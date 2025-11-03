@@ -188,9 +188,11 @@ void FFApplication::load_taskgraph_flatbuf(std::string & taskgraph, std::string 
         assert("Failed to read file!" && false);
     }
     load_weight_matrix(weight_matrix_file, weight_matrix);
-    
+    flatbuffers::Verifier::Options opts;
+    opts.max_tables = 10000000;  // Increase to 10 million
+    opts.max_depth = 64;
     // Verify the FlatBuffer before using it
-    flatbuffers::Verifier verifier(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size());
+    flatbuffers::Verifier verifier(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size(), opts);
     bool verification_result = verifier.VerifyBuffer<FlatBufTaskGraph::TaskGraph>(nullptr);
     if (!verification_result) {
         std::cerr << "ERROR: FlatBuffer verification failed for file: " << taskgraph << std::endl;

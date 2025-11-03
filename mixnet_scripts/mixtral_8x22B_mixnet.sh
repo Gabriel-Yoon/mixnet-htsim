@@ -2,8 +2,8 @@ declare -a bw=(100)
 declare -a microbatchsize=(8)
 declare -a rdelay=(25)
 declare -a workloads=("num_global_tokens_per_expert")
-dir="/usr/wkspace/mixnet/flexnet-sim-refactor/src/clos/datacenter"
-new_fbuf_dir="/usr/wkspace/mixnet/FlexFlow-master/results"
+dir="/usr/wkspace/mixnet-sim/mixnet-htsim/src/clos/datacenter"
+new_fbuf_dir="/usr/wkspace/mixnet-sim/mixnet-flexflow/results"
 cd "$dir" || exit 1
 for mb in "${microbatchsize[@]}"; do
     for b in "${bw[@]}"; do

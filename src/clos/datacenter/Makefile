@@ -1,6 +1,6 @@
 CC=g++
 CXX=g++
-CFLAGS=-Wall -std=c++17 -O0 -g
+CFLAGS=-Wall -std=c++17 -O3
 FF_HOME?=$(PWD)/../../../../FlexFlow
 #GUROBI_DIR?=$(HOME)/gurobi912/linux64
 #GUROBI_DIR=/usr/wkspace/3dparty/gurobi_server912/linux64
@@ -17,12 +17,12 @@ LIB=-L..
 # endif
 ifeq ($(USE_GUROBI), 1)
 	INC+= -I$(GUROBI_DIR)/include/ #-I/usr/local/Cellar/flatbuffers/2.0.0/include/
-	CFLAGS+= -L$(GUROBI_DIR)/lib  -DHAVE_GUROBI #-O0 -g  #-L$(FF_HOME)/protobuf/src/.libs -lprotobuf 
+	CFLAGS+= -L$(GUROBI_DIR)/lib  -DHAVE_GUROBI #-O3  #-L$(FF_HOME)/protobuf/src/.libs -lprotobuf 
 endif
 #-Lksp
 OBJS=../eventlist.o ../tcppacket.o ../pipe.o ../queue.o ../queue_lossless.o ../queue_lossless_input.o ../queue_lossless_output.o ../ecnqueue.o ../tcp.o ../dctcp.o ../mtcp.o ../loggers.o ../logfile.o ../clock.o ../config.o ../network.o ../qcn.o ../exoqueue.o ../randomqueue.o ../cbr.o ../cbrpacket.o ../sent_packets.o ../ndp.o ../ndppacket.o ../eth_pause_packet.o ../compositequeue.o ../prioqueue.o ../cpqueue.o ../compositeprioqueue.o ../switch.o ../fairpullqueue.o ../route.o ../ffapp.o ../dyn_net_sch.o ../mixnet_topomanager.o#../taskgraph.pb.o
 
-all: htsim_tcp_fc htsim_tcp_fattree htsim_tcp_os_fattree htsim_tcp_flat htsim_tcp_aggosft htsim_tcp_dyn_flat htsim_tcp_fattree_multijob htsim_tcp_aggos_fattree_multijob htsim_tcp_mixnet
+all: htsim_tcp_glassfb htsim_tcp_fc htsim_tcp_fattree htsim_tcp_os_fattree htsim_tcp_flat htsim_tcp_aggosft htsim_tcp_dyn_flat htsim_tcp_fattree_multijob htsim_tcp_aggos_fattree_multijob htsim_tcp_mixnet
 
 htsim_tcp_fattree_multijob: main_tcp_multijob_fattree.o firstfit.o fat_tree_topology.o
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_multijob_fattree.o fat_tree_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_fattree_multijob
@@ -110,3 +110,12 @@ mixnet.o: mixnet.cpp mixnet.h topology.h fat_tree_topology.cpp fat_tree_topology
 
 clean:	
 	rm -f *.o htsim_ndp* htsim_tcp* htsim_dctcp*
+
+htsim_tcp_glassfb: main_tcp_glassfb.o firstfit.o glassfb_topology.o
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_glassfb
+
+main_tcp_glassfb.o: main_tcp_glassfb.cpp
+	$(CC) $(INCLUDE) $(CFLAGS) -c main_tcp_glassfb.cpp
+
+glassfb_topology.o: glassfb_topology.cpp glassfb_topology.h topology.h
+	$(CC) $(INCLUDE) $(CFLAGS) -c glassfb_topology.cpp

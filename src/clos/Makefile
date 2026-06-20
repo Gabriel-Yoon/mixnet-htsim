@@ -9,15 +9,15 @@ GUROBI_DIR=/usr/wkspace/3dparty/gurobi1000/linux64/linux64
 CC=g++
 CRT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 INC= -I$(CRT)/datacenter -I$(CRT) -I$(FF_HOME)/fbuf/include/ 
-CFLAGS= -Wall $(INC) -std=c++17 -O0 -g
+CFLAGS= -Wall $(INC) -std=c++17 -O3
 # ifeq ($(USE_GUROBI), 1)
 # 	INC+= -I$(GUROBI_DIR)/include/ #-I/usr/local/Cellar/flatbuffers/2.0.0/include/
-# 	CFLAGS+= -L$(GUROBI_DIR)/lib -lgurobi_c++ -lgurobi91 -DHAVE_GUROBI #-O0 -g  #-L$(FF_HOME)/protobuf/src/.libs -lprotobuf 
+# 	CFLAGS+= -L$(GUROBI_DIR)/lib -lgurobi_c++ -lgurobi91 -DHAVE_GUROBI #-O3  #-L$(FF_HOME)/protobuf/src/.libs -lprotobuf 
 # endif
 
 ifeq ($(USE_GUROBI), 1)
 	INC+= -I$(GUROBI_DIR)/include/ #-I/usr/local/Cellar/flatbuffers/2.0.0/include/
-	CFLAGS+= -L$(GUROBI_DIR)/lib  -DHAVE_GUROBI #-O0 -g  #-L$(FF_HOME)/protobuf/src/.libs -lprotobuf 
+	CFLAGS+= -L$(GUROBI_DIR)/lib  -DHAVE_GUROBI #-O3  #-L$(FF_HOME)/protobuf/src/.libs -lprotobuf 
 endif
 
 # all:	htsim lib parse_output

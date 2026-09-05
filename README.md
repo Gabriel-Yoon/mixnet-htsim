@@ -28,3 +28,31 @@ MixNet-htsim's major extension from the htsim simulator allows it to take a task
 
 Each topology's "main" function can be found in `src/clos/datacenter/main_tcp_*.cpp`, which provides detailed description on the input arguments for the executable. 
 
+## `wafer-topology` branch additions
+
+This branch adds a Glass-Photonic Flattened-Butterfly (Glass-FB) topology
+(`src/clos/datacenter/glassfb_topology.*`, `htsim_tcp_glassfb`) and a wafer-scale
+row/col comparison topology (`wafer_rowcol_topology.*`, `htsim_tcp_wafer`), plus:
+
+- **Serving-sim bridge (protobuf task graphs)**: `htsim_tcp_glassfb`/`_fattree`/`_flat`
+  accept a `.pb` flowfile (`TaskGraphProtoBuf`, `src/clos/taskgraph.proto`) as an
+  alternative to the FlexFlow FlatBuffer format, for bridging real routing/profiling
+  data from LLMServingSim's decode/prefill simulation into htsim.
+  `src/clos/gen_decode_block.cpp` turns a small JSON
+  export (`ep`, per-rank compute latency, dispatch/combine byte counts) into a `.pb`
+  graph. Requires `protobuf` + `abseil` (`brew install protobuf abseil` on macOS);
+  `mixnet_scripts/compile.sh` picks these up via `pkg-config` automatically.
+- **`GLASS_ECN_K`** (env var, default 50 packets): ECN marking threshold for the
+  `ECN` queue type, previously hardcoded.
+- **`GLASS_GW_PARALLEL`** (env var, default 1 = prior behavior): spreads a panel
+  pair's inter-panel traffic across `G` parallel gateway GPU pairs (hashed by
+  in-panel position) instead of funneling all of it through one fixed pair, at the
+  same total inter-panel bandwidth. See `glassfb_topology.h`'s `gw()`/`gw_g()`.
+  Clamps to the largest feasible `G` (`panel_size / panel_degree()`) if the request
+  doesn't fit.
+
+Build: `FF_HOME=<path with fbuf/include, or a dir symlinking flatbuffers'
+include/> bash mixnet_scripts/compile.sh`. Other environment knobs for
+`htsim_tcp_glassfb` (panel size, EP-aware placement, per-tier bandwidths) are
+listed at the top of `glassfb_topology.cpp`'s `set_params()`.
+

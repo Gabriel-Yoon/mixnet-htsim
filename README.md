@@ -48,8 +48,18 @@ row/col comparison topology (`wafer_rowcol_topology.*`, `htsim_tcp_wafer`), plus
   pair's inter-panel traffic across `G` parallel gateway GPU pairs (hashed by
   in-panel position) instead of funneling all of it through one fixed pair, at the
   same total inter-panel bandwidth. See `glassfb_topology.h`'s `gw()`/`gw_g()`.
-  Clamps to the largest feasible `G` (`panel_size / panel_degree()`) if the request
-  doesn't fit.
+  Clamps to the largest feasible `G` for the current `GLASS_INTER` mode (see below).
+- **`GLASS_INTER=mesh`** (in addition to the existing default dragonfly and `fb2`):
+  a true 4-edge mesh -- a panel connects only to its immediate N/S/E/W neighbors in
+  the `_ppr x _ppc` panel grid, each direction backed by one dedicated, disjoint
+  4-GPU edge (a full row/column of the panel's own 4x4 grid; see `edge_local()`/
+  `mesh_neighbor()`). `fb2`'s "connect to everyone in my row or column" graph has
+  degree up to `(ppr-1)+(ppc-1)` (e.g. 10 on a 32-panel 8x4 grid) with no physical
+  4-port realization; `mesh` is the physically-honest alternative, at the cost of
+  needing multi-hop (XY dimension-order, `panel_path()`) routing between
+  non-adjacent panels. Under `mesh`, `GLASS_GW_PARALLEL` is capped at 4 (the fixed
+  edge-pool size) regardless of how many of the panel's other edges are active,
+  rather than `panel_size / panel_degree()` as in the other two modes.
 
 Build: `FF_HOME=<path with fbuf/include, or a dir symlinking flatbuffers'
 include/> bash mixnet_scripts/compile.sh`. Other environment knobs for

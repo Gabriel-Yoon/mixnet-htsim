@@ -59,3 +59,4 @@ mixnet_scripts/*
 !mixnet_scripts/mixtral_8x22B_mixnet.sh
 
 .vscode/*
+src/clos/gen_decode_block

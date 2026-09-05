@@ -1,0 +1,44 @@
+{
+  "model": "deepseek-ai/DeepSeek-V3-0324",
+  "hardware": "H100",
+  "dtype": "bfloat16",
+  "phase": "prefill",
+  "total_len": 8192,
+  "ep": 8,
+  "num_experts": 256,
+  "topk": 8,
+  "hidden_size": 7168,
+  "fp_bytes": 2,
+  "local_tokens": [
+    5377,
+    5377,
+    5377,
+    5377,
+    5377,
+    5377,
+    5377,
+    5377
+  ],
+  "activated_experts": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "total_dispatch_bytes": 638701568,
+  "total_combine_bytes": 616677376,
+  "rank_latency_ns": [
+    8258843,
+    8258843,
+    8258843,
+    8258843,
+    8258843,
+    8258843,
+    8258843,
+    8258843
+  ]
+}

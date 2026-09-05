@@ -2,8 +2,8 @@ declare -a bw=(100)
 declare -a microbatchsize=(8)
 declare -a rdelay=(25)
 declare -a workloads=("num_global_tokens_per_expert")
-dir="/usr/wkspace/mixnet-sim/mixnet-htsim/src/clos/datacenter"
-new_fbuf_dir="/usr/wkspace/mixnet-sim/mixnet-flexflow/results"
+dir="/Users/seongwonyoon/Documents/vscode_workspace/github-repos/mixnet-sim/mixnet-htsim/src/clos/datacenter"
+new_fbuf_dir="/Users/seongwonyoon/Documents/vscode_workspace/github-repos/mixnet-sim/taskgraph/mixtral8x22B_onestage_dp2_tp8_pp1_ep8_8.fbuf"
 cd "$dir" || exit 1
 for mb in "${microbatchsize[@]}"; do
     for b in "${bw[@]}"; do

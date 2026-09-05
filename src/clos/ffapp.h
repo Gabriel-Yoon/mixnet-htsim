@@ -15,7 +15,7 @@
 #include "ndp.h"
 #include "taskgraph_generated.h"
 #include "mixnet_topomanager.h"
-// #include "taskgraph.pb.h"
+#include "taskgraph.pb.h"
 #include "tcp.h"
 #define NUM_GPU_PER_NODE 8
 
@@ -479,7 +479,7 @@ public:
 	~FFApplication();
 
     // void load_taskgraph_json(std::string & taskgraph);
-    // void load_taskgraph_protobuf(std::string & taskgraph);
+    void load_taskgraph_protobuf(std::string & taskgraph, std::string & weight_matrix_file);
     void load_taskgraph_flatbuf(std::string & taskgraph,std::string & weight_matrix_file);
     void load_taskgraph_flatbuf(std::string & taskgraph);
     void start_init_tasks();
@@ -542,6 +542,13 @@ public:
     int pp_degree;
     int ep_degree;
     int is_mixnet;
+    bool disable_intra_node_shortcut = false;  // wafer-scale: set true to disable the NVLink/NVSwitch
+                                                // intra-node shortcut and force all traffic through
+                                                // the topology's actual routing (get_paths)
+    simtime_picosec thermal_tuning_delay_ps = 0;  // one-time stall added before each all-to-all
+                                                   // round starts (ring-modulator wavelength re-lock
+                                                   // time), NOT a per-packet link propagation delay --
+                                                   // see FFTask::cleanup() TASK_ALLTOALL branch.
     std::vector<std::vector<int>> weight_matrix;
     MixnetTopoManager* topomanager; // we use this to manage the mixnet topology
 

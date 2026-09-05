@@ -321,7 +321,11 @@ int main(int argc, char **argv)
     FlatTopology *top = new FlatTopology(no_of_nodes, queuesize, nullptr /* &logfile */, &eventlist, ff, ECN);
     // FFApplication app = FFApplication(top, ssthresh, sinkLogger, traffic_logger, tcpRtxScanner, eventlist);
     FFApplication app = FFApplication(top, ssthresh, logdir, &fct_util_out, tcpRtxScanner, eventlist, ar_strategy);
-    app.load_taskgraph_flatbuf(flowfile,weight_matrix_file);
+    if (flowfile.size() >= 3 && flowfile.compare(flowfile.size() - 3, 3, ".pb") == 0) {
+        app.load_taskgraph_protobuf(flowfile, weight_matrix_file);
+    } else {
+        app.load_taskgraph_flatbuf(flowfile, weight_matrix_file);
+    }
     app.start_init_tasks();
 
     // UtilMonitor* UM = new UtilMonitor(top, eventlist);

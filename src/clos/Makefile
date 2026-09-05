@@ -1,6 +1,6 @@
-OBJS=eventlist.o tcppacket.o pipe.o queue.o queue_lossless.o queue_lossless_input.o queue_lossless_output.o ecnqueue.o tcp.o dctcp.o mtcp.o loggers.o logfile.o clock.o config.o network.o qcn.o exoqueue.o randomqueue.o cbr.o cbrpacket.o sent_packets.o ndp.o ndppacket.o eth_pause_packet.o compositequeue.o prioqueue.o cpqueue.o compositeprioqueue.o switch.o fairpullqueue.o route.o ffapp.o dyn_net_sch.o mixnet_topomanager.o#taskgraph.pb.o
+OBJS=eventlist.o tcppacket.o pipe.o queue.o queue_lossless.o queue_lossless_input.o queue_lossless_output.o ecnqueue.o tcp.o dctcp.o mtcp.o loggers.o logfile.o clock.o config.o network.o qcn.o exoqueue.o randomqueue.o cbr.o cbrpacket.o sent_packets.o ndp.o ndppacket.o eth_pause_packet.o compositequeue.o prioqueue.o cpqueue.o compositeprioqueue.o switch.o fairpullqueue.o route.o ffapp.o dyn_net_sch.o mixnet_topomanager.o taskgraph.pb.o
 
-HDRS=network.h ndp.h queue_lossless.h queue_lossless_input.h queue_lossless_output.h compositequeue.h prioqueue.h cpqueue.h queue.h loggers.h loggertypes.h pipe.h eventlist.h config.h tcp.h dctcp.h mtcp.h sent_packets.h tcppacket.h ndppacket.h eth_pause_packet.h compositeprioqueue.h ecnqueue.h switch.h ffapp.h taskgraph_generated.h dyn_net_sch.h mixnet_topomanager.h #taskgraph.pb.h
+HDRS=network.h ndp.h queue_lossless.h queue_lossless_input.h queue_lossless_output.h compositequeue.h prioqueue.h cpqueue.h queue.h loggers.h loggertypes.h pipe.h eventlist.h config.h tcp.h dctcp.h mtcp.h sent_packets.h tcppacket.h ndppacket.h eth_pause_packet.h compositeprioqueue.h ecnqueue.h switch.h ffapp.h taskgraph_generated.h dyn_net_sch.h mixnet_topomanager.h taskgraph.pb.h
 #USE_GUROBI = 1
 FF_HOME?=$(PWD)/../../../FlexFlow
 #GUROBI_DIR?=$(HOME)/gurobi912/linux64
@@ -8,7 +8,13 @@ FF_HOME?=$(PWD)/../../../FlexFlow
 GUROBI_DIR=/usr/wkspace/3dparty/gurobi1000/linux64/linux64
 CC=g++
 CRT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-INC= -I$(CRT)/datacenter -I$(CRT) -I$(FF_HOME)/fbuf/include/ 
+# Protobuf (revived TaskGraphProtoBuf path; see taskgraph.proto). PROTOBUF_PREFIX/
+# ABSEIL_PREFIX let this be overridden per-machine (e.g. on PACE); defaults assume
+# Homebrew on macOS. PBFLAGS is computed via pkg-config when available.
+PROTOBUF_PREFIX?=$(shell brew --prefix protobuf 2>/dev/null)
+ABSEIL_PREFIX?=$(shell brew --prefix abseil 2>/dev/null)
+PBFLAGS?=$(shell PKG_CONFIG_PATH="$(PROTOBUF_PREFIX)/lib/pkgconfig:$(ABSEIL_PREFIX)/lib/pkgconfig" pkg-config --cflags protobuf 2>/dev/null)
+INC= -I$(CRT)/datacenter -I$(CRT) -I$(FF_HOME)/fbuf/include/ $(PBFLAGS)
 CFLAGS= -Wall $(INC) -std=c++17 -O3
 # ifeq ($(USE_GUROBI), 1)
 # 	INC+= -I$(GUROBI_DIR)/include/ #-I/usr/local/Cellar/flatbuffers/2.0.0/include/

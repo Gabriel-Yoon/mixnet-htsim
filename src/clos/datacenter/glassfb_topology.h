@@ -48,10 +48,50 @@ public:
   // per-link bandwidth (Mbps). intra-panel = in-package glass waveguide;
   // inter-panel = optical fiber gateway. The thesis lives in _inter_bw_mbps
   // (glass optical ~512 GB/s vs NVL72 IB ~50 GB/s) at fixed topology.
-  uint64_t _intra_bw_mbps = 0, _inter_bw_mbps = 0;
+  uint64_t _intra_bw_mbps = 0, _inter_bw_mbps = 0;   // legacy single-intra (back-compat)
+  // distance-layered design (ASTRA-sim FB config): adjacent(grid dist 1)=electrical RDL,
+  // far(dist>=2)=optical WG, inter-panel=optical fiber.  defaults: 1800 / 400 / 200 GB/s.
+  uint64_t _elec_bw_mbps = 0, _opt_bw_mbps = 0;     // Mbps
+  uint32_t _elec_lat_ns = 100, _opt_lat_ns = 300, _inter_lat_ns = 500;
+  // ECN marking threshold (packets) for the ECN queue_type; overridable via GLASS_ECN_K.
+  int _ecn_k_pkts = 50;
+  // Multi-gateway inter-panel spreading: instead of ONE fixed gateway pair carrying
+  // ALL traffic between a given panel pair, provision _gw_parallel parallel gateway
+  // pairs and load-balance flows across them by a hash of their local panel positions.
+  // The per-link inter-panel bandwidth is divided by _gw_parallel so the *aggregate*
+  // p<->q capacity is unchanged -- this isolates whether spreading fan-in across
+  // multiple physical links (vs. one) fixes the EP>panel incast, independent of
+  // adding more total bandwidth. Overridable via GLASS_GW_PARALLEL (default 1 = old
+  // single-gateway behavior). Requires panel_degree() * _gw_parallel <= _psize
+  // (clamped in set_params if violated).
+  int _gw_parallel = 1;
+  // EP-panel-aware placement: relabel logical nodes so EP-group mates land in one panel.
+  bool _ep_place = false; int _tp_deg = 1, _ep_deg = 1;
+  // dimension-order load-balanced (Valiant) intra-panel routing: spread each 2-hop a2a
+  // flow across the two dimension-order relays (row-first vs col-first) instead of always
+  // using the same corner, so skewed MoE a2a does not pile onto one relay/link.
+  bool _dim_route = false;
 
-  int panel(int n) const { return n / _psize; }
-  int loc(int n)   const { return n % _psize; }
+  // EP-aware placement: relabel so EP-group mates (same dp/tp/pp, varying ep) become contiguous
+  // -> co-located in one panel when ep_deg <= psize, making the expert a2a intra-panel.
+  int phys(int n) const {
+    if (!_ep_place || _ep_deg <= 1) return n;
+    int hi = n / (_ep_deg * _tp_deg);
+    int ep = (n / _tp_deg) % _ep_deg;
+    int tp = n % _tp_deg;
+    return (hi * _tp_deg + tp) * _ep_deg + ep;
+  }
+  // inverse of phys(): physical id -> logical id (for functions that compute a physical position)
+  int phys_inv(int m) const {
+    if (!_ep_place || _ep_deg <= 1) return m;
+    int ep = m % _ep_deg;
+    int rest = m / _ep_deg;
+    int tp = rest % _tp_deg;
+    int hi = rest / _tp_deg;
+    return (hi * _ep_deg + ep) * _tp_deg + tp;
+  }
+  int panel(int n) const { return phys(n) / _psize; }
+  int loc(int n)   const { return phys(n) % _psize; }
   int lrow(int n)  const { return loc(n) / _pcols; }
   int lcol(int n)  const { return loc(n) % _pcols; }
   bool same_panel(int a, int b) const { return panel(a) == panel(b); }
@@ -59,9 +99,30 @@ public:
   bool intra_link(int a, int b) const {
     return same_panel(a, b) && (lrow(a) == lrow(b) || lcol(a) == lcol(b));
   }
-  // intra-panel diameter-2 relay: same panel as a, a's row, b's column
+  // grid distance along the shared row/col of an intra_link (1 = adjacent electrical RDL)
+  int intra_dist(int a, int b) const {
+    int d = 999;
+    if (lrow(a) == lrow(b)) d = lcol(a) - lcol(b);
+    else if (lcol(a) == lcol(b)) d = lrow(a) - lrow(b);
+    return d < 0 ? -d : d;
+  }
+  bool adjacent_link(int a, int b) const { return intra_dist(a, b) == 1; }
+  // intra-panel diameter-2 relay: same panel as a, a's row, b's column (row-first / dim-0-first)
   int intra_relay(int a, int b) const {
-    return panel(a) * _psize + lrow(a) * _pcols + lcol(b);
+    return phys_inv(panel(a) * _psize + lrow(a) * _pcols + lcol(b));
+  }
+  // the other dimension-order relay: a's column, b's row (col-first / dim-1-first)
+  int intra_relay2(int a, int b) const {
+    return phys_inv(panel(a) * _psize + lrow(b) * _pcols + lcol(a));
+  }
+  // pick the relay for a 2-hop intra-panel hop. with dim-order load balancing on, spread
+  // flows across both relays by a stable hash of (a,b) so neither corner becomes a hotspot.
+  int relay_for(int a, int b) const {
+    if (_dim_route) {
+      unsigned h = ((unsigned)a * 2654435761u) ^ ((unsigned)b * 40503u);
+      if (h & 1u) return intra_relay2(a, b);
+    }
+    return intra_relay(a, b);
   }
   int prow(int p) const { return p / _ppc; }
   int pcol(int p) const { return p % _ppc; }
@@ -81,16 +142,33 @@ public:
     }
     return r;
   }
-  int gw(int p, int q) const { return p * _psize + slot(p, q); }
+  // gateway GPU hosting the fiber toward panel q, sub-link g in [0,_gw_parallel).
+  // Each destination panel is reserved a block of _gw_parallel consecutive local
+  // slots (slot(p,q)*_gw_parallel .. +g); wraps if that exceeds _psize (OCS-FC /
+  // forced dragonfly at large P, or _gw_parallel too large for panel_degree()).
+  int gw(int p, int q, int g = 0) const {
+    int base = slot(p, q) * _gw_parallel;
+    int gg = _gw_parallel > 1 ? (g % _gw_parallel) : 0;
+    return phys_inv(p * _psize + (base + gg) % _psize);
+  }
+  // which of the _gw_parallel gateway pairs a given (src,dst) flow uses -- a
+  // symmetric hash of their in-panel local positions so both directions of the
+  // same physical flow (and its ACKs) pick the same gateway pair.
+  int gw_g(int src, int dst) const {
+    return _gw_parallel > 1 ? (loc(src) + loc(dst)) % _gw_parallel : 0;
+  }
   // optical egress ports a panel needs = its inter-panel degree
   int panel_degree() const {
     return _mode == 0 ? (_P - 1) : ((_ppr - 1) + (_ppc - 1));
   }
-  // inter-panel (optical) direct link between two specific gateway nodes
+  // inter-panel (optical) direct link between two specific gateway nodes (any of
+  // the _gw_parallel sub-links between their panels)
   bool global_link(int a, int b) const {
     int pa = panel(a), pb = panel(b);
     if (pa == pb || !panels_conn(pa, pb)) return false;
-    return a == gw(pa, pb) && b == gw(pb, pa);
+    for (int g = 0; g < _gw_parallel; g++)
+      if (a == gw(pa, pb, g) && b == gw(pb, pa, g)) return true;
+    return false;
   }
   bool connected(int a, int b) const { return intra_link(a, b) || global_link(a, b); }
   queue_type qt;

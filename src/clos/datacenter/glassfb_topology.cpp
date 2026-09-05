@@ -2,6 +2,7 @@
 #include "glassfb_topology.h"
 #include <cmath>
 #include <cstdlib>
+#include <algorithm>
 #include <vector>
 #include "string.h"
 #include <sstream>
@@ -69,22 +70,55 @@ void GlassFBTopology::set_params(int no_of_nodes)
 
   // Each inter-panel optical link consumes one egress port; a panel's port budget is
   // <= _psize (one optical port per GPU). Dragonfly needs P-1 ports; if that exceeds
-  // the budget, fall back to 2-level FB (degree (ppr-1)+(ppc-1)). Warn if still over.
+  // the budget, fall back to 2-level FB (degree (ppr-1)+(ppc-1)) -- UNLESS the design
+  // uses an optical circuit switch (our documented inter-panel model: FullyConnected,
+  // 1 hop, cost = bandwidth not hop count). GLASS_FORCE_DFLY=1 keeps the FC/dragonfly
+  // graph at any P; gateways wrap around the panel (a GPU hosts multiple fiber ports).
+  bool force_dfly = false;
+  if (const char *e = getenv("GLASS_FORCE_DFLY")) force_dfly = atoi(e) != 0;
   if (_mode == 0 && panel_degree() > _psize) {
-    cout << "GlassFB: dragonfly infeasible (degree " << panel_degree()
-         << " > panel ports " << _psize << "); falling back to 2-level FB" << endl;
-    _mode = 1;
+    if (force_dfly) {
+      cout << "GlassFB: OCS-FC forced (degree " << panel_degree() << " > panel ports "
+           << _psize << "; modeling optical-circuit-switch FullyConnected, wrapped gateways)" << endl;
+    } else {
+      cout << "GlassFB: dragonfly infeasible (degree " << panel_degree()
+           << " > panel ports " << _psize << "); falling back to 2-level FB" << endl;
+      _mode = 1;
+    }
   }
-  if (panel_degree() > _psize)
+  if (_mode == 1 && panel_degree() > _psize)
     cout << "GlassFB: WARNING scale-out INFEASIBLE -- panel degree " << panel_degree()
          << " > optical ports " << _psize << " (needs smaller panels or 3-level)" << endl;
 
   // per-link bandwidth (GB/s in env -> Mbps). Default to global -speed (SPEED, Mbps)
   // so behaviour is unchanged unless overridden. 1 GB/s = 8000 Mbps.
-  _intra_bw_mbps = SPEED;
-  _inter_bw_mbps = SPEED;
-  if (const char *e = getenv("GLASS_INTRA_BW")) { double g = atof(e); if (g > 0) _intra_bw_mbps = (uint64_t)(g * 8000.0); }
-  if (const char *e = getenv("GLASS_INTER_BW")) { double g = atof(e); if (g > 0) _inter_bw_mbps = (uint64_t)(g * 8000.0); }
+  // distance-layered design (from ASTRA-sim FB cluster config h100_fb_4x4):
+  //   adjacent (grid dist 1) = electrical RDL 1800 GB/s; far (dist>=2) = optical WG 400; inter 200.
+  _elec_bw_mbps  = 1800ULL * 8000;
+  _opt_bw_mbps   = 400ULL  * 8000;
+  _inter_bw_mbps = 200ULL  * 8000;
+  _intra_bw_mbps = _opt_bw_mbps;   // legacy alias
+  if (const char *e = getenv("GLASS_ELEC_BW")) { double g=atof(e); if(g>0) _elec_bw_mbps=(uint64_t)(g*8000.0); }
+  if (const char *e = getenv("GLASS_OPT_BW"))  { double g=atof(e); if(g>0) _opt_bw_mbps =(uint64_t)(g*8000.0); }
+  if (const char *e = getenv("GLASS_INTER_BW")){ double g=atof(e); if(g>0) _inter_bw_mbps=(uint64_t)(g*8000.0); }
+  if (const char *e = getenv("GLASS_INTRA_BW")){ double g=atof(e); if(g>0){ _elec_bw_mbps=_opt_bw_mbps=(uint64_t)(g*8000.0); } } // legacy uniform intra
+  if (const char *e = getenv("GLASS_ELEC_LAT")) _elec_lat_ns=atoi(e);
+  if (const char *e = getenv("GLASS_OPT_LAT"))  _opt_lat_ns =atoi(e);
+  if (const char *e = getenv("GLASS_INTER_LAT"))_inter_lat_ns=atoi(e);
+  if (const char *e = getenv("GLASS_EP_PLACE")) _ep_place = atoi(e) != 0;
+  if (const char *e = getenv("GLASS_TP")) _tp_deg = atoi(e);
+  if (const char *e = getenv("GLASS_EP")) _ep_deg = atoi(e);
+  if (const char *e = getenv("GLASS_DIM_A2A")) _dim_route = atoi(e) != 0;
+  if (const char *e = getenv("GLASS_ECN_K")) { int v = atoi(e); if (v > 0) _ecn_k_pkts = v; }
+  if (const char *e = getenv("GLASS_GW_PARALLEL")) { int v = atoi(e); if (v > 0) _gw_parallel = v; }
+  { // clamp: each panel needs panel_degree() reserved blocks of _gw_parallel slots, total <= _psize
+    int deg = panel_degree();
+    if (deg > 0 && _gw_parallel > _psize / deg) {
+      cout << "GLASS_GW_PARALLEL=" << _gw_parallel << " too large for panel_degree=" << deg
+           << " and panel size=" << _psize << "; clamping to " << (_psize / deg) << endl;
+      _gw_parallel = std::max(1, _psize / deg);
+    }
+  }
 
   cout << "GlassFB 2-tier: " << _P << " panels x " << _psize << " GPU"
        << " (intra " << _prows << "x" << _pcols << " FB, panel diam 2); "
@@ -92,8 +126,11 @@ void GlassFBTopology::set_params(int no_of_nodes)
                                           : "2-level FB " ) ;
   if (_mode == 1) cout << _ppr << "x" << _ppc << " (diam 2)";
   cout << endl;
-  cout << "GlassFB per-link BW: intra " << (_intra_bw_mbps / 8000.0)
-       << " GB/s, inter-panel " << (_inter_bw_mbps / 8000.0) << " GB/s" << endl;
+  if (_ep_place) cout << "GlassFB EP-aware placement ON (tp=" << _tp_deg << " ep=" << _ep_deg << "): EP-mates -> same panel" << endl;
+  if (_dim_route) cout << "GlassFB dimension-order load-balanced (Valiant) intra-panel routing ON" << endl;
+  cout << "GlassFB distance-layered BW: elec(adj) " << (_elec_bw_mbps/8000.0)
+       << " / opt(far) " << (_opt_bw_mbps/8000.0) << " / inter " << (_inter_bw_mbps/8000.0)
+       << " GB/s; lat " << _elec_lat_ns << "/" << _opt_lat_ns << "/" << _inter_lat_ns << " ns" << endl;
 
   switchs.resize(_no_of_nodes, nullptr);
   pipes.resize(_no_of_nodes, vector<Pipe *>(_no_of_nodes));
@@ -119,7 +156,7 @@ Queue *GlassFBTopology::alloc_queue(QueueLogger *queueLogger, uint64_t speed, me
   else if (qt == CTRL_PRIO)
     return new CtrlPrioQueue(speedFromMbps(speed), queuesize, *eventlist, queueLogger);
   else if (qt == ECN)
-    return new ECNQueue(speedFromMbps(speed), queuesize, *eventlist, queueLogger, memFromPkt(50));
+    return new ECNQueue(speedFromMbps(speed), queuesize, *eventlist, queueLogger, memFromPkt(_ecn_k_pkts));
   else if (qt == LOSSLESS)
     return new LosslessQueue(speedFromMbps(speed), memFromPkt(50), *eventlist, queueLogger, NULL);
   else if (qt == LOSSLESS_INPUT)
@@ -162,7 +199,12 @@ void GlassFBTopology::init_network()
       // logfile->addLogger(*queueLoggeru);
 
       // per-link bandwidth: intra-panel glass vs inter-panel optical gateway
-      uint64_t link_bw = intra_link(j, k) ? _intra_bw_mbps : _inter_bw_mbps;
+      uint64_t link_bw; uint32_t link_lat;
+      if (intra_link(j, k)) {
+        bool adj = adjacent_link(j, k);
+        link_bw  = adj ? _elec_bw_mbps : _opt_bw_mbps;
+        link_lat = adj ? _elec_lat_ns  : _opt_lat_ns;
+      } else { link_bw = _inter_bw_mbps / _gw_parallel; link_lat = _inter_lat_ns; }
       queues[j][k] = alloc_queue(queueLogger, link_bw, _queuesize);
       queues[k][j] = alloc_queue(queueLogger, link_bw, _queuesize);
       queues[j][k]->setName("L" + ntoa(j) + "->DST" + ntoa(k));
@@ -170,8 +212,8 @@ void GlassFBTopology::init_network()
       // logfile->writeName(*(queues[j][k]));
       // logfile->writeName(*(queues[k][j]));
 
-      pipes[j][k] = new Pipe(timeFromNs(RTT), *eventlist);
-      pipes[k][j] = new Pipe(timeFromNs(RTT), *eventlist);
+      pipes[j][k] = new Pipe(timeFromNs(link_lat), *eventlist);
+      pipes[k][j] = new Pipe(timeFromNs(link_lat), *eventlist);
       pipes[j][k]->setName("Pipe-LS" + ntoa(j) + "->DST" + ntoa(k));
       pipes[k][j]->setName("Pipe-LS" + ntoa(k) + "->DST" + ntoa(j));
       // logfile->writeName(*(pipes[j][k]));
@@ -240,15 +282,18 @@ vector<int> GlassFBTopology::node_path(int src, int dest) const
   // intra_relay; cross-panel transitions ride an optical gateway link.
   vector<int> wp;
   int p = panel(src), q = panel(dest);
+  // which of the _gw_parallel parallel inter-panel links this flow uses -- spreads
+  // the panel-pair's full a2a fan-in across multiple physical fibers instead of one.
+  int g = gw_g(src, dest);
   if (p == q) {
     wp = {src, dest};
   } else if (_mode == 0 || panels_conn(p, q)) {
     // dragonfly, or 2-level FB with directly-connected panels: one optical hop
-    wp = {src, gw(p, q), gw(q, p), dest};
+    wp = {src, gw(p, q, g), gw(q, p, g), dest};
   } else {
     // 2-level FB, unconnected panels: relay through panel pm = (p's panel-row, q's panel-col)
     int pm = prow(p) * _ppc + pcol(q);
-    wp = {src, gw(p, pm), gw(pm, p), gw(pm, q), gw(q, pm), dest};
+    wp = {src, gw(p, pm, g), gw(pm, p, g), gw(pm, q, g), gw(q, pm, g), dest};
   }
 
   vector<int> path;
@@ -257,7 +302,7 @@ vector<int> GlassFBTopology::node_path(int src, int dest) const
     int a = path.back(), b = wp[i];
     if (a == b) continue;
     if (same_panel(a, b) && !intra_link(a, b))
-      path.push_back(intra_relay(a, b)); // 2-hop intra-panel FB
+      path.push_back(relay_for(a, b)); // 2-hop intra-panel FB (dim-order balanced if enabled)
     path.push_back(b);
   }
   return path;

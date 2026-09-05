@@ -177,7 +177,15 @@ void load_weight_matrix(std::string & weight_matrix_file, std::vector<std::vecto
             }
         }
     } else {
-        std::cerr << "Unable to open file" << std::endl;
+        // A silently-empty weight_matrix here is dangerous, not benign: ALLTOALL
+        // sizing later does `weight_matrix[x % weight_matrix.size()]`, and on
+        // ARM64 integer '% 0' does not trap (division-by-zero returns 0, so
+        // 'x % 0' evaluates to 'x' via the a-(a/b)*b identity) -- so this
+        // silently turns into an out-of-bounds read on an empty vector:
+        // undefined behavior that sometimes "works" with garbage data and
+        // sometimes segfaults, instead of failing loudly at load time.
+        std::cerr << "FATAL: could not open weight-matrix file: " << weight_matrix_file << std::endl;
+        assert("Unable to open weight-matrix file!" && false);
     }
 }
 
@@ -395,12 +403,12 @@ void FFApplication::load_taskgraph_flatbuf(std::string & taskgraph, std::string 
                         if((this_task.info()->str().find("GROUP_BY")!= std::string::npos && this_task.info()->str().find("forward")!= std::string::npos)
                         || (this_task.info()->str().find("AGGREGATE")!= std::string::npos && this_task.info()->str().find("backward")!= std::string::npos)) {
                             float xfer_size_tmp=0;
-                            xfer_size_tmp = total_xfer_size * 1.0 * weight_matrix[fn_expid%8][tn_expid%8]/32768;
+                            xfer_size_tmp = total_xfer_size * 1.0 * weight_matrix[fn_expid%weight_matrix.size()][tn_expid%weight_matrix.size()]/32768;
                             operator_sizes[std::make_pair(fn, tn)] =  static_cast<uint64_t>(std::ceil(xfer_size_tmp));
                         }
                         else {
                             float xfer_size_tmp=0;
-                            xfer_size_tmp = total_xfer_size*1.0*weight_matrix[tn_expid%8][fn_expid%8]/32768;
+                            xfer_size_tmp = total_xfer_size*1.0*weight_matrix[tn_expid%weight_matrix.size()][fn_expid%weight_matrix.size()]/32768;
                             operator_sizes[std::make_pair(fn, tn)] =  static_cast<uint64_t>(std::ceil(xfer_size_tmp));
                         }
                         if(is_first)
@@ -486,6 +494,123 @@ void FFApplication::load_taskgraph_flatbuf(std::string & taskgraph, std::string 
         }
         counters[this_task.taskid()] = this_task.counter();
         tasks[this_task.taskid()]->name=this_task.name()->str();
+    }
+}
+
+// Loader for the (revived) TaskGraphProtoBuf schema (taskgraph.proto). This is a
+// simpler, non-training-specific sibling of load_taskgraph_flatbuf above: it carries
+// only point-to-point TASK_COMM/TASK_P2P/TASK_ALLTOALL and plain compute tasks (no
+// ring-allreduce family), which is what a serving/inference workload (e.g. an
+// LLMServingSim-exported MoE expert dispatch/combine step) actually needs. Mirrors
+// the flatbuf loader's structure field-for-field so the same active FFTask/FFDevice/
+// FFAlltoAll/FFP2P constructors are reused unmodified.
+void FFApplication::load_taskgraph_protobuf(std::string & taskgraph, std::string & weight_matrix_file) {
+    string buffer;
+    bool success = FFApplication::LoadFileRaw(taskgraph.c_str(), &buffer);
+    if (!success) {
+        assert("Failed to read file!" && false);
+    }
+    load_weight_matrix(weight_matrix_file, weight_matrix);
+
+    TaskGraphProtoBuf::TaskGraph pb_tg;
+    if (!pb_tg.ParseFromString(buffer)) {
+        std::cerr << "ERROR: protobuf parse failed for file: " << taskgraph << std::endl;
+        std::cerr << "File size: " << buffer.size() << " bytes" << std::endl;
+        assert("TaskGraphProtoBuf parse failed!" && false);
+    }
+
+    ngpupernode = pb_tg.ngpupernode();
+    nnodes = pb_tg.nnode();
+    dp_degree = pb_tg.dp_degree();
+    tp_degree = pb_tg.tp_degree();
+    pp_degree = pb_tg.pp_degree();
+    ep_degree = pb_tg.ep_degree();
+    std::cerr << " dp_degree " << dp_degree << " tp_degree " << tp_degree << " pp_degree " << pp_degree << " ep_degree " << ep_degree << std::endl;
+    if (gpus.empty()) {
+        gpus.resize(nnodes);
+        std::iota(std::begin(gpus), std::end(gpus), 0);
+    }
+
+    // load devices
+    for (int i = 0; i < pb_tg.devices_size(); i++) {
+        const auto & dev = pb_tg.devices(i);
+        devices[dev.deviceid()] = new FFDevice(
+            this,
+            TaskGraphProtoBuf::Device_DeviceType_Name(dev.type()),
+            (float)dev.bandwidth(),
+            (int)dev.nodeid(),
+            (int)dev.gpuid(),
+            (int)dev.fromnode(),
+            (int)dev.tonode(),
+            (int)dev.fromgpu(),
+            (int)dev.togpu()
+        );
+    }
+
+    // load tasks
+    std::cerr << "load_taskgraph_protobuf: start load tasks, total=" << pb_tg.tasks_size() << std::endl;
+    int is_first = global_operator_sizes.empty() ? 1 : 0;
+    for (int i = 0; i < pb_tg.tasks_size(); i++) {
+        const auto & this_task = pb_tg.tasks(i);
+        assert(tasks.find(this_task.taskid()) == tasks.end());
+
+        if (this_task.type() == TaskGraphProtoBuf::Task_SimTaskType_TASK_ALLTOALL) {
+            std::vector<uint64_t> from_node, to_node;
+            std::unordered_map<std::pair<int, int>, uint64_t, pair_hash> operator_sizes;
+            for (int j = 0; j < this_task.from_node_ids_size(); j++) from_node.push_back(this_task.from_node_ids(j));
+            for (int k = 0; k < this_task.to_node_ids_size(); k++) to_node.push_back(this_task.to_node_ids(k));
+
+            uint64_t total_xfer_size = this_task.xfersize() * ep_degree; // no need to x tp_degree
+            for (int j = 0; j < this_task.from_node_ids_size() / tp_degree; j++) {
+                for (int k = 0; k < this_task.to_node_ids_size() / tp_degree; k++) {
+                    for (int tp_idx = 0; tp_idx < tp_degree; tp_idx++) {
+                        auto fn = this_task.from_node_ids(j * tp_degree + tp_idx);
+                        auto tn = this_task.to_node_ids(k * tp_degree + tp_idx);
+                        auto fn_expid = (fn / tp_degree) % ep_degree;
+                        auto tn_expid = (tn / tp_degree) % ep_degree;
+                        float xfer_size_tmp;
+                        if ((this_task.info().find("GROUP_BY") != std::string::npos && this_task.info().find("forward") != std::string::npos)
+                         || (this_task.info().find("AGGREGATE") != std::string::npos && this_task.info().find("backward") != std::string::npos)) {
+                            xfer_size_tmp = total_xfer_size * 1.0 * weight_matrix[fn_expid % weight_matrix.size()][tn_expid % weight_matrix.size()] / 32768;
+                        } else {
+                            xfer_size_tmp = total_xfer_size * 1.0 * weight_matrix[tn_expid % weight_matrix.size()][fn_expid % weight_matrix.size()] / 32768;
+                        }
+                        operator_sizes[std::make_pair(fn, tn)] = static_cast<uint64_t>(std::ceil(xfer_size_tmp));
+                        if (is_first) global_operator_sizes[std::make_pair(fn, tn)] = operator_sizes[std::make_pair(fn, tn)];
+                    }
+                }
+            }
+            tasks[this_task.taskid()] = new FFAlltoAll(
+                this, this_task.taskid(), this_task.counter(), from_node, to_node, operator_sizes,
+                this_task.info(), this_task.micro_batch_id(), this_task.layer_id(),
+                this_task.target_micro_batch_id(), this_task.target_layer_id(), this_task.runtime()
+            );
+        }
+        else if (this_task.type() == TaskGraphProtoBuf::Task_SimTaskType_TASK_P2P) {
+            std::vector<uint64_t> from_nodes, to_nodes;
+            for (int j = 0; j < this_task.from_node_ids_size(); j++) from_nodes.push_back(this_task.from_node_ids(j));
+            for (int j = 0; j < this_task.to_node_ids_size(); j++) to_nodes.push_back(this_task.to_node_ids(j));
+            assert(from_nodes.size() == to_nodes.size());
+            tasks[this_task.taskid()] = new FFP2P(
+                this, this_task.taskid(), this_task.counter(), from_nodes, to_nodes, this_task.xfersize(),
+                this_task.info(), this_task.micro_batch_id(), this_task.layer_id(),
+                this_task.target_micro_batch_id(), this_task.target_layer_id(), this_task.runtime()
+            );
+        }
+        else {
+            tasks[this_task.taskid()] = new FFTask(
+                this, TaskGraphProtoBuf::Task_SimTaskType_Name(this_task.type()), devices[this_task.deviceid()],
+                this_task.taskid(), this_task.xfersize(), this_task.runtime(), this_task.counter(),
+                this_task.info(), this_task.micro_batch_id(), this_task.layer_id(),
+                this_task.target_micro_batch_id(), this_task.target_layer_id()
+            );
+        }
+
+        for (int j = 0; j < this_task.nexttasks_size(); j++) {
+            tasks[this_task.taskid()]->next_tasks.push_back(this_task.nexttasks(j));
+        }
+        counters[this_task.taskid()] = this_task.counter();
+        tasks[this_task.taskid()]->name = this_task.name();
     }
 }
 
@@ -1084,6 +1209,17 @@ void FFTask::cleanup() {
                 }
                 eventlist().sourceIsPending(*task, task->ready_time + ffapp->topomanager->reconf_delay + 10);// add some delay for reconfig
             }
+            else if (task->type == FFTask::TASK_ALLTOALL && ffapp->thermal_tuning_delay_ps > 0) {
+                // Thermal-tuning stall: ring/disk modulators must re-lock wavelength before this
+                // all-to-all round can start transmitting optically. Applied ONCE per round here
+                // (not as a per-packet link propagation delay, which would compound every RTT).
+                // IMPORTANT: update ready_time itself (not just the event's firing time) -- other
+                // code (e.g. FFTask::start_flow's `start_time = ready_time`) reads ready_time
+                // directly once doNextEvent() runs, so a stale value would schedule things in the
+                // past relative to eventlist().now() once we jump forward by the delay.
+                task->ready_time += ffapp->thermal_tuning_delay_ps;
+                eventlist().sourceIsPending(*task, task->ready_time);
+            }
             else{
                 eventlist().sourceIsPending(*task, task->ready_time);
             }
@@ -1359,9 +1495,10 @@ void FFRingAllreduce::start_flow(int src_idx, int id) {
     f->id = id;
     f->src_idx = src_gpu;
 
-    if ((src_gpu / NUM_GPU_PER_NODE) == (dst_gpu / NUM_GPU_PER_NODE)) { 
+    if (src_gpu == dst_gpu || (!ffapp->disable_intra_node_shortcut && (src_gpu / NUM_GPU_PER_NODE) == (dst_gpu / NUM_GPU_PER_NODE))) {
         //std::cerr << "intra-node communication" << std::endl;
-        //intra-node communication
+        //intra-node communication: a true self-loop (src==dst) is always a no-op, regardless of
+        //the shortcut flag -- it never needs a real network flow/route.
         finish_time = start_time + timeFromSec((operator_size / node_group.size()) / ffapp->nvlink_bandwidth);//refer to flexflow simulation
         std::cerr << "intra-node communication" << " start time: "<< start_time <<" transmission time: " << timeFromSec((operator_size / node_group.size()) / ffapp->nvlink_bandwidth) << " transmission size "<< operator_size << " group size" << node_group.size() << " nvlink bandwidth" << ffapp->nvlink_bandwidth << " finish time "<< finish_time << std::endl;
         ar_finish_ring(f);
@@ -1897,9 +2034,10 @@ void FFReduceScatter::start_flow(int src_idx, int id) {
     f->rs = this;
     f->id = id;
 
-    if ((src_node / NUM_GPU_PER_NODE) == (dst_node / NUM_GPU_PER_NODE)) { 
+    if (src_node == dst_node || (!ffapp->disable_intra_node_shortcut && (src_node / NUM_GPU_PER_NODE) == (dst_node / NUM_GPU_PER_NODE))) {
         //std::cerr << "intra-node communication" << std::endl;
-        //intra-node communication
+        //intra-node communication: a true self-loop (src==dst) is always a no-op, regardless of
+        //the shortcut flag -- it never needs a real network flow/route.
         finish_time = start_time + timeFromSec((operator_size / node_group.size()) / ffapp->nvlink_bandwidth);//refer to flexflow simulation
         std::cerr << "intra-node communication" << " start time: "<< start_time <<" transmission time: " << timeFromSec((operator_size / node_group.size()) / ffapp->nvlink_bandwidth) << " transmission size "<< operator_size << " group size" << node_group.size() << " nvlink bandwidth" << ffapp->nvlink_bandwidth << " finish time "<< finish_time << std::endl;
         ar_finish_reducescatter(f);
@@ -1909,7 +2047,7 @@ void FFReduceScatter::start_flow(int src_idx, int id) {
     // Transform src_gpu to src_node, dst_gpu to dst_node
     int src_gpu = src_node % NUM_GPU_PER_NODE;
     int dst_gpu = dst_node % NUM_GPU_PER_NODE;
-    if (src_gpu != dst_gpu) {
+    if (!ffapp->disable_intra_node_shortcut && src_gpu != dst_gpu) {
         // add intra-node communication time
         finish_time += timeFromSec((operator_size / node_group.size()) / ffapp->nvlink_bandwidth);
     }
@@ -2029,9 +2167,10 @@ void FFAllGather::start_flow(int src_idx, int id) {
     f->ag = this;
     f->id = id;
 
-    if ((src_node / NUM_GPU_PER_NODE) == (dst_node / NUM_GPU_PER_NODE)) { 
+    if (src_node == dst_node || (!ffapp->disable_intra_node_shortcut && (src_node / NUM_GPU_PER_NODE) == (dst_node / NUM_GPU_PER_NODE))) {
         //std::cerr << "intra-node communication" << std::endl;
-        //intra-node communication
+        //intra-node communication: a true self-loop (src==dst) is always a no-op, regardless of
+        //the shortcut flag -- it never needs a real network flow/route.
         finish_time = start_time + timeFromSec((operator_size / node_group.size()) / ffapp->nvlink_bandwidth);//refer to flexflow simulation
         std::cerr << "intra-node communication" << " start time: "<< start_time <<" transmission time: " << timeFromSec((operator_size / node_group.size()) / ffapp->nvlink_bandwidth) << " transmission size "<< operator_size << " group size" << node_group.size() << " nvlink bandwidth" << ffapp->nvlink_bandwidth << " finish time "<< finish_time << std::endl;
         ar_finish_allgather(f);
@@ -2041,7 +2180,7 @@ void FFAllGather::start_flow(int src_idx, int id) {
     // Transform src_gpu to src_node, dst_gpu to dst_node
     int src_gpu = src_node % NUM_GPU_PER_NODE;
     int dst_gpu = dst_node % NUM_GPU_PER_NODE;
-    if (src_gpu != dst_gpu) {
+    if (!ffapp->disable_intra_node_shortcut && src_gpu != dst_gpu) {
         // add intra-node communication time
         finish_time += timeFromSec((operator_size / node_group.size()) / ffapp->nvlink_bandwidth);
     }
@@ -2203,8 +2342,8 @@ void FFAlltoAll::start_flow(int src_gpu, int dst_gpu) {
     f->src_idx = src_gpu;
     f->dst_idx = dst_gpu;
 
-    if ((src_gpu / NUM_GPU_PER_NODE) == (dst_gpu / NUM_GPU_PER_NODE)) {
-        // intra-node communication
+    if (src_gpu == dst_gpu || (!ffapp->disable_intra_node_shortcut && (src_gpu / NUM_GPU_PER_NODE) == (dst_gpu / NUM_GPU_PER_NODE))) {
+        // intra-node communication (or a true self-loop, always a no-op regardless of the shortcut flag)
         finish_time = start_time + timeFromSec(flow_size / ffapp->nvlink_bandwidth);
         std::cerr << "intra-node communication" << " start time: "<< start_time <<" transmission time: " << timeFromSec(flow_size / ffapp->nvlink_bandwidth) << " transmission size "<< flow_size << " nvlink bandwidth" << ffapp->nvlink_bandwidth << " finish time "<< finish_time << std::endl;
         f->intra_node_routing++;
@@ -2375,8 +2514,8 @@ void FFP2P::start_flow(uint64_t src_gpu, uint64_t dst_gpu) {
     flow->src_idx = src_gpu;
     flow->dst_idx = dst_gpu;
 
-    if ((src_gpu / NUM_GPU_PER_NODE) == (dst_gpu / NUM_GPU_PER_NODE)) {
-        // intra-node communication
+    if (src_gpu == dst_gpu || (!ffapp->disable_intra_node_shortcut && (src_gpu / NUM_GPU_PER_NODE) == (dst_gpu / NUM_GPU_PER_NODE))) {
+        // intra-node communication (or a true self-loop, always a no-op regardless of the shortcut flag)
         simtime_picosec done_time = start_time + timeFromSec(operator_size / ffapp->nvlink_bandwidth);//refer to flexflow simulation
         finish_time = std::max(finish_time, done_time);
         std::cerr << "intra-node communication" << " start time: "<< start_time <<" transmission time: " << timeFromSec(operator_size / ffapp->nvlink_bandwidth) << " transmission size "<< operator_size << " nvlink bandwidth" << ffapp->nvlink_bandwidth << " finish time "<< finish_time << std::endl;

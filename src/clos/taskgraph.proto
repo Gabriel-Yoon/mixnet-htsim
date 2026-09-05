@@ -82,6 +82,8 @@ message Task {
     TASK_UPDATE = 3;
     TASK_BARRIER = 4;
     TASK_LATENCY = 5;
+    TASK_P2P = 6;
+    TASK_ALLTOALL = 7;
   };
   required SimTaskType type = 1;
   required uint64 taskid = 2;
@@ -89,7 +91,20 @@ message Task {
   required uint64 opid = 4;
   required float runtime = 5;
   optional uint64 xfersize = 6 [default = 0];
-  repeated uint64 nexttasks = 7 [packed=true]; 
+  repeated uint64 nexttasks = 7 [packed=true];
+  // Added for LLMServingSim (serving traffic) bridging: FFAlltoAll/FFP2P group
+  // membership and metadata, mirroring the richer FlexFlow FlatBuffer schema's
+  // per-task fields so the same active FFTask/FFAlltoAll/FFP2P C++ constructors
+  // can be reused unmodified by a new protobuf loader.
+  repeated uint64 from_node_ids = 8 [packed = true];
+  repeated uint64 to_node_ids = 9 [packed = true];
+  optional string info = 10 [default = ""];
+  optional int32 micro_batch_id = 11 [default = 0];
+  optional int32 layer_id = 12 [default = 0];
+  optional int32 target_micro_batch_id = 13 [default = 0];
+  optional int32 target_layer_id = 14 [default = 0];
+  optional string name = 15 [default = ""];
+  optional int32 counter = 16 [default = 0];
 }
 
 message Device {
@@ -127,4 +142,8 @@ message TaskGraph {
   repeated Operator ops = 7;
   repeated Task tasks = 8;
   repeated Device devices = 9;
+  optional int32 dp_degree = 10 [default = 1];
+  optional int32 tp_degree = 11 [default = 1];
+  optional int32 pp_degree = 12 [default = 1];
+  optional int32 ep_degree = 13 [default = 1];
 }

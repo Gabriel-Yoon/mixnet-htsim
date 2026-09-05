@@ -1,8 +1,10 @@
 // -*- c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t -*-
+// Driver for WaferRowColTopology: imec-style system-on-wafer topology (NxM GPUs/wafer,
+// row/col intra-wafer mesh, gateway-based inter-wafer routing). See wafer_rowcol_topology.h.
 #include "config.h"
 #include <sstream>
 #include <strstream>
-#include <fstream> // need to read flows
+#include <fstream>
 #include <iostream>
 #include <string.h>
 #include <math.h>
@@ -23,35 +25,28 @@
 #include "compositequeue.h"
 #include "firstfit.h"
 #include "topology.h"
-//#include "connection_matrix.h"
 
-// Choose the topology here:
-// #include "test_topology.h"
-#include "glassfb_topology.h"
+#include "wafer_rowcol_topology.h"
 #include "ffapp.h"
 
 #include <list>
 
-// Simulation params
-
 #define PRINT_PATHS 0
-
 #define PERIODIC 0
 #include "main.h"
 
 uint32_t RTT_rack = 500; // ns
 uint32_t RTT_net = 500;  // ns
-uint32_t RTT = 1000;     // ns (glass-FB per-link)
+uint32_t RTT = 1000;     // ns (per-link)
 uint32_t SPEED;
 std::ofstream fct_util_out;
 
 int DEFAULT_NODES = 128;
 
 FirstFit *ff = NULL;
-//unsigned int subflow_count = 8; // probably not necessary ???
 
-#define DEFAULT_PACKET_SIZE 1500 // full packet (including header), Bytes
-#define DEFAULT_HEADER_SIZE 64   // header size, Bytes
+#define DEFAULT_PACKET_SIZE 1500
+#define DEFAULT_HEADER_SIZE 64
 #define DEFAULT_QUEUE_SIZE 200
 
 #define DEFAULT_SPEED 40000
@@ -67,20 +62,6 @@ void exit_error(char *progr, char *param)
     cerr << "Bad parameter: " << param << endl;
     cerr << "Usage " << progr << " [UNCOUPLED(DEFAULT)|COUPLED_INC|FULLY_COUPLED|COUPLED_EPSILON] [epsilon][COUPLED_SCALABLE_TCP]" << endl;
     exit(1);
-}
-
-void print_path(std::ofstream &paths, const Route *rt)
-{
-    for (unsigned int i = 1; i < rt->size() - 1; i += 2)
-    {
-        RandomQueue *q = (RandomQueue *)rt->at(i);
-        if (q != NULL)
-            paths << q->str() << " ";
-        else
-            paths << "NULL ";
-    }
-
-    paths << endl;
 }
 
 std::string getCurrentDateTime() {
@@ -100,22 +81,14 @@ std::string getExecutableName() {
         std::filesystem::path execPath(std::string(buffer, count));
         return execPath.filename().string();
     } else {
-        // 处理读取错误的情况
         std::cerr << "Error reading the executable path." << std::endl;
         return "";
     }
 }
-int find_nonum(int _no_nodes){
-  int k=0;
-  while( k*k*k/4 < _no_nodes){
-    k+=4;
-  }
-  return k*k*k/4;
-}
+
 int main(int argc, char **argv)
 {
-
-    TcpPacket::set_packet_size(DEFAULT_PACKET_SIZE - DEFAULT_HEADER_SIZE); // MTU
+    TcpPacket::set_packet_size(DEFAULT_PACKET_SIZE - DEFAULT_HEADER_SIZE);
     mem_b queuesize = DEFAULT_QUEUE_SIZE * DEFAULT_PACKET_SIZE;
 
     int algo = UNCOUPLED;
@@ -124,29 +97,32 @@ int main(int argc, char **argv)
 
     int no_of_nodes = DEFAULT_NODES;
     SPEED = DEFAULT_SPEED;
-    // fct_util_out = std::cout;
 
-    // Default flowfile path
-    string flowfile = "../../../test/taskgraph.fbuf";       // so we can read the flows from a specified file
+    string flowfile = "../../../test/taskgraph.fbuf";
     string weight_matrix_file = "../../../test/num_global_tokens_per_expert.txt";
-    // Default log dir = ./logs/
     string logdir = "";
     string ofile = "";
 
-    double simtime;        // seconds
-    double utiltime = .01; // seconds
+    double simtime;
+    double utiltime = .01;
 
-    // stringstream filename(ios_base::out);
+    // WaferConfig defaults: 4x4=16 GPUs/wafer (matches the ICCAD2026 manuscript's "each wafer
+    // integrates a 4x4 GPU array"); link speeds default to the project's established
+    // distance-layered numbers (elec 1800 GB/s intra-node-adjacent-class RDL link, 200 GB/s
+    // inter-wafer optical fiber gateway) -- override via CLI for a DSE sweep.
+    int wafer_rows = 4, wafer_cols = 4;
+    uint64_t intra_speed_mbps = 1800ULL * 8000; // 1800 GB/s (GB/s -> Mbit/s: x8000, matches glassfb_topology.cpp's convention)
+    uint64_t inter_speed_mbps = 200ULL * 8000;  // 200 GB/s
+    simtime_picosec intra_delay_ps = 78000;   // 78 ns: real link propagation delay (physical constant,
+                                               // applied per-packet -- NOT the thermal tuning delay)
+    simtime_picosec inter_delay_ps = 500000;  // 500 ns
+    bool disable_intra_shortcut = true; // wafer topology should route through get_paths, not NVLink shortcut
+    simtime_picosec thermal_delay_ps = 0;     // one-time per-all-to-all-round stall (ring-modulator
+                                               // wavelength re-lock time); see -thermal-delay (ns)
+
     int i = 1;
-    // filename << "logout.dat";
-
     while (i < argc)
     {
-        //   if (!strcmp(argv[i],"-o")){
-        //       filename.str(std::string());
-        //       filename << argv[i+1];
-        //       i++;
-        //   } else
         if (!strcmp(argv[i], "-nodes"))
         {
             no_of_nodes = atoi(argv[i + 1]);
@@ -158,6 +134,48 @@ int main(int argc, char **argv)
             SPEED = atoi(argv[i + 1]);
             cout << "speed " << SPEED << endl;
             i++;
+        }
+        else if (!strcmp(argv[i], "-wafer-rows"))
+        {
+            wafer_rows = atoi(argv[i + 1]);
+            i++;
+        }
+        else if (!strcmp(argv[i], "-wafer-cols"))
+        {
+            wafer_cols = atoi(argv[i + 1]);
+            i++;
+        }
+        else if (!strcmp(argv[i], "-intra-speed"))
+        {
+            // GB/s on the CLI (matches the default's unit); converted to Mbit/s (x8000) for speedFromMbps()
+            intra_speed_mbps = (uint64_t)(atof(argv[i + 1]) * 8000.0);
+            i++;
+        }
+        else if (!strcmp(argv[i], "-inter-speed"))
+        {
+            inter_speed_mbps = (uint64_t)(atof(argv[i + 1]) * 8000.0);
+            i++;
+        }
+        else if (!strcmp(argv[i], "-intra-delay"))
+        {
+            // nanoseconds on the CLI (matches the recovered sweep's intra_delay_ns naming)
+            intra_delay_ps = (simtime_picosec)atof(argv[i + 1]) * 1000ULL;
+            i++;
+        }
+        else if (!strcmp(argv[i], "-inter-delay"))
+        {
+            inter_delay_ps = (simtime_picosec)atof(argv[i + 1]) * 1000ULL;
+            i++;
+        }
+        else if (!strcmp(argv[i], "-thermal-delay"))
+        {
+            // nanoseconds on the CLI; one-time stall per all-to-all round (not a link latency)
+            thermal_delay_ps = (simtime_picosec)atof(argv[i + 1]) * 1000ULL;
+            i++;
+        }
+        else if (!strcmp(argv[i], "-enable-intra-shortcut"))
+        {
+            disable_intra_shortcut = false;
         }
         else if (!strcmp(argv[i], "-rttrack"))
         {
@@ -244,14 +262,12 @@ int main(int argc, char **argv)
     eventlist.setEndtime(timeFromSec(simtime));
     Clock c(timeFromSec(5 / 100.), eventlist);
 
-    // if log_dir not set, use default format
     if (logdir == "")
     {
         std::string dateTime = getCurrentDateTime();
         std::string executableName = getExecutableName();
         logdir = "./logs/" + executableName + "_" + dateTime;
         std::filesystem::create_directories(logdir);
-
         std::cout << "Log directory created: " << logdir << std::endl;
     }
     else if (!std::filesystem::exists(logdir))
@@ -267,10 +283,8 @@ int main(int argc, char **argv)
         fct_util_out.open(ofile_path);
     }
     else {
-        // check if ofile is a path and obtain its basename
         std::filesystem::path filePath(ofile);
         if (filePath.has_parent_path()) {
-            // 取最后一个basename作为文件名
             ofile = filePath.filename().string();
         }
         ofile_path = logdir + "/" + ofile;
@@ -285,90 +299,47 @@ int main(int argc, char **argv)
 
     std::cout << "Output file is open and ready for writing: " << (ofile == "" ? "fct_util_out.txt" : ofile) << std::endl;
 
-    //cout <<  "Using algo="<<algo<< " epsilon=" << epsilon << endl;
-
-    //Logfile logfile(filename.str(), eventlist);
-
-#if PRINT_PATHS
-    filename << ".paths";
-    cout << "Logging path choices to " << filename.str() << endl;
-    std::ofstream paths(filename.str().c_str());
-    if (!paths)
-    {
-        cout << "Can't open for writing paths file!" << endl;
-        exit(1);
-    }
-#endif
-
-    //lg = &logfile;
-
-    //logfile.setStartTime(timeFromSec(10));
-
-    // TcpSinkLoggerSampling sinkLogger = TcpSinkLoggerSampling(timeFromUs(50.), eventlist);
-    //logfile.addLogger(sinkLogger);
-    // TcpTrafficLogger traffic_logger = TcpTrafficLogger();
-    // traffic_logger.fct_util_out = &fct_util_out;
-    //logfile.addLogger(traffic_logger);
-
-
-    //No need to agg as a big NIC
-    // assert(no_of_nodes % NUM_GPU_PER_NODE == 0 && "no_of_nodes should be a multiple of NUM_GPU_PER_NODE");
-    // no_of_nodes = no_of_nodes / NUM_GPU_PER_NODE;
-    // SPEED = SPEED * NUM_GPU_PER_NODE;
     std::cerr << "Bandwidth per node: " << SPEED << std::endl;
     TcpRtxTimerScanner tcpRtxScanner(timeFromMs(1), eventlist);
-    // glass-FB uses the exact requested node count (panels x panel-size), not the
-    // fat-tree k^3/4 rounding, so panel counts stay exact (e.g. 144 = 4 x 36, not 432).
-    GlassFBTopology *top = new GlassFBTopology(no_of_nodes, queuesize, nullptr /*&logfile*/, &eventlist, ff, ECN);
-    // note that 'queuesize' does not pass throuf_nodesgh currently for RANDOM...
 
-    // FFApplication app = FFApplication(top, ssthresh, sinkLogger, traffic_logger, tcpRtxScanner, eventlist);
+    WaferConfig cfg;
+    cfg.wafer_rows = wafer_rows;
+    cfg.wafer_cols = wafer_cols;
+    cfg.total_gpus = no_of_nodes;
+    cfg.intra_link_speed = intra_speed_mbps;
+    cfg.intra_link_delay = intra_delay_ps;
+    cfg.inter_link_speed = inter_speed_mbps;
+    cfg.inter_link_delay = inter_delay_ps;
+    std::cout << "Wafer topology: " << wafer_rows << "x" << wafer_cols << " ("
+              << cfg.gpus_per_wafer() << " GPUs/wafer, " << cfg.num_wafers() << " wafers), "
+              << "intra=" << intra_speed_mbps << " Mbps/" << (intra_delay_ps / 1000) << " ns, "
+              << "inter=" << inter_speed_mbps << " Mbps/" << (inter_delay_ps / 1000) << " ns" << std::endl;
+
+    WaferRowColTopology *top = new WaferRowColTopology(cfg, queuesize, nullptr /*&logfile*/, &eventlist, ff);
+
     FFApplication app = FFApplication(top, ssthresh, logdir, &fct_util_out, tcpRtxScanner, eventlist);
-    // Dispatch by extension: ".pb" flow files use the (revived) TaskGraphProtoBuf
-    // schema (see taskgraph.proto) -- a simpler, non-FlexFlow-training-specific
-    // bridge intended for serving/inference workloads (e.g. exported from
-    // LLMServingSim); everything else keeps using the FlexFlow FlatBuffer path.
-    if (flowfile.size() >= 3 && flowfile.compare(flowfile.size() - 3, 3, ".pb") == 0) {
-        app.load_taskgraph_protobuf(flowfile, weight_matrix_file);
-    } else {
-        app.load_taskgraph_flatbuf(flowfile, weight_matrix_file);
-    }
+    app.disable_intra_node_shortcut = disable_intra_shortcut;
+    app.thermal_tuning_delay_ps = thermal_delay_ps;
+    app.load_taskgraph_flatbuf(flowfile, weight_matrix_file);
     app.start_init_tasks();
 
-    // UtilMonitor* UM = new UtilMonitor(top, eventlist);
-    // UM->start(timeFromSec(utiltime));
-
-    // Record the setup
     int pktsize = Packet::data_packet_size();
-    //logfile.write("# pktsize=" + ntoa(pktsize) + " bytes");
-    //logfile.write("# subflows=" + ntoa(subflow_count));
-    //logfile.write("# hostnicrate = " + ntoa(SPEED) + " pkt/sec");
-    //logfile.write("# corelinkrate = " + ntoa(SPEED*CORE_TO_HOST) + " pkt/sec");
-    //logfile.write("# buffer = " + ntoa((double) (queues_na_ni[0][1]->_maxsize) / ((double) pktsize)) + " pkt");
-    //double rtt = timeAsSec(timeFromUs(RTT));
-    //logfile.write("# rtt =" + ntoa(rtt));
 
     auto start = std::chrono::high_resolution_clock::now();
-    // GO!
-    int counter=0;
+    int counter = 0;
     while (eventlist.doNextEvent())
     {
         counter++;
-        // std::cerr << "do next event counter"<<counter << std::endl;
     }
 
     auto end = std::chrono::high_resolution_clock::now();
-    // Calculate the duration
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-
-    // Convert the duration to hours, minutes, and seconds
     auto hours = std::chrono::duration_cast<std::chrono::hours>(duration);
     duration -= hours;
     auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
     duration -= minutes;
     auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
 
-    // Output the duration in hour:minute:second format
     std::cout << "Total simulation duration: ";
     std::cout << std::setw(2) << std::setfill('0') << hours.count() << "h"
               << std::setw(2) << std::setfill('0') << minutes.count() << "m"

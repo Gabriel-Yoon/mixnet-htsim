@@ -126,10 +126,58 @@ public:
   }
   int prow(int p) const { return p / _ppc; }
   int pcol(int p) const { return p % _ppc; }
+
+  // mode 2 = true 4-edge mesh: a panel has AT MOST 4 physical neighbors (N/S/E/W in
+  // the panel grid), each reachable only via that one dedicated physical edge -- unlike
+  // mode 0/1, GPUs are NOT a free-floating pool; each of the panel's 4 sides is a fixed,
+  // disjoint set of _pcols (N/S) or _prows (E/W) GPUs (a full row/column of the intra-
+  // panel grid), and only THAT side's GPUs can host a fiber facing THAT direction.
+  enum { DIR_N = 0, DIR_S = 1, DIR_E = 2, DIR_W = 3 };
+  int edge_pool_size(int dir) const { return (dir == DIR_N || dir == DIR_S) ? _pcols : _prows; }
+  // local index (within the panel) of gateway slot g on the edge facing `dir`.
+  int edge_local(int dir, int g) const {
+    int sz = edge_pool_size(dir);
+    g = ((g % sz) + sz) % sz;
+    switch (dir) {
+      case DIR_N: return g;                          // row 0 (top edge)
+      case DIR_S: return (_prows - 1) * _pcols + g;   // last row (bottom edge)
+      case DIR_E: return g * _pcols + (_pcols - 1);   // last col (right edge)
+      default:    return g * _pcols;                  // col 0 (left edge)
+    }
+  }
+  // which physical direction, from panel p, does immediate neighbor q sit in? false if
+  // q is not an immediate (mesh-adjacent) panel-grid neighbor of p.
+  bool mesh_neighbor(int p, int q, int &dir) const {
+    int dr = prow(q) - prow(p), dc = pcol(q) - pcol(p);
+    if (dr == 0 && dc == 1)  { dir = DIR_E; return true; }
+    if (dr == 0 && dc == -1) { dir = DIR_W; return true; }
+    if (dc == 0 && dr == 1)  { dir = DIR_S; return true; }
+    if (dc == 0 && dr == -1) { dir = DIR_N; return true; }
+    return false;
+  }
+  // panel-level XY (dimension-order) route from panel p to panel q: match column
+  // first (E/W steps), then row (N/S steps). Each step is one mesh_neighbor() hop.
+  vector<int> panel_path(int p, int q) const {
+    vector<int> path; path.push_back(p);
+    int cp = p;
+    while (pcol(cp) != pcol(q)) {
+      int step = pcol(q) > pcol(cp) ? 1 : -1;
+      cp = prow(cp) * _ppc + (pcol(cp) + step);
+      path.push_back(cp);
+    }
+    while (prow(cp) != prow(q)) {
+      int step = prow(q) > prow(cp) ? 1 : -1;
+      cp = (prow(cp) + step) * _ppc + pcol(cp);
+      path.push_back(cp);
+    }
+    return path;
+  }
   // do panels p,q carry a direct optical link?
   bool panels_conn(int p, int q) const {
     if (p == q) return false;
-    return _mode == 0 ? true : (prow(p) == prow(q) || pcol(p) == pcol(q));
+    if (_mode == 0) return true;
+    if (_mode == 2) { int d; return mesh_neighbor(p, q, d); }
+    return prow(p) == prow(q) || pcol(p) == pcol(q);
   }
   // local gateway index in panel p for the optical link toward panel q: the rank of
   // q among p's connected panels (compacted, so it is bounded by the panel degree).
@@ -147,6 +195,11 @@ public:
   // slots (slot(p,q)*_gw_parallel .. +g); wraps if that exceeds _psize (OCS-FC /
   // forced dragonfly at large P, or _gw_parallel too large for panel_degree()).
   int gw(int p, int q, int g = 0) const {
+    if (_mode == 2) {
+      int dir;
+      if (!mesh_neighbor(p, q, dir)) return p * _psize; // not adjacent; caller error
+      return phys_inv(p * _psize + edge_local(dir, g));
+    }
     int base = slot(p, q) * _gw_parallel;
     int gg = _gw_parallel > 1 ? (g % _gw_parallel) : 0;
     return phys_inv(p * _psize + (base + gg) % _psize);
@@ -159,6 +212,7 @@ public:
   }
   // optical egress ports a panel needs = its inter-panel degree
   int panel_degree() const {
+    if (_mode == 2) return 4; // ceiling; corner/edge panel-grid positions have fewer
     return _mode == 0 ? (_P - 1) : ((_ppr - 1) + (_ppc - 1));
   }
   // inter-panel (optical) direct link between two specific gateway nodes (any of

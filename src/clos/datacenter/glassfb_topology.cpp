@@ -61,7 +61,10 @@ void GlassFBTopology::set_params(int no_of_nodes)
   // tier-2: number of panels and inter-panel mode.
   _P = no_of_nodes / _psize;
   _mode = 0; // dragonfly
-  if (const char *e = getenv("GLASS_INTER")) if (strcmp(e, "fb2") == 0) _mode = 1;
+  if (const char *e = getenv("GLASS_INTER")) {
+    if (strcmp(e, "fb2") == 0) _mode = 1;
+    else if (strcmp(e, "mesh") == 0) _mode = 2; // true 4-edge mesh, see panels_conn()/gw()
+  }
   // panel grid for 2-level FB: ppc = largest divisor of _P <= sqrt(_P).
   int ppc = (int)(sqrt((double)_P) + 0.5);
   while (ppc > 1 && _P % ppc != 0) ppc--;
@@ -111,7 +114,17 @@ void GlassFBTopology::set_params(int no_of_nodes)
   if (const char *e = getenv("GLASS_DIM_A2A")) _dim_route = atoi(e) != 0;
   if (const char *e = getenv("GLASS_ECN_K")) { int v = atoi(e); if (v > 0) _ecn_k_pkts = v; }
   if (const char *e = getenv("GLASS_GW_PARALLEL")) { int v = atoi(e); if (v > 0) _gw_parallel = v; }
-  { // clamp: each panel needs panel_degree() reserved blocks of _gw_parallel slots, total <= _psize
+  if (_mode == 2) {
+    // mesh: each of the 4 edges is its OWN disjoint GPU pool (a full row/col of the
+    // panel), independent of how many of the panel's other 3 edges are also active --
+    // so G is capped by that single edge's pool size, not divided by neighbor count.
+    int cap = std::min(_pcols, _prows);
+    if (_gw_parallel > cap) {
+      cout << "GLASS_GW_PARALLEL=" << _gw_parallel << " too large for mesh edge pool ("
+           << cap << " GPUs/edge); clamping to " << cap << endl;
+      _gw_parallel = cap;
+    }
+  } else { // clamp: each panel needs panel_degree() reserved blocks of _gw_parallel slots, total <= _psize
     int deg = panel_degree();
     if (deg > 0 && _gw_parallel > _psize / deg) {
       cout << "GLASS_GW_PARALLEL=" << _gw_parallel << " too large for panel_degree=" << deg
@@ -123,8 +136,9 @@ void GlassFBTopology::set_params(int no_of_nodes)
   cout << "GlassFB 2-tier: " << _P << " panels x " << _psize << " GPU"
        << " (intra " << _prows << "x" << _pcols << " FB, panel diam 2); "
        << "inter-panel = " << (_mode == 0 ? "dragonfly (all-to-all, diam 1)"
-                                          : "2-level FB " ) ;
-  if (_mode == 1) cout << _ppr << "x" << _ppc << " (diam 2)";
+                             : _mode == 2 ? "4-edge mesh " : "2-level FB " ) ;
+  if (_mode == 1 || _mode == 2) cout << _ppr << "x" << _ppc
+      << (_mode == 2 ? " (N/S/E/W neighbors only, XY routed)" : " (diam 2)");
   cout << endl;
   if (_ep_place) cout << "GlassFB EP-aware placement ON (tp=" << _tp_deg << " ep=" << _ep_deg << "): EP-mates -> same panel" << endl;
   if (_dim_route) cout << "GlassFB dimension-order load-balanced (Valiant) intra-panel routing ON" << endl;
@@ -288,8 +302,19 @@ vector<int> GlassFBTopology::node_path(int src, int dest) const
   if (p == q) {
     wp = {src, dest};
   } else if (_mode == 0 || panels_conn(p, q)) {
-    // dragonfly, or 2-level FB with directly-connected panels: one optical hop
+    // dragonfly, or (2-level FB / mesh) with directly-connected/adjacent panels: one hop
     wp = {src, gw(p, q, g), gw(q, p, g), dest};
+  } else if (_mode == 2) {
+    // mesh, non-adjacent panels: multi-hop XY dimension-order routing through however
+    // many intermediate panels the grid distance requires. Each hop rides its own
+    // dedicated edge (disjoint GPU pool -- see gw()/edge_local()), and any intra-panel
+    // hop-to-hop turn within a pass-through panel is handled by the relay insertion
+    // below exactly as for the existing single-relay cases.
+    vector<int> pp = panel_path(p, q);
+    wp.push_back(src);
+    for (size_t i = 0; i + 1 < pp.size(); i++)
+      wp.insert(wp.end(), {gw(pp[i], pp[i + 1], g), gw(pp[i + 1], pp[i], g)});
+    wp.push_back(dest);
   } else {
     // 2-level FB, unconnected panels: relay through panel pm = (p's panel-row, q's panel-col)
     int pm = prow(p) * _ppc + pcol(q);

@@ -88,8 +88,15 @@ std::string getExecutableName() {
 
 int main(int argc, char **argv)
 {
-    TcpPacket::set_packet_size(DEFAULT_PACKET_SIZE - DEFAULT_HEADER_SIZE);
-    mem_b queuesize = DEFAULT_QUEUE_SIZE * DEFAULT_PACKET_SIZE;
+    // Packet size (bytes, incl. header): overridable via -mtu so cross-topology runs can
+    // be pinned to the same *byte* buffer via -q instead of silently differing (flat/
+    // mixnet default to 9000B jumbo frames while this binary defaults to 1500B -- the
+    // same -q value then means a ~6x different queuesize in bytes between them).
+    int packet_size = DEFAULT_PACKET_SIZE;
+    for (int pre_i = 1; pre_i < argc - 1; pre_i++)
+        if (!strcmp(argv[pre_i], "-mtu")) { packet_size = atoi(argv[pre_i + 1]); break; }
+    TcpPacket::set_packet_size(packet_size - DEFAULT_HEADER_SIZE); // MTU
+    mem_b queuesize = DEFAULT_QUEUE_SIZE * packet_size;
 
     int algo = UNCOUPLED;
     double epsilon = 1;
@@ -133,6 +140,12 @@ int main(int argc, char **argv)
         {
             SPEED = atoi(argv[i + 1]);
             cout << "speed " << SPEED << endl;
+            i++;
+        }
+        else if (!strcmp(argv[i], "-mtu"))
+        {
+            // already applied above, before TcpPacket::set_packet_size()/-q
+            cout << "mtu " << packet_size << endl;
             i++;
         }
         else if (!strcmp(argv[i], "-wafer-rows"))

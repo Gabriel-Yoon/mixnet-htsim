@@ -160,3 +160,28 @@ number we can cite. Order of switching on: 1, 2, 3 (inside the domain, cheap, al
 microbenchmark-sourced) → 4, 5 (scale-out, only affects EP>64 rows) → 6, 7 (accounting).
 Every charged row carries the uncharged value as a sensitivity row so the effect of each
 cost is visible on its own.
+
+### 10a. Sourcing outcome (2026-09-06, after search)
+
+Items 1–3 **cannot be sourced** and therefore default **uncharged** (flags present, banner
+tags "uncharged: no published measurement"):
+- η: no achieved-vs-nominal measurement exists for an NVSwitch fabric. De Sensi et al.
+  (SC'24, arXiv:2408.14090) measure GH200 quads with *direct* NVLink 4.0 (no NVSwitch);
+  their "95% of theoretical peak" is the Slingshot inter-node case and their "70%" is
+  LUMI/Infinity Fabric. Their "*CCL achieves around 75% efficiency" intra-node (Alps,
+  Leonardo) is software-inclusive and direct-NVLink; it may appear as one sensitivity row
+  labelled as such — an over-charge bound, not a claim.
+- NVSwitch hop latency: never published by NVIDIA; published GPU-to-GPU latencies are
+  software ping-pong round trips (~10 µs) and would be wrong by ~2 orders of magnitude as
+  a hop latency. 250 ns/hop stays, uncharged.
+- 5/5/4/4 link split: NVIDIA's HGX H100 announcement states only "connects to all four
+  NVSwitches", "fully non-blocking", 900 GB/s bidirectional. The split appears only in
+  third-party blogs. Uniform 18/4 per chip, uncharged.
+
+Position for the paper: NVIDIA's public claim is a fully non-blocking 900 GB/s any-to-any
+domain — which is exactly the analytic island. The packet-level model does not charge a
+factor; it lets contention under the real A2A pattern emerge from queueing. Charged items
+are the sourced ones only: multi-tier rail-optimized scale-out (DGX SuperPOD RA) with a
+measured RDMA end-to-end latency (De Sensi inter-node, 2–4 µs), PCIe Gen5 cap where it
+binds, 8 of 72 stranded GPUs, scale-out switch-port power, 1.55–5 pJ/bit SerDes, NVSwitch
+tray power.

@@ -72,6 +72,35 @@ binary reproduced 46 028 299 484 ps and 6 448 818 088 ps exactly, now with
 `RTO floor: 10000 us (default)` present. The rule cost one re-run and converted
 an assumption into a record.
 
+### Four sub-classes discovered after the original six
+
+The six instances above are all one failure: a setting that was configured but never read.
+Four further failures have since been found that the banner rule provably **cannot** catch,
+because in each the run used exactly what it was handed and reported it accurately.
+
+| # | Sub-class | Instance | Why banners miss it |
+|---|---|---|---|
+| A | **Input provenance** | One task graph was generated with FlexFlow's *measured* attention path while every other used the analytical one, making a layer-scaling comparison across them unreadable | The mode is a property of the input file, not of the run; nothing at run time is wrong |
+| B | **Figure without a producer** | `fig_baselines`, `fig_phases`, `fig_isopower` are committed PNGs whose source CSVs and plotting scripts were not in any repo; `fig_thermal` was drawn from a third run at h=100 000 while its caption says 70 000 | The chain from result to figure was never recorded at all |
+| C | **Post-processing failed silently after a successful solve** | MAPDL wrote to files literally named `%CSVTILE%.csv` because the parameter never substituted; all four expected panel CSVs were absent, and a stale output from a *different configuration* sat in their place looking current | The solve succeeded and its `.rth` is correct; only the extraction failed, and it failed without an error |
+| D | **Uncommitted code that keeps reapplying** | The flat port-cap implementation was written, built and run from a working tree and never committed; a commit referencing its `extern`s would not link from a clean checkout | `git -c rebase.autoStash=true pull --rebase` stashed and reapplied the files cleanly across many commits, so they stayed live in the tree while appearing in none of them |
+
+**Sub-class D is the one that most resembles a correct state.** A working tree that reapplies an
+uncommitted change across every rebase is, at runtime, indistinguishable from a committed one:
+the binary builds, the results are real, and `git status` reports it only in a section nobody
+reads while checking what was staged. The rule that follows is narrow and mechanical:
+
+> **Attribution requires a rebuild from the SHA.** A result is attributable to a commit only once
+> a binary built from that commit has reproduced it. "The committed source is identical to what
+> ran" is the same *it must be fine* inference this document exists to refuse.
+
+Applied: the port-capped flat rows (86.508 ms at EP=16, 67.821 at EP=32) are held **provisional**
+until a rebuild from `1d10a42` reproduces them and the 410 025 604 ps gate bit-exactly.
+
+Sub-class C's rule is the mirror image: **an output file existing is not evidence that the run
+that was supposed to write it did.** Check the timestamp against the solve, not just the name.
+The panel CSVs predated their own `.rth` files by three hours, which is what exposed them.
+
 ### Scope limit
 
 This rule establishes that a parameter was *read*. It says nothing about whether

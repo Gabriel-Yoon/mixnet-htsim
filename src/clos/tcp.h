@@ -15,6 +15,15 @@
 #include <utility>
 //#include "dyn_net_sch.h"
 #include <cstdlib>
+
+// Retransmission-timeout floor, shared by TcpSrc and DCTCPSrc.
+// RFC2988's 1 s and Linux's 200 ms are WAN numbers. This fabric's hops are
+// ~100 ns, so RTT is ~1 us and the stock 10 ms floor sits ~4 orders of
+// magnitude above it -- every timeout wave costs ~10,000 RTTs of dead time,
+// which quantises makespan in RTO_min units and produces large swings from
+// small bandwidth changes. Overridable via GLASS_RTO_MIN_US so the floor can
+// be checked against actual RTT; the default preserves prior behaviour.
+simtime_picosec glass_rto_floor();
 #include <stdexcept>
 #include <cstring>
 #include <limits>

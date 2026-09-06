@@ -6,6 +6,32 @@
 #include <iostream>
 #include <fstream>
 
+simtime_picosec glass_rto_floor() {
+    // Resolved once. A separate parsed flag rather than testing f==0: atof()
+    // returns 0 for any unparseable string, and GLASS_RTO_MIN_US=0 would also
+    // give 0 -- either would silently remove the floor entirely AND defeat the
+    // latch, re-running getenv on every call. A zero floor is never intended.
+    // Units are microseconds, matching ndp.h's existing setMinRTO(uint32_t us).
+    static bool parsed = false;
+    static simtime_picosec f = 0;
+    if (!parsed) {
+        parsed = true;
+        const char *e = getenv("GLASS_RTO_MIN_US");
+        double us = e ? atof(e) : 0.0;
+        if (e && us > 0.0) {
+            f = timeFromUs(us);
+            fprintf(stderr, "RTO floor: %g us (GLASS_RTO_MIN_US)\n", us);
+        } else {
+            if (e)
+                fprintf(stderr, "GLASS_RTO_MIN_US=%s is not a positive number;"
+                                " falling back to the 10 ms default\n", e);
+            f = timeFromMs(10);
+            fprintf(stderr, "RTO floor: 10000 us (default)\n");
+        }
+    }
+    return f;
+}
+
 #define KILL_THRESHOLD 5
 ////////////////////////////////////////////////////////////////
 //  TCP SOURCE
@@ -271,8 +297,8 @@ void TcpSrc::receivePacket(Packet &pkt)
 	}
 	//  cout << "Base "<<timeAsMs(_base_rtt)<< " RTT " << timeAsMs(_rtt)<< " Queued " << queued_packets << endl;
 
-	if (_rto < timeFromMs(10))
-    _rto = timeFromMs(10);
+	if (_rto < glass_rto_floor())
+    _rto = glass_rto_floor();
 
 	// debug:
 	// cerr << this << " hss " << _highest_sent << " seqno = " << seqno << ", _flow_size = " <<  _flow_size << ", _mss = " << _mss << ", packet size = " << pkt.size() << " cwnd " << _cwnd << " ssthresh " << _ssthresh << " time " << eventlist().now() << endl;

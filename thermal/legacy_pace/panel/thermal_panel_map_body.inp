@@ -1,0 +1,113 @@
+! ==========================================================================
+! thermal_panel_map_body.inp -- 4x4 glass PANEL with PER-TILE PIC self-heating.
+!
+! Derived from thermal_panel_body.inp, which powers ONLY the die (MAT 5) and
+! leaves the PIC layer (MAT 3) with no heat source at all. That is why the
+! existing solve shows the PIC tracking the die so closely: the PIC was not
+! powered. This body adds a PIC source whose magnitude depends on the tile's
+! position, because the optical degree does.
+!
+! At the 384 GB/s intra / 3200 GB/s inter design point, counting both directions
+! and 1 waveguide = 1.178 W at 1.15 pJ/bit:
+!   interior tile (optical degree 2)              12   WG -> 14.1 W
+!   edge non-corner (degree 3, one panel edge)    30.5 WG -> 35.9 W
+!   corner (degree 4, two panel edges)            49   WG -> 57.7 W
+! plus PIC_TUNE of ring tuning per tile regardless of position.
+! At the conservative 2.62 pJ/bit bracket multiply the dynamic terms by 2.28.
+!
+! GATE: with PIC_INT = PIC_EDGE = PIC_CORNER = PIC_TUNE = 0 this body must
+! reproduce thermal_panel_body.inp's die-only result (119.300 C PIC max for
+! glass) exactly. Run that variant first; nothing else is trustworthy until it
+! matches.
+!
+! Params (wrapper *SET): MATFLAG, NX, P_GPU, FHOT, NDPT, TCP_IN, TCP_RISE, HCP,
+!   PIC_INT, PIC_EDGE, PIC_CORNER, PIC_TUNE, CSVTILE_NAME is NOT used -- output
+!   filenames are hardcoded by the wrapper writing this file, because %PARAM%
+!   substitution is what silently failed before (see docs/methods_provenance.md).
+! ==========================================================================
+/PREP7
+TILE_W=28.3e-3 $ GAP=2.0e-3 $ PT=TILE_W+GAP
+PANEL=NX*PT
+T_BRD=0.5e-3 $ T_SUB=0.7e-3 $ T_PIC=0.05e-3 $ T_RDL=0.1e-3 $ T_DIE=0.75e-3
+
+*IF,MATFLAG,EQ,1,THEN
+  KMAT=1.2
+*ELSE
+  KMAT=150.0
+*ENDIF
+MP,KXX,1,1.0 $ MP,KYY,1,1.0 $ MP,KZZ,1,1.0
+MP,KXX,2,KMAT $ MP,KYY,2,KMAT $ MP,KZZ,2,KMAT
+MP,KXX,3,80.0 $ MP,KYY,3,80.0 $ MP,KZZ,3,80.0
+MP,KXX,4,200.0 $ MP,KYY,4,200.0 $ MP,KZZ,4,60.0
+MP,KXX,5,150.0 $ MP,KYY,5,150.0 $ MP,KZZ,5,150.0
+
+ET,1,SOLID70
+ESIZE,PT/NDPT
+Z0=0 $ Z1=Z0+T_BRD $ Z2=Z1+T_SUB $ Z3=Z2+T_PIC $ Z4=Z3+T_RDL $ Z5=Z4+T_DIE
+BLOCK,0,PANEL,0,PANEL,Z0,Z1 $ VSEL,S,LOC,Z,(Z0+Z1)/2 $ VATT,1,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,PANEL,0,PANEL,Z1,Z2 $ VSEL,S,LOC,Z,(Z1+Z2)/2 $ VATT,2,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,PANEL,0,PANEL,Z2,Z3 $ VSEL,S,LOC,Z,(Z2+Z3)/2 $ VATT,3,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,PANEL,0,PANEL,Z3,Z4 $ VSEL,S,LOC,Z,(Z3+Z4)/2 $ VATT,4,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,PANEL,0,PANEL,Z4,Z5 $ VSEL,S,LOC,Z,(Z4+Z5)/2 $ VATT,5,,1 $ VMESH,ALL $ ALLSEL
+ALLSEL $ NUMMRG,NODE,1e-6 $ NUMCMP,NODE
+
+! ---- die heat: uniform + central hotspot, identical to the original body ----
+AHOT=(TILE_W/3)*(TILE_W/3)
+HGH=FHOT*P_GPU/(AHOT*T_DIE)
+HGC=(1.0-FHOT)*P_GPU/((TILE_W*TILE_W-AHOT)*T_DIE)
+APIC=TILE_W*TILE_W
+*DO,TI,0,NX-1
+  *DO,TJ,0,NX-1
+    X0=TI*PT $ X1=X0+TILE_W
+    Y0=TJ*PT $ Y1=Y0+TILE_W
+    ESEL,S,MAT,,5 $ ESEL,R,CENT,X,X0,X1 $ ESEL,R,CENT,Y,Y0,Y1
+    BFE,ALL,HGEN,1,HGC $ ALLSEL
+    XA=X0+TILE_W/3 $ XB=X0+2*TILE_W/3
+    YA=Y0+TILE_W/3 $ YB=Y0+2*TILE_W/3
+    ESEL,S,MAT,,5 $ ESEL,R,CENT,X,XA,XB $ ESEL,R,CENT,Y,YA,YB
+    BFE,ALL,HGEN,1,HGH $ ALLSEL
+
+    ! ---- PIC self-heating, by tile position -------------------------------
+    ! Edge count on the panel boundary: 0 interior, 1 edge, 2 corner.
+    NEDGE=0
+    *IF,TI,EQ,0,THEN
+      NEDGE=NEDGE+1
+    *ENDIF
+    *IF,TI,EQ,NX-1,THEN
+      NEDGE=NEDGE+1
+    *ENDIF
+    *IF,TJ,EQ,0,THEN
+      NEDGE=NEDGE+1
+    *ENDIF
+    *IF,TJ,EQ,NX-1,THEN
+      NEDGE=NEDGE+1
+    *ENDIF
+    *IF,NEDGE,EQ,0,THEN
+      PW=PIC_INT
+    *ELSEIF,NEDGE,EQ,1,THEN
+      PW=PIC_EDGE
+    *ELSE
+      PW=PIC_CORNER
+    *ENDIF
+    PW=PW+PIC_TUNE
+    *IF,PW,GT,0.0,THEN
+      ESEL,S,MAT,,3 $ ESEL,R,CENT,X,X0,X1 $ ESEL,R,CENT,Y,Y0,Y1
+      BFE,ALL,HGEN,1,PW/(APIC*T_PIC) $ ALLSEL
+    *ENDIF
+  *ENDDO
+*ENDDO
+
+! ---- BCs, identical to the original body ----
+*DIM,TCPTAB,TABLE,2,1,1,X
+TCPTAB(1,0,1)=0.0
+TCPTAB(2,0,1)=PANEL
+TCPTAB(1,1,1)=TCP_IN
+TCPTAB(2,1,1)=TCP_IN+TCP_RISE
+ASEL,S,LOC,Z,Z5 $ SFA,ALL,,CONV,HCP,%TCPTAB% $ ALLSEL
+ASEL,S,LOC,Z,Z0 $ SFA,ALL,,CONV,50.0,40.0 $ ALLSEL
+
+FINISH
+/SOLU
+ANTYPE,STATIC
+SOLVE
+FINISH

@@ -134,3 +134,29 @@ short runs. Estimated one working day including gates.
 one L GB/s link per (GPU, chip), each port a queued pipe (D×S ports per domain), with
 per-flow ECMP [or per-packet striping] across chips and transport derived for that tier;
 the earlier contention-free island is retained only as an upper bound."
+
+## 10. Real costs of the incumbent the model must charge (user, 2026-09-06)
+
+Rule: every item below is a documented property of shipping NVLink/NVSwitch systems that
+the analytic-island model gave away for free. Each needs a citable number before it is
+switched on; none is a tuning knob. Flags default to the *charged* value once sourced,
+with the uncharged value available for the sensitivity row, and the banner prints all.
+
+| # | cost | how it enters the model | flag | source needed |
+|---|---|---|---|---|
+| 1 | NVLink achievable vs nominal bandwidth (flit/CRC/protocol overhead; NCCL busbw reaches a fraction of peak) | `L_eff = L × η_nvl`, η from a microbenchmark (nvbandwidth / NCCL all-to-all busbw on H100 and GB200) | `-nvs_eff` | Hopper/Blackwell dissection papers (Luo et al. 2024-25), nvbandwidth results |
+| 2 | GPU→NVSwitch→GPU latency as measured, not the raw link figure | `nvs_lat` per hop from a measured P2P latency through NVSwitch, split evenly over 2 hops | `-nvs_lat` | same microbenchmarks (H100 NVSwitch P2P ≈ 1–2 µs at NCCL level, ≈0.7 µs hardware) |
+| 3 | HGX-8's unequal link distribution over 4 NVSwitch3 chips (5/5/4/4) | per-chip link rate 5×25 / 5×25 / 4×25 / 4×25 GB/s instead of a uniform 112.5; ECMP then lands 25% of flows on the thin chips | `-nvs_links_per_chip 5,5,4,4` | NVIDIA HGX H100 NVSwitch topology (public system docs) |
+| 4 | Scale-out beyond the domain is a multi-tier IB/Ethernet fat-tree, not an ideal non-blocking pipe | replace the all-pairs flat NIC path with a 2-tier (rail-optimized) fat-tree at a documented oversubscription (1:1 rail, 2:1 spine typical), end-to-end latency 3–5 µs including PCIe/NIC traversal at both ends | `-scaleout fattree -so_oversub 2 -so_lat 4000` | RDMA/IB microbenchmarks; DGX SuperPOD reference architecture (rail-optimized, oversubscription stated) |
+| 5 | NIC-side PCIe path: GPUDirect RDMA through PCIe Gen5 x16 (64 GB/s) | cap the NIC path at min(NIC, PCIe) per GPU; binds for 800G NICs on Gen5 hosts, not for Gen6 (GB200: state which) | `-so_pcie 64` | PCIe spec + platform docs |
+| 6 | 8 of 72 GPUs stranded when EP groups are powers of two (64 used) | count the 8 idle GPUs' cost in iso-power / iso-cost rows (11% of rack compute and its static power) — a table row, not a simulation change | — | NVL72 = 72 GPUs (public) |
+| 7 | Power for the cross-domain path: NIC + scale-out switch port share, not NIC alone | `whole_power2.py`: add per-GPU share of the 800G switch tier (W/port from a switch datasheet) to the NVL-64 beyond-64 rows; glass edges have no switch tier | — | switch ASIC/system datasheet (the dragonfly ref already cites 1.7 kW per 64×400G) |
+| 8 | NVSwitch tray power and NVLink SerDes energy at the sourced 1.55–5 pJ/bit bracket (already in) | unchanged | — | done |
+| 9 | Copper reach: NVL72's spine is copper within one rack; every domain beyond it is optical anyway | qualitative sentence in §method, no model change | — | GB200 NVL72 system description |
+
+What is **not** charged, and why: NCCL/software launch overheads (apply to both fabrics),
+TCP-vs-credit-flow (already disclosed as a symmetric limitation), and anything without a
+number we can cite. Order of switching on: 1, 2, 3 (inside the domain, cheap, all
+microbenchmark-sourced) → 4, 5 (scale-out, only affects EP>64 rows) → 6, 7 (accounting).
+Every charged row carries the uncharged value as a sensitivity row so the effect of each
+cost is visible on its own.

@@ -1,0 +1,4 @@
+workload_type,ep_source,model,ep,nodes,system,panel,elec_bw,opt_bw,inter_bw,G,q,rto_min_us,shortcut_banner,qdisc,makespan_ps,makespan_ms,rtos,flows,wall_s
+training,flexflow_llamaMoE_dp2tp1pp4,llamaMoE,32,256,glassfb_mesh,16,1800,384,1600,4,5000,100,DISABLED,ECN,186382633640,186.383,368,131072,649
+training,flexflow_llamaMoE_dp2tp1pp4,llamaMoE,32,256,nvl4_dom8,8,450,450,50,1,5000,100,ENABLED,ECN,11676343095794,11676.343,17464,131072,754
+training,flexflow_llamaMoE_dp2tp1pp4,llamaMoE,32,256,nvl5_dom64,64,900,900,100,1,5000,100,ENABLED,ECN,691269833863,691.270,248,131072,484

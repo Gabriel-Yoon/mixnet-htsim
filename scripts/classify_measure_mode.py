@@ -61,23 +61,45 @@ for fb in sorted(glob.glob(os.path.join(RES, "*.fbuf"))):
         cfg = dict(dp=dp, tp=tp, pp=pp, ep=ep, topk=topk,
                    layers=L, seq=seq, mb=mb, devices=dp * tp * pp * ep)
 
-    meta = dict(graph=name, attention_mode=mode, evidence=detail,
-                attention_nodes=nattn, size_bytes=os.path.getsize(fb),
-                config=cfg,
-                note="attention_mode is inferred from the 0-byte signature, not "
-                     "recorded at generation time; see docs/paper_todo.md D35")
+    detected = dict(graph=name, attention_nodes=nattn,
+                    size_bytes=os.path.getsize(fb), config=cfg,
+                    note="attention_mode is inferred from the 0-byte signature, not "
+                         "recorded at generation time; see docs/paper_todo.md D35")
+
+    # Merge, never clobber. A curated resolution (an exclusion, or a mode derived
+    # from a parent graph rather than read from a dot dump) must survive a re-run;
+    # otherwise re-running this tool silently discards the provenance it exists to
+    # keep. Only the fields this script actually measures are overwritten.
+    prev = {}
+    if os.path.exists(base + ".meta"):
+        try:
+            prev = json.load(open(base + ".meta"))
+        except (ValueError, OSError):
+            prev = {}
+    meta = dict(prev)
+    meta.update(detected)
+    if prev.get("mode_source") == "inferred_from_parent" and mode == "UNKNOWN":
+        # keep the curated mode and its evidence; this graph has no dot dump to read
+        mode = prev.get("attention_mode", mode)
+    else:
+        meta["attention_mode"] = mode
+        meta["evidence"] = detail
+    meta.setdefault("attention_mode", mode)
+
     with open(base + ".meta", "w") as fh:
         json.dump(meta, fh, indent=2)
-    rows.append((name, mode, cfg.get("ep"), cfg.get("tp"), cfg.get("devices"), nattn))
+    rows.append((name, meta["attention_mode"], cfg.get("ep"), cfg.get("tp"),
+                 cfg.get("devices"), nattn, bool(meta.get("excluded"))))
 
-print(f"{'graph':<66}{'mode':<20}{'EP':>5}{'TP':>4}{'dev':>7}{'attn':>6}")
-for name, mode, ep, tp, dev, na in rows:
-    print(f"{name:<66}{mode:<20}{str(ep):>5}{str(tp):>4}{str(dev):>7}{na:>6}")
+print(f"{'graph':<62}{'mode':<14}{'EP':>5}{'TP':>4}{'dev':>7}{'attn':>6}  excl")
+for name, mode, ep, tp, dev, na, ex in rows:
+    print(f"{name:<62}{mode:<14}{str(ep):>5}{str(tp):>4}{str(dev):>7}{na:>6}"
+          f"  {'EXCL' if ex else ''}")
 
 print("\n=== consistency by EP (curve-mates must agree) ===")
 by_ep = {}
-for name, mode, ep, tp, dev, na in rows:
-    if ep is not None:
+for name, mode, ep, tp, dev, na, ex in rows:
+    if ep is not None and not ex:      # excluded graphs are not curve-mates
         by_ep.setdefault(ep, set()).add(mode)
 bad = False
 for ep in sorted(by_ep):
@@ -87,7 +109,7 @@ for ep in sorted(by_ep):
         bad = True
     print(f"  EP={ep:<5} {ok:<10} {sorted(modes)}")
 
-allmodes = {m for _, m, ep, _, _, _ in rows if ep is not None}
+allmodes = {m for _, m, ep, _, _, _, ex in rows if ep is not None and not ex}
 print(f"\nAll EP-bearing graphs: {sorted(allmodes)}")
 print("MISMATCH FOUND — curves mixing modes are not readable" if bad
       else "Uniform across every graph: curves are internally comparable.")

@@ -45,7 +45,8 @@ pitch = L / n
 
 fig, ax = plt.subplots(figsize=(3.4, 3.1), dpi=200)
 tri = mtri.Triangulation(y, x)  # tile_i (coolant axis) runs along y in the cut; draw it left->right
-levels = np.linspace(55, 140, 35)
+tin = float(bc.get("tcp_in") or 55); tmax = float(np.ceil((max(peaks_g.values()) + 5) / 10) * 10)
+levels = np.linspace(tin, tmax, int((tmax - tin) / 2.5) + 1)
 cf = ax.tricontourf(tri, T, levels=levels, cmap="inferno", extend="both")
 for k in range(1, n):
     ax.axhline(k * pitch, color="w", lw=0.4, alpha=0.6)
@@ -55,13 +56,13 @@ for (i, j), tp in peaks_g.items():
             fontsize=6.5, color="w" if tp < 100 else "k", fontweight="bold")
 ax.set_xlim(0, L); ax.set_ylim(0, L); ax.set_aspect("equal")
 ax.set_xticks([]); ax.set_yticks([])
-ax.set_xlabel("coolant flow  →  (inlet 55 °C, outlet 75 °C)", fontsize=7, labelpad=2)
-cb = fig.colorbar(cf, ax=ax, fraction=0.046, pad=0.03, ticks=[60, 80, 100, 120, 140])
+ax.set_xlabel(f"coolant flow  →  (inlet {tin:.0f} °C, outlet {tin+20:.0f} °C)", fontsize=7, labelpad=2)
+cb = fig.colorbar(cf, ax=ax, fraction=0.046, pad=0.03, ticks=list(range(int(tin), int(tmax) + 1, 20)))
 cb.ax.tick_params(labelsize=7); cb.set_label("PIC-plane T (°C)", fontsize=7)
 gmax = max(peaks_g.values()); smax = max(peaks_s.values())
 pic_w = sorted({float(r) for r in [bc["pic_w"]]})
 ax.set_title(f"glass: PIC peak {gmax:.1f} °C  (Si control {smax:.1f})\n"
-             f"700 W/die, PIC 14–58 W by tile ({bc['pj_bit']} pJ/bit), h={int(float(bc['hcp']))//1000}k W/m²K",
+             f"700 W/die · PIC 14–58 W/tile · h={int(float(bc['hcp']))//1000}k W/m²K",
              fontsize=7.5)
 fig.tight_layout(pad=0.3)
 os.makedirs(a.out, exist_ok=True)

@@ -107,9 +107,38 @@ At the corrected-budget **wide** design (640 intra / 1600 inter) the average ris
 3.00 × 5 × 2 + 6.25 = **36.25 WG/GPU**. Both are selectable via `--design {current,wide}`.
 
 Charging all 60 is conservative in our own disfavour either way, and should be *stated* rather
-than left for a reader to derive. Worth noting: the wide design makes the energy claim **more**
-robust, not less — lighting 36 of 60 wastes far less of the provisioned budget than lighting 19,
-so the provisioned-basis advantage rises from 3.1× to 5.8× (at 1.15 pJ/bit, per-hop).
+than left for a reader to derive.
+
+### Do not read the provisioned current-vs-wide gap as an efficiency gain
+
+Under `--budget provisioned` the advantage appears to rise from 3.12× (current) to 5.80× (wide)
+at 1.15 pJ/bit. **That is a division artifact, not a physical effect, and must not be quoted.**
+
+The pessimism multiplier is `WG_PROVISIONED / WG_USED`: 60/19.5 = 3.077 for current, 60/36.25 =
+1.655 for wide, a ratio of 1.859. And 3.12 × 1.859 = 5.80 — the entire "gain" is that the
+conservative overcharge shrinks, reproduced to three significant figures. The two numbers have
+different denominators by construction and are not comparable to each other.
+
+The physical reason is that `e_glass = bits × pJ/bit × hops` contains no waveguide-count term.
+1.15 pJ/bit is a *dynamic* energy-per-bit figure; an unlit waveguide burns no dynamic energy.
+`provisioned` is therefore a deliberate "charge us as if all 60 were saturated" upper bound, not
+a model of the hardware. If asked whether 640/1600 consumes less energy per token than 400/200,
+the correct answer is **no — it is identical** (verified: the `--budget used` rows for the two
+designs are bit-identical).
+
+**The correct framings, all of which are still favourable:**
+
+1. **Energy per token is invariant to the provisioning choice.** This is a robustness property
+   worth stating outright: the energy result does not move when the design point moves, so it
+   survives the 400/200 → 640/1600 migration unchanged.
+2. **What re-provisioning buys is latency at unchanged energy** — i.e. it improves GB/s per watt,
+   which is already the paper's efficiency metric (`fig_energy`, the 46–101 GB/s/W envelope).
+   The number to recompute for the wide design is GB/s/W, not µJ/token.
+3. **Keep `provisioned` as a one-sided sensitivity check.** "Even charged for all 60 waveguides
+   we still win by ≥3.1×" is honest and strong. Comparing two designs *within* that basis is not.
+
+Consequence: re-provisioning has to justify itself on latency (Task 1). It gets no independent
+energy justification.
 
 Note this also resolves an inconsistency: an earlier iso-power sweep
 (`serving_sweep_isopower.csv`) computed the per-GPU aggregate as
@@ -135,11 +164,13 @@ Sensitivity across every accounting choice above — **fat-tree joules ÷ Glass-
 | per-hop | 1.15 | used | — | 9.6× | 19.1× | 32.1× |
 | per-hop | 2.62 | used | — | 4.2× | 9.3× | 17.0× |
 | per-hop | 1.15 | provisioned | current | 3.1× | 6.2× | 10.4× |
-| per-hop | 1.15 | provisioned | wide | 5.8× | 11.6× | 19.4× |
 | **per-hop** | **2.62** | **provisioned** | **current** | **1.37×** | **3.02×** | **5.52×** |
-| per-hop | 2.62 | provisioned | wide | 2.6× | 5.6× | 10.3× |
 
-(`used` is unaffected by `--design`, since the design only rescales the provisioned/lit ratio.)
+`used` rows are bit-identical across `--design` (energy per bit carries no waveguide-count term),
+which is the invariance property described in §4. The `provisioned` rows are quoted for the
+**current** design only, on purpose: the wide design's provisioned numbers are larger only
+because its overcharge denominator is larger, and quoting both side by side would present a
+division artifact as an efficiency gain.
 
 The bold row stacks *every* conservative choice simultaneously — the pessimistic end of the
 paper's own pJ/bit range, the full 60-waveguide budget, per-hop charging that helps the fat-tree

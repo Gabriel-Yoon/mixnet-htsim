@@ -1,0 +1,4 @@
+model,ep,topk,nodes,fbuf_mb,rc,flows,banner,verdict
+qwenMoE,64,4,512,20,124,221184,DISABLED,PASS_load(timeout)
+qwen2_57b,64,8,512,20,124,81920,DISABLED,PASS_load(timeout)
+llamaMoE32,32,2,256,10,0,131072,DISABLED,PASS_complete

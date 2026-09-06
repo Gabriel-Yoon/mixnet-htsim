@@ -136,6 +136,15 @@ int main(int argc, char **argv)
     // overriding. Pass -enable-intra-shortcut only to reproduce pre-6d3fae7 numbers.
     bool disable_intra_shortcut = true;
 
+    // Queue discipline. alloc_queue() already implements the lossless variants; only
+    // the constructor's hardcoded ECN made them unreachable. LOSSLESS_INPUT_ECN is
+    // the interesting one: lossless with ECN marking, i.e. the closest this simulator
+    // gets to a credit-flow-controlled fabric with congestion notification.
+    // NOTE it is still packet-level TCP, NOT cycle-level credit backpressure -- see
+    // docs/paper_todo.md A35. Default ECN, so this switch is inert until asked for.
+    queue_type qtype = ECN;
+    const char *qtype_name = "ECN";
+
     int algo = UNCOUPLED;
     double epsilon = 1;
     int ssthresh = 15;
@@ -257,6 +266,23 @@ int main(int argc, char **argv)
         {
             disable_intra_shortcut = true;
         }
+        else if (!strcmp(argv[i], "-queuetype"))
+        {
+            qtype_name = argv[i + 1];
+            if (!strcmp(qtype_name, "ecn")) qtype = ECN;
+            else if (!strcmp(qtype_name, "lossless")) qtype = LOSSLESS;
+            else if (!strcmp(qtype_name, "lossless_input")) qtype = LOSSLESS_INPUT;
+            else if (!strcmp(qtype_name, "lossless_input_ecn")) qtype = LOSSLESS_INPUT_ECN;
+            else if (!strcmp(qtype_name, "composite")) qtype = COMPOSITE;
+            else if (!strcmp(qtype_name, "random")) qtype = RANDOM;
+            else {
+                fprintf(stderr, "unknown -queuetype '%s' (want ecn | lossless |"
+                                " lossless_input | lossless_input_ecn | composite |"
+                                " random)\n", qtype_name);
+                exit(1);
+            }
+            i++;
+        }
         else if (!strcmp(argv[i], "-simtime"))
         {
             simtime = atof(argv[i + 1]);
@@ -351,7 +377,11 @@ int main(int argc, char **argv)
     TcpRtxTimerScanner tcpRtxScanner(timeFromMs(1), eventlist);
     // glass-FB uses the exact requested node count (panels x panel-size), not the
     // fat-tree k^3/4 rounding, so panel counts stay exact (e.g. 144 = 4 x 36, not 432).
-    GlassFBTopology *top = new GlassFBTopology(no_of_nodes, queuesize, nullptr /*&logfile*/, &eventlist, ff, ECN);
+    std::cerr << "Queue discipline: " << qtype_name
+              << (qtype == ECN ? " (lossy, drops on overflow)"
+                               : " (see alloc_queue; lossless variants apply backpressure)")
+              << std::endl;
+    GlassFBTopology *top = new GlassFBTopology(no_of_nodes, queuesize, nullptr /*&logfile*/, &eventlist, ff, qtype);
     // note that 'queuesize' does not pass throuf_nodesgh currently for RANDOM...
 
     // FFApplication app = FFApplication(top, ssthresh, sinkLogger, traffic_logger, tcpRtxScanner, eventlist);

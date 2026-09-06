@@ -1,0 +1,4 @@
+arm,queuetype,q,rto_min_us,inter_bw,qdisc_banner,shortcut_banner,makespan_ps,makespan_ms,rtos,pause_events,lossless_violations,verdict
+gate_default,(none),5000,100,1600,ECN,DISABLED,11690301651,11.690,1156,0,0,PASS_bitexact
+gate_explicit,ecn,5000,100,1600,ecn,DISABLED,11690301651,11.690,1156,0,0,PASS_bitexact
+lossless_probe,lossless_input_ecn,5000,100,1600,lossless_input_ecn,DISABLED,0,0.000,0,0,0,NO_COMPLETION(rc=134)

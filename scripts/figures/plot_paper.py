@@ -23,8 +23,9 @@ RES = os.environ.get("PAPER_RES", os.path.join(os.path.dirname(__file__), "..", 
 OUT = os.environ.get("OUT", ".")
 SYS_LABEL = {"glassfb": "Glass-FB", "hgx8": "HGX-8", "nvl64": "NVL-64", "flat900_capped": "900 GB/s no-boundary bound",
              "flat900_uncapped": "900 GB/s uncapped", "copperfb": "Copper-FB @100",
-             "glass_A": "A: as submitted", "glass_B": "B: +placement", "glass_C": "C: +G=4 mesh", "glass_D": "D: +1600 edge"}
-SYS_COLOR = {"glassfb": "#1f6f8b", "hgx8": "#d95f0e", "nvl64": "#7a0177", "flat900_capped": "#7a0177",
+             "glass_A": "A: as submitted", "glass_B": "B: +placement", "glass_C": "C: +16-port cabling",
+             "glassfb_mesh": "Glass-FB (4-edge mesh)", "glassfb_hier": "Glass-FB (hier. A2A)", "nvl64_pkt": "NVL-64 (packet-level)", "hgx8_pkt": "HGX-8 (packet-level)"}
+SYS_COLOR = {"glassfb": "#1f6f8b", "glassfb_mesh": "#7fb3c8", "glassfb_hier": "#0b3d4f", "hgx8": "#d95f0e", "hgx8_pkt": "#d95f0e", "nvl64": "#7a0177", "nvl64_pkt": "#7a0177", "flat900_capped": "#7a0177",
              "flat900_uncapped": "#b8a0c8", "copperfb": "#8c6d31"}
 
 def load(ref):
@@ -48,10 +49,12 @@ def f(name):
 def cliff():
     rows = load("cliff")
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    for sysname in ("hgx8", "nvl64", "flat900_capped", "glassfb"):
+    for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "glassfb_mesh", "glassfb", "glassfb_hier"):
         pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname])
         if not pts: continue
-        ax.plot([p[0] for p in pts], [p[1] for p in pts], "o-", color=SYS_COLOR[sysname], label=SYS_LABEL[sysname], lw=1.4, ms=4)
+        dashed = sysname in ("hgx8", "nvl64")  # analytic island = vendor-claim upper bound
+        ax.plot([p[0] for p in pts], [p[1] for p in pts], "--" if dashed else "o-", color=SYS_COLOR[sysname],
+                label=SYS_LABEL[sysname] + (" (vendor-claim bound)" if dashed else ""), lw=1.2 if dashed else 1.5, ms=4, alpha=0.8 if dashed else 1)
         for ep, y, r in pts:
             if r.get("rtos") and r["rtos"] > 0:
                 ax.annotate(f"{r['rtos']:,} RTO", (ep, y), fontsize=5, textcoords="offset points", xytext=(3, 3))
@@ -108,10 +111,10 @@ def mb():
 
 def ladder():
     rows = load("ladder")
-    order = ["glass_A", "glass_B", "glass_C", "glass_D", "copperfb", "flat900_capped"]
+    order = ["glass_A", "glass_B", "glass_C", "copperfb", "flat900_capped"]
     rows = sorted([r for r in rows if r["system"] in order], key=lambda r: order.index(r["system"]))
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    base = next((r["makespan_ms"] for r in rows if r["system"] == "glass_D"), None)
+    base = next((r["makespan_ms"] for r in rows if r["system"] == "glass_C"), None)
     for i, r in enumerate(rows):
         ax.bar(i, r["makespan_ms"], color=SYS_COLOR.get(r["system"], "#1f6f8b"), width=0.7)
         ax.text(i, r["makespan_ms"] * 1.02, f"{r['makespan_ms']:.0f}" + (f"\n{r['makespan_ms']/base:.2f}x" if base else ""), ha="center", fontsize=5)

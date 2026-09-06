@@ -61,10 +61,18 @@ NVLink stripes one transfer across all 18 links; a TCP flow in htsim follows one
    packets over `_paths` when compiled with `PACKET_SCATTER` (tcp.h:41 is commented out),
    and every `ffapp` start_flow site already calls `set_paths()` under the same ifdef. A
    separate binary `htsim_tcp_nvswitch_scatter` built with that define models NVLink's
-   link striping directly. **Blocker to check first:** how `tcp.cpp:906/1005` treat
-   reordering — if per-packet spraying triggers dup-ACK fast retransmit storms, mode 2 is
-   unusable and mode 3 is the fallback. Verify on the G1 microbenchmark below before
-   any paper row uses it.
+   link striping directly. **Checked (peer, 2026-09-06):** reordering is tolerated by
+   construction — `set_paths()` raises `DUPACK_TH = 3 + paths` (tcp.cpp:136) and the
+   fast-retransmit test uses it (454–457), so S=18 gives a threshold of 21, which covers
+   round-robin reordering over equal-latency paths. Two caveats: (a) the `PACKET_SCATTER`
+   destructor block (tcp.cpp:112–120) has bit-rotted and **does not compile** (range-for
+   over a raw pointer, const dropped) — a two-line fix, so this is not "flip -D and
+   rebuild"; (b) the threshold covers path multiplicity, not differential queueing: under
+   heavy incast one chip's egress queue can run far deeper than another's and a packet can
+   fall behind by more than 18, firing spurious fast retransmits — exactly the A2A case
+   this model studies, so G2's RTO/retransmit count also tests this, and `DUPACK_TH` goes
+   in the banner. Decision: build mode 1 first; mode 2 is a follow-up gated on G1/G2
+   showing single-flow bandwidth is binding.
 3. **Subflow striping in ffapp** — split each transfer into `S` TcpSrc of `size/S`, subflow
    `k` pinned to route `k` (`srcpaths->at(k)`), completion = last subflow. One helper
    called from the five `start_flow` sites (ffapp.cpp:1279, 1568, 1836, 1947, 2080, 2214,

@@ -18,6 +18,17 @@
 #define DEFAULT_PACKET_SIZE 1500 // full packet (including header), Bytes
 #define NVLINK_BANDWIDTH (600.0 * 1024 * 1024 * 1024)
 
+// --- runtime island parameters (see -island_gpus / -island_bw) -------------
+// Redefined HERE rather than in ffapp.h on purpose: datacenter/mixnet.h has its
+// own NUM_GPU_PER_NODE, and changing the header would alter the mixnet topology
+// as a side effect. Defaults reproduce the previous compile-time constants.
+int GLASS_ISLAND_GPUS = NUM_GPU_PER_NODE;
+double GLASS_ISLAND_BW_BYTES = NVLINK_BANDWIDTH;
+#undef NUM_GPU_PER_NODE
+#define NUM_GPU_PER_NODE GLASS_ISLAND_GPUS
+#undef NVLINK_BANDWIDTH
+#define NVLINK_BANDWIDTH GLASS_ISLAND_BW_BYTES
+
 using json = nlohmann::json;
 
 int FFApplication::total_apps = 0;

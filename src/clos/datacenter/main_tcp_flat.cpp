@@ -43,6 +43,19 @@ uint32_t RTT = 1000; // ns
 int DEFAULT_NODES = 16;
 
 uint32_t SPEED;
+
+// Per-node egress port cap, defined in flat_topology.cpp. Default OFF: without it
+// this topology is an ideal non-blocking bound with (N-1) x link-rate injection
+// per node, which is what every existing flat result row used. Pass -port-cap to
+// model a switch-based crossbar, where one port is what makes injection finite.
+// Island (scale-up domain) modelled analytically by ffapp: any flow whose
+// endpoints share a group of GLASS_ISLAND_GPUS completes at GLASS_ISLAND_BW_BYTES
+// without entering the topology. With -port-cap that gives MixNet section 7.1's
+// substrate: an island plus one NIC per GPU into a non-blocking fabric.
+extern int GLASS_ISLAND_GPUS;
+extern double GLASS_ISLAND_BW_BYTES;
+extern bool FLAT_PORT_CAP;
+extern uint32_t FLAT_PORT_CAP_PKTS;
 std::ofstream fct_util_out;
 
 FirstFit *ff = NULL;
@@ -147,6 +160,26 @@ int main(int argc, char **argv)
         {
             no_of_nodes = atoi(argv[i + 1]);
             cout << "no_of_nodes " << no_of_nodes << endl;
+            i++;
+        }
+        else if (!strcmp(argv[i], "-island_gpus"))
+        {
+            GLASS_ISLAND_GPUS = atoi(argv[i + 1]);
+            i++;
+        }
+        else if (!strcmp(argv[i], "-island_bw"))
+        {
+            // GB/s on the command line; ffapp works in bytes/s
+            GLASS_ISLAND_BW_BYTES = atof(argv[i + 1]) * 1e9;
+            i++;
+        }
+        else if (!strcmp(argv[i], "-port-cap"))
+        {
+            FLAT_PORT_CAP = true;
+        }
+        else if (!strcmp(argv[i], "-port-cap-pkts"))
+        {
+            FLAT_PORT_CAP_PKTS = atoi(argv[i + 1]);
             i++;
         }
         else if (!strcmp(argv[i], "-speed"))
@@ -331,6 +364,11 @@ int main(int argc, char **argv)
     TcpRtxTimerScanner tcpRtxScanner(timeFromMs(1), eventlist);
 
     //FlatTopology *top = new FlatTopology(no_of_nodes, flowfile, queuesize, nullptr /* &logfile */, &eventlist, ff, ECN);
+    std::cerr << "Island: " << GLASS_ISLAND_GPUS << " GPUs at "
+              << (GLASS_ISLAND_BW_BYTES / 1e9) << " GB/s (analytic, contention-free)"
+              << std::endl;
+    std::cerr << "Scale-out: " << (SPEED / 8000.0) << " GB/s per node, link latency "
+              << RTT << " ns" << std::endl;
     FlatTopology *top = new FlatTopology(no_of_nodes, queuesize, nullptr /* &logfile */, &eventlist, ff, ECN);
     // FFApplication app = FFApplication(top, ssthresh, sinkLogger, traffic_logger, tcpRtxScanner, eventlist);
     FFApplication app = FFApplication(top, ssthresh, logdir, &fct_util_out, tcpRtxScanner, eventlist, ar_strategy);

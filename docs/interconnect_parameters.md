@@ -26,7 +26,8 @@ because our 1.15 pJ/bit has to be read against comparable *totals*.
 | [O] Linear pluggable optics (LPO) | 13 | total incl. host SerDes | HotI'25 Tab. II |
 | [O] Pluggable optical module | 21 | total incl. host SerDes | HotI'25 Tab. II |
 | [E] 112G-LR SerDes w/ DSP (host) | 5 | PHY only, no optics | ISSCC'21/'22 via HotI'25 |
-| [E] Short-reach XSR SerDes @112G PAM-4 | 1 | PHY only, <100 µm drive | Tonietto, via HotI'25 |
+| [E] Short-reach XSR SerDes @112G PAM-4 | **1.55** | measured, PHY only | Shivnaraine et al., ISSCC 2021, DOI 10.1109/ISSCC42613.2021.9365975 (HotI'25 ref [15]) |
+| [E] NVLink-class SerDes, assumed ceiling | **5** | total | HotI'25 Tab. I "scale-up <5 pJ/bit" and §IV "5 pJ/bit is our assumed energy efficiency" (224G-LR) |
 | [O] Die-to-die OE chiplet adder | +0.5 | interface adder | UCIe, via HotI'25 |
 | [O] TeraBIX transceiver @56G NRZ | 3.3–4.3 | transceiver | space-grade optics |
 | [O] SiPh Tx, slow-light mod. @64 Gbaud | 0.78 | transmitter only (no Rx/laser) | arXiv:2506.04820 |
@@ -160,6 +161,30 @@ read as an inconsistency in our own configuration.
 **Also state in the methodology:** our NVLink per-direction figures (450 / 900) are derived by
 halving the vendor's bidirectional headline, while the scale-out figures are used as quoted. A
 reviewer who knows the NVLink convention will check exactly this.
+
+### ⚠ NVLink pJ/bit is a BRACKET, not a value — and the published 39/62 GB/s/W used a placeholder
+
+`scripts/figures/plot_energy_final.py` sets `NVL4_EDYN = NVL5_EDYN = 1.5`, and those constants
+produced the **published** "39 / 62 GB/s/W" in the abstract and Fig 7b. The value was never
+cited; a local methodology note carried 2.0 and marked it "placeholder — ❌ CITE". Neither
+number has a source.
+
+What is sourced, and what every NVLink power figure must now use:
+
+| end | pJ/bit | basis |
+|---|---|---|
+| floor | **1.55** | measured 112G XSR SerDes, Shivnaraine ISSCC 2021 (HotI'25 ref [15]) |
+| ceiling | **5** | HotI'25 Tab. I scale-up class bound, and §IV's own assumption for 224G-LR |
+
+The primary for the older "1 pJ/bit XSR" entry is D. Tonietto, *Pushing energy efficiency limits
+in wireline communication*, SSCS Wireline Workshop 2022 — a **workshop talk**, so it is not cited
+directly; HotI'25's table is the citable route.
+
+**Report both ends, never the ceiling alone.** At 5 pJ/bit NVLink 5's 62 GB/s/W falls to roughly
+a third, which moves the whole-interconnect comparison in glass's favour — precisely the reason
+to quote the bracket rather than the flattering end. Glass is already bracketed 1.15–2.62 on the
+same principle; the two must be treated symmetrically. Every result row carries an
+`nvlink_pj_bit` column saying which end it is.
 
 ### Related: the same class of bug has now bitten this project three times
 

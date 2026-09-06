@@ -123,6 +123,55 @@ Pick deliberately and say which.
 
 ---
 
+## 4b. ⚠ Unidirectional vs bidirectional: the quoting trap
+
+**NVLink and Ethernet/InfiniBand quote bandwidth by opposite conventions.** Every number in
+this document and in the simulator is **per direction**, but the two families need *different*
+conversions to get there:
+
+| Family | Vendor headline | Convention | Per-direction value |
+|---|---|---|---|
+| NVLink 4 | "900 GB/s" | **bidirectional total** | 450 GB/s — **halve it** |
+| NVLink 5 | "1800 GB/s" | **bidirectional total** | 900 GB/s — **halve it** |
+| Ethernet / IB | "400G" (ConnectX-7) | **per direction** | 50 GB/s — **use as-is** |
+| Ethernet / IB | "800G" (GB200-class) | **per direction** | 100 GB/s — **use as-is** |
+
+So `GLASS_ELEC_BW=450` and `GLASS_INTER_BW=50` land on the same per-direction axis by
+*different* routes — one halved, one not. Halving both, or neither, is a silent 2× error in one
+of the two tiers. The current values are correct; the point is that the correctness is not
+self-evident from the constants, so it needs this note beside them.
+
+Cross-check from MixNet SIGCOMM'25 §8, which is the citable precedent for the NVL72 model:
+"per-GPU NVLink bandwidth of 7.2 Tbps in the scale-up domain, alongside 800 Gbps Ethernet",
+then "match … to NVL72's 8 Tbps". 7.2 + 0.8 = 8.0 closes exactly, which is only consistent if
+both terms are per-GPU **per-direction**. If the 800 Gbps were a bidirectional total the sum
+would not close.
+
+**Scale-out rate is a property of the system being modelled, not of a "generation":**
+
+| Config | Scale-out | Why |
+|---|---|---|
+| `nvl4_dom8` | 50 GB/s | H100 HGX, one 400G ConnectX-7 per GPU |
+| `nvl5_dom64` | 100 GB/s | NVL72 as modelled in MixNet §8, 800G Ethernet per GPU |
+
+The asymmetry is deliberate and sourced; state it explicitly in the methodology so it does not
+read as an inconsistency in our own configuration.
+
+**Also state in the methodology:** our NVLink per-direction figures (450 / 900) are derived by
+halving the vendor's bidirectional headline, while the scale-out figures are used as quoted. A
+reviewer who knows the NVLink convention will check exactly this.
+
+### Related: the same class of bug has now bitten this project three times
+
+1. Weight-matrix default — an 8×8 matrix silently wrapped by modulo for EP=32/64.
+2. Packet size — 9000 B in `main_tcp_flat.cpp` vs 1500 B elsewhere, so the same `-q` meant a
+   6× different byte buffer.
+3. Waveguide count — a per-direction count compared against a both-directions budget
+   (main.tex line ~659's "1600 GB/s ≈ 13 waveguides", which should read 25).
+
+All three are unit/convention mismatches that produce plausible-looking numbers. None threw an
+error. When a new constant enters the model, record its convention next to it.
+
 ## 5. Latency classes
 
 | Path | Latency | Context | Source |

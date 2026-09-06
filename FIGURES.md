@@ -35,7 +35,7 @@ reproducible as published.
 |---|---|
 | `fig_3d_node` | screenshot of `glass_panel_3d_4x4.html` (user-maintained; edit the HTML, not the PNG) |
 | `fig_panel`, `fig_coupling`, `fig_wgcross`, `fig_epplace` | schematic drawings, no simulation input |
-| `fig_thermal` | ANSYS steady-state / transient solve (external tool; assumptions listed in main.tex §thermal) |
+| `fig_thermal` | ANSYS MAPDL, run on PACE, **uncommitted** as of 2026-09-06 (`mixnet-sim/thermal/` on PACE only). Left panel: 4×4 full-package steady-state `thermal_panel_body.inp` via `run_panel_hq.sh` (NX=4, PGPU=700, FHOT=0.5, TCP_IN=55 TCP_RISE=20, HCP=70000, glass vs Si control) → `panhq_glass.rth` / `panhq_si.rth` (7 Jul, 49 MB each) — **solve succeeded but the CSV extraction failed silently** (MAPDL left output under the literal names `%CSVTILE%.csv` / `%CSVPLANE%.csv`; `panel_*.csv` never existed), so the published panel has no traceable producer until re-extracted. Note `_run_panel_small.sh` uses HCP=100000, not the paper's 70000. Right panel (PIC excursion ≤7.8 K, 13 Hz corner): from the single-stack transient decks in `mixnet-sim/thermal_pic/` (committed; `gen_pic_transient.py` → `pic_transient_*.inp` → `.rth` → `*_pic_transient*.csv` via POST26 `PRVAR`) and/or the PACE-only `stab_p*` stability sweep — exact deck to be recorded by the inventory. Being re-extracted and refined under Task #16. |
 
 ## Scripts in `scripts/figures/` that are not paper figures
 

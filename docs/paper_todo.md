@@ -64,6 +64,20 @@ D33 (main.tex paused), D34 (two-commit rule; banner-or-inadmissible) — **[SETT
 
 ## E. Additions from this session
 
+- **A37 [PROPOSED WORDING IS FALSE AS WRITTEN — see E43]** Compute-cost provenance sentence. The intent is right, but "attention costs are analytical **consistently across every graph**" is contradicted by a graph already in the set. Fix before it goes in: either name the exception or regenerate that graph analytically and restore the clean claim.
+- **D35 [SETTLED]** The attention measurement mode is recorded per graph. `scripts/classify_measure_mode.py` writes a `.meta` sidecar beside every `.fbuf` and checks mode-consistency across curve-mates mechanically, so it stops depending on anyone remembering.
+- **E43 [NEW — blocks A37]** One graph was generated with FlexFlow's **measured** attention path while every other is analytical:
+
+  | graph | attention bytes (in / out / weight) | mode |
+  |---|---|---|
+  | mixtral8x7B_paper_dp2tp4pp4_ep8top2_L32_seq4096_mb8 | 4.027e8 / 8.389e6 / 1.091e8 | **measured** |
+  | mixtral8x7B_paper_dp2tp4pp4_ep8top2_L4_seq4096_mb8 | 0 / 0 / 0 | analytical |
+
+  Same model, same dp2/tp4/pp4, same seq4096 — differing only in layer count and in how attention was costed. **Any L4-vs-L32 layer-scaling comparison across these two is invalid.** Consistency holds within every other EP group (16, 64, 128, 160, 256 all analytical); EP=8 is the only mismatched group, and it also holds the two graphs with no dot-dump sidecar at all (mixtral8x22B _fixed and _validation), which remain UNKNOWN.
+
+  This is the first provenance failure that lives in an **input artifact** rather than in a run, so no amount of run-side banner logging could have caught it: the simulation used exactly what it was handed and reported it accurately. Distinct sub-class for the §4b list, not a seventh instance of the same one.
+
+
 - **E35 [SETTLED — corrects the record]** The iso-byte MTU result and its **mechanism**. At a byte buffer held at ~14.3 MB, mtu 9000 is *worse*, not better: inter 2400 goes 6.449 ms / 0 RTO → 24.151 ms / 1345 RTO, a 3.7× regression. The mechanism is **not** "fewer packet slots" (an earlier claim of mine, retracted): drops are byte-denominated (`queue.cpp:57`, `_queuesize + pkt.size() > _maxsize`). What *is* packet-denominated, and so 6× larger in bytes at mtu 9000, is the ECN marking threshold (`glassfb_topology.cpp:173`, `memFromPkt(_ecn_k_pkts)` → 450 KB vs 75 KB) and the initial congestion window (`tcp.cpp:182`, `_cwnd = 100 * _mss` → 900 KB vs 150 KB per flow, across ~1024 simultaneous flows). Jumbo frames lose because the incast burst is 6× bigger and marking fires 6× later into the same byte buffer. **Action: ECN_K should be byte-denominated or a fraction of the byte buffer** — this is a design lever, not only a note.
 - **E36 [BLOCKED on 12872572, but the signal is already strong]** At the physically-derived corner, inter-panel provisioning barely matters. Partial results (EP=64 coding_prefill, intra 384, shortcut OFF, mtu 1500):
 

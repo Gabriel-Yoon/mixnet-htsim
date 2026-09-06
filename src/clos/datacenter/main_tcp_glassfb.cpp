@@ -129,9 +129,12 @@ int main(int argc, char **argv)
     // at nvlink_bandwidth without entering the topology). A glass panel has no 8-GPU
     // NVLink server behind it, so for glass-FB this shortcut hands the fabric free
     // bandwidth it does not have -- measured, it bypassed 50% of flows at EP=16 and
-    // 100% of in-domain traffic in the NVLink-domain configs. This commit only adds
-    // the switch; the default is unchanged so the hook is verifiably inert.
-    bool disable_intra_shortcut = false;
+    // 100% of in-domain traffic in the NVLink-domain configs. Default OFF, matching
+    // main_tcp_wafer.cpp. This is also the correct default for the nvl4_dom8 /
+    // nvl5_dom64 reference configs that run on this binary: they model the NVLink
+    // domain through GLASS_ELEC_BW, which the shortcut's hardcoded 600 GiB/s was
+    // overriding. Pass -enable-intra-shortcut only to reproduce pre-6d3fae7 numbers.
+    bool disable_intra_shortcut = true;
 
     int algo = UNCOUPLED;
     double epsilon = 1;

@@ -85,6 +85,18 @@ because in each the run used exactly what it was handed and reported it accurate
 | C | **Post-processing failed silently after a successful solve** | MAPDL wrote to files literally named `%CSVTILE%.csv` because the parameter never substituted; all four expected panel CSVs were absent, and a stale output from a *different configuration* sat in their place looking current | The solve succeeded and its `.rth` is correct; only the extraction failed, and it failed without an error |
 | D | **Uncommitted code that keeps reapplying** | The flat port-cap implementation was written, built and run from a working tree and never committed; a commit referencing its `extern`s would not link from a clean checkout | `git -c rebase.autoStash=true pull --rebase` stashed and reapplied the files cleanly across many commits, so they stayed live in the tree while appearing in none of them |
 
+| E | **Runner script disagrees with the solve** | `run_panel_hq.sh` declares `HCP=70000` and cites Coenen for it; the solve it produced used **100000**, recovered from `panhq_glass.db` `*STATUS`. The solve has **no `.out` log** at all | Nothing at run time is inconsistent — the deck used what it was given; only the *script* claims otherwise, and scripts are read as documentation |
+
+Sub-class E's rule, which is D's rule pointed at inputs rather than code:
+
+> **The runner script is not evidence of what ran.** Recover boundary conditions and
+> parameters from the solve artifact — `.db` `*STATUS`, a run banner, a `.meta` — never
+> from the script that was supposed to have set them.
+
+Applied: every thermal CSV row carries a `bc_source` column naming where its boundary
+conditions were read from. It was only knowable here because MAPDL's `.db` retains scalar
+parameters; had it not, the published figure's cold plate would have been unrecoverable.
+
 **Sub-class D is the one that most resembles a correct state.** A working tree that reapplies an
 uncommitted change across every rebase is, at runtime, indistinguishable from a committed one:
 the binary builds, the results are real, and `git status` reports it only in a section nobody

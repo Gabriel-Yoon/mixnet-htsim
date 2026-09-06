@@ -1,17 +1,17 @@
-paper_ref,artifact,substrate,tile_i,tile_j,pic_max_C,pic_min_C,pic_spread_C,die_max_C,hcp_W_m2K,tcp_in_C,tcp_rise_C,p_gpu_W,fhot,ndpt,source_rth
-thermal,panel_steady,si,0,0,100.457,59.506,40.951,100.822,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,0,1,100.456,59.506,40.950,100.821,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,0,2,100.456,59.506,40.950,100.821,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,0,3,100.456,58.788,41.667,100.821,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,1,0,105.452,62.921,42.531,105.818,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,1,1,105.451,62.921,42.530,105.817,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,1,2,105.451,62.921,42.530,105.817,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,1,3,105.451,62.399,43.051,105.816,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,2,0,110.448,67.917,42.531,110.814,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,2,1,110.447,67.917,42.530,110.813,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,2,2,110.447,67.917,42.530,110.813,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,2,3,110.447,67.395,43.051,110.813,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,3,0,115.443,72.913,42.530,115.810,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,3,1,115.442,72.913,42.530,115.809,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,3,2,115.442,72.913,42.530,115.809,70000,55,20,700,0.5,32,panhq_si.rth
-thermal,panel_steady,si,3,3,115.442,72.391,43.051,115.809,70000,55,20,700,0.5,32,panhq_si.rth
+paper_ref,artifact,substrate,tile_i,tile_j,pic_max_C,pic_min_C,pic_spread_C,die_max_C,hcp_W_m2K,tcp_in_C,tcp_rise_C,p_gpu_W,fhot,ndpt,source_rth,bc_source
+thermal,panel_steady,si,0,0,100.457,59.506,40.951,100.822,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,0,1,100.456,59.506,40.950,100.821,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,0,2,100.456,59.506,40.950,100.821,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,0,3,100.456,58.788,41.667,100.821,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,1,0,105.452,62.921,42.531,105.818,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,1,1,105.451,62.921,42.530,105.817,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,1,2,105.451,62.921,42.530,105.817,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,1,3,105.451,62.399,43.051,105.816,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,2,0,110.448,67.917,42.531,110.814,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,2,1,110.447,67.917,42.530,110.813,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,2,2,110.447,67.917,42.530,110.813,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,2,3,110.447,67.395,43.051,110.813,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,3,0,115.443,72.913,42.530,115.810,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,3,1,115.442,72.913,42.530,115.809,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,3,2,115.442,72.913,42.530,115.809,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS
+thermal,panel_steady,si,3,3,115.442,72.391,43.051,115.809,100000,55,20,700,0.5,32,panhq_si.rth,db:panhq_si.db *STATUS

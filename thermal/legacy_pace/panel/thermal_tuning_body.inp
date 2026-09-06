@@ -1,0 +1,80 @@
+! ==========================================================================
+! thermal_tuning_body.inp -- thermo-optic TUNING EFFICIENCY of one microring.
+! Local, finely-meshed sub-model centered on a single ring: a small heater
+! dissipates PHEAT_W in the PIC layer; we measure the LOCAL temperature rise
+! at the ring.  Efficiency = dT_ring / PHEAT  [K/W].  A confining (low-k glass)
+! surround gives a larger local rise per watt -> less trim power to tune a ring.
+! glass (MATFLAG=1) vs silicon-interposer control (MATFLAG=0).
+! Params set by caller: MATFLAG, PHEAT_W, T_REF (operating far-field temp, C),
+!                       HCP (cold-plate conv), CSVOUT.
+! No /CLEAR (fresh process; would wipe wrapper params).
+! ==========================================================================
+/PREP7
+! LOCAL sub-model: small lateral extent + truncated far layers (far-field handled
+! by fixed-T boundaries), so it resolves the ring without exploding the mesh.
+LL   = 0.8e-3           ! local lateral extent (0.8 mm) centered on the ring
+ND   = 32               ! -> 25 um lateral elements (heater ~50 um = 2 elems)
+T_BRD=0.3e-3 $ T_SUB=0.4e-3 $ T_PIC=0.05e-3 $ T_RDL=0.1e-3 $ T_DIE=0.3e-3
+HW   = 25e-6            ! heater half-width (ring footprint ~50 um)
+
+*IF,MATFLAG,EQ,1,THEN
+  KMAT=1.2
+*ELSE
+  KMAT=150.0
+*ENDIF
+! (TGV effect negligible for the LOCAL heater path; use matrix k for substrate)
+MP,KXX,1,1.0 $ MP,KYY,1,1.0 $ MP,KZZ,1,1.0
+MP,KXX,2,KMAT $ MP,KYY,2,KMAT $ MP,KZZ,2,KMAT
+MP,KXX,3,80.0 $ MP,KYY,3,80.0 $ MP,KZZ,3,80.0
+MP,KXX,4,200.0 $ MP,KYY,4,200.0 $ MP,KZZ,4,60.0
+MP,KXX,5,150.0 $ MP,KYY,5,150.0 $ MP,KZZ,5,150.0
+
+ET,1,SOLID70
+ESIZE,LL/ND
+Z0=0 $ Z1=Z0+T_BRD $ Z2=Z1+T_SUB $ Z3=Z2+T_PIC $ Z4=Z3+T_RDL $ Z5=Z4+T_DIE
+BLOCK,0,LL,0,LL,Z0,Z1 $ VSEL,S,LOC,Z,(Z0+Z1)/2 $ VATT,1,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,LL,0,LL,Z1,Z2 $ VSEL,S,LOC,Z,(Z1+Z2)/2 $ VATT,2,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,LL,0,LL,Z2,Z3 $ VSEL,S,LOC,Z,(Z2+Z3)/2 $ VATT,3,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,LL,0,LL,Z3,Z4 $ VSEL,S,LOC,Z,(Z3+Z4)/2 $ VATT,4,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,LL,0,LL,Z4,Z5 $ VSEL,S,LOC,Z,(Z4+Z5)/2 $ VATT,5,,1 $ VMESH,ALL $ ALLSEL
+ALLSEL $ NUMMRG,NODE,1e-6 $ NUMCMP,NODE
+
+! ---- ring heater: central HW x HW patch in the PIC layer -------------------
+XC=LL/2 $ YC=LL/2
+VOL_H=(2*HW)*(2*HW)*T_PIC
+HG_H=PHEAT_W/VOL_H
+ESEL,S,MAT,,3 $ ESEL,R,CENT,X,XC-HW,XC+HW $ ESEL,R,CENT,Y,YC-HW,YC+HW
+BFE,ALL,HGEN,1,HG_H $ ALLSEL
+
+! ---- BC: everything referenced to T_REF; only the heater drives dT ---------
+ASEL,S,LOC,Z,Z5 $ SFA,ALL,,CONV,HCP,T_REF $ ALLSEL         ! cold plate on top
+ASEL,S,LOC,Z,Z0 $ DA,ALL,TEMP,T_REF $ ALLSEL               ! board bottom = far-field
+ASEL,S,LOC,X,0 $ DA,ALL,TEMP,T_REF $ ALLSEL                ! lateral far-field (chip)
+ASEL,S,LOC,X,LL $ DA,ALL,TEMP,T_REF $ ALLSEL
+ASEL,S,LOC,Y,0 $ DA,ALL,TEMP,T_REF $ ALLSEL
+ASEL,S,LOC,Y,LL $ DA,ALL,TEMP,T_REF $ ALLSEL
+ALLSEL
+
+FINISH
+/SOLU
+ANTYPE,STATIC
+SOLVE
+FINISH
+
+/POST1
+SET,LAST
+NRING=NODE(XC,YC,(Z2+Z3)/2)          ! ring center node
+*GET,TRING,NODE,NRING,TEMP
+DTRING=TRING-T_REF                    ! local rise driven by the heater [K]
+EFF=DTRING/PHEAT_W                    ! tuning efficiency [K/W]
+! implied trim power: shift each ring by DTTUNE (K) to cover channel spacing
+DTTUNE=5.0
+NRINGS=1915
+PTUNE1=DTTUNE/EFF                     ! per-ring [W]
+PTUNET=NRINGS*PTUNE1                  ! whole PIC [W]
+
+*CFOPEN,%CSVOUT%,,,APPEND
+*VWRITE,MATFLAG,PHEAT_W,TRING,DTRING,EFF,PTUNE1,PTUNET
+(F4.0,',',F10.5,',',F10.4,',',F10.4,',',F12.3,',',F12.6,',',F10.3)
+*CFCLOS
+FINISH

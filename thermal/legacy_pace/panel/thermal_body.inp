@@ -1,0 +1,140 @@
+! ==========================================================================
+! thermal_body.inp  --  Glass-photonic FB package: steady-state thermal core
+! Assumes these parameters are already *SET by the caller (see run_thermal.sh):
+!   MATFLAG   1 = glass substrate (k=1.2) , 0 = silicon-interposer control (k=150)
+!   PITCH_UM  TGV pitch [um]  (sets effective vertical k of the substrate layer)
+!   PGPU_W    GPU die power [W]
+!   PPIC_W    PIC power (modulators + thermo-optic ring trim) [W]
+!   TCP_C     cold-plate coolant temperature [C]
+!   HCP       cold-plate effective convection coeff [W/m^2K]
+!   CSVOUT    results csv filename (appended)
+!   CASETAG   text label for this case
+! Units: SI (m, W, K/C, W/mK, kg/m3, J/kgK).  Temperatures in Celsius.
+! NOTE: no /CLEAR here -- each case is a fresh MAPDL process, and /CLEAR would
+! wipe the parameters the wrapper *SET before /INPUT'ing this file.
+! ==========================================================================
+/PREP7
+
+! ---- geometry (lateral W x W square die footprint ~ 800 mm^2) -------------
+W    = 28.3e-3            ! 28.3 mm -> 801 mm^2 footprint
+ND   = 20                 ! lateral element divisions (sets ring-array gradient resolution)
+! layer thicknesses [m]  (bottom -> top: board, substrate(+TGV), PIC, RDL, die)
+T_BRD = 1.0e-3
+T_SUB = 0.7e-3
+T_PIC = 0.05e-3
+T_RDL = 0.1e-3
+T_DIE = 0.75e-3
+
+! ---- TGV effective vertical conductivity of the substrate layer ----------
+! copper vias (d=100 um) on a square PITCH; area fraction f = (pi/4 d^2)/pitch^2
+! k_zz = k_matrix*(1-f) + k_cu*f ; lateral k stays ~matrix (vias don't help laterally)
+DVIA  = 100e-6
+KCU   = 400.0
+*IF,MATFLAG,EQ,1,THEN
+  KMAT = 1.2              ! glass (borosilicate-like)
+*ELSE
+  KMAT = 150.0           ! silicon interposer control
+*ENDIF
+FVIA=0.7853982*DVIA**2/(PITCH_UM*1e-6)**2
+*IF,FVIA,GT,0.5,THEN
+  FVIA=0.5
+*ENDIF
+KSUB_Z=KMAT*(1.0-FVIA)+KCU*FVIA
+KSUB_L=KMAT
+
+! ---- material properties  (MAT: 1 board,2 substrate,3 PIC,4 RDL,5 die) ----
+! board (organic/PCB effective)
+MP,KXX,1,1.0 $ MP,KYY,1,1.0 $ MP,KZZ,1,1.0
+MP,DENS,1,1900 $ MP,C,1,1100
+! substrate (glass or Si) -- orthotropic vertical enhancement from TGV
+MP,KXX,2,KSUB_L $ MP,KYY,2,KSUB_L $ MP,KZZ,2,KSUB_Z
+MP,DENS,2,2230 $ MP,C,2,830
+! PIC (SiN/Si photonic layer)
+MP,KXX,3,80.0 $ MP,KYY,3,80.0 $ MP,KZZ,3,80.0
+MP,DENS,3,2300 $ MP,C,3,700
+! RDL + micro-bump layer: Cu redistribution planes act as a lateral heat spreader
+MP,KXX,4,200.0 $ MP,KYY,4,200.0 $ MP,KZZ,4,60.0
+MP,DENS,4,2500 $ MP,C,4,800
+! die (silicon)
+MP,KXX,5,150.0 $ MP,KYY,5,150.0 $ MP,KZZ,5,150.0
+MP,DENS,5,2330 $ MP,C,5,700
+
+ET,1,SOLID70            ! 8-node thermal brick, supports orthotropic KXX/KYY/KZZ
+
+ESZ = W/ND
+ESIZE,ESZ
+
+! ---- build 5 stacked layers; same lateral ESIZE -> coincident interface nodes
+Z0 = 0
+Z1 = Z0+T_BRD
+Z2 = Z1+T_SUB
+Z3 = Z2+T_PIC
+Z4 = Z3+T_RDL
+Z5 = Z4+T_DIE
+
+! board
+BLOCK,0,W,0,W,Z0,Z1 $ VSEL,S,LOC,Z,(Z0+Z1)/2 $ VATT,1,,1 $ VMESH,ALL $ ALLSEL
+! substrate (+TGV)
+BLOCK,0,W,0,W,Z1,Z2 $ VSEL,S,LOC,Z,(Z1+Z2)/2 $ VATT,2,,1 $ VMESH,ALL $ ALLSEL
+! PIC (ring-array level)
+BLOCK,0,W,0,W,Z2,Z3 $ VSEL,S,LOC,Z,(Z2+Z3)/2 $ VATT,3,,1 $ VMESH,ALL $ ALLSEL
+! RDL / micro-bumps
+BLOCK,0,W,0,W,Z3,Z4 $ VSEL,S,LOC,Z,(Z3+Z4)/2 $ VATT,4,,1 $ VMESH,ALL $ ALLSEL
+! die
+BLOCK,0,W,0,W,Z4,Z5 $ VSEL,S,LOC,Z,(Z4+Z5)/2 $ VATT,5,,1 $ VMESH,ALL $ ALLSEL
+ALLSEL
+
+NUMMRG,NODE,1e-6        ! merge coincident interface nodes -> conformal stack
+NUMCMP,NODE
+
+! ---- heat generation (volumetric, W/m^3) ---------------------------------
+VOL_PIC=W*W*T_PIC
+HG_PIC=PPIC_W/VOL_PIC
+ESEL,S,MAT,,3 $ BFE,ALL,HGEN,1,HG_PIC $ ALLSEL          ! PIC uniform
+! die with a central compute-tile HOTSPOT -> realistic lateral ring-array gradient.
+! central W/3 x W/3 region carries fraction FHOT of the die power (rest uniform).
+FHOT=0.5
+AHOT=(W/3)*(W/3)
+HGH=FHOT*PGPU_W/(AHOT*T_DIE)
+HGC=(1.0-FHOT)*PGPU_W/((W*W-AHOT)*T_DIE)
+ESEL,S,MAT,,5 $ BFE,ALL,HGEN,1,HGC $ ALLSEL
+ESEL,S,MAT,,5 $ ESEL,R,CENT,X,W/3,2*W/3 $ ESEL,R,CENT,Y,W/3,2*W/3 $ BFE,ALL,HGEN,1,HGH $ ALLSEL
+
+! ---- boundary conditions --------------------------------------------------
+! top face of die -> liquid cold plate (convection)
+ASEL,S,LOC,Z,Z5 $ SFA,ALL,,CONV,HCP,TCP_C $ ALLSEL
+! bottom face of board -> mild ambient convection (most heat leaves via cold plate)
+ASEL,S,LOC,Z,Z0 $ SFA,ALL,,CONV,50.0,40.0 $ ALLSEL
+! sides: adiabatic (unit-cell symmetry) = natural BC, nothing to apply
+
+! ---- solve ----------------------------------------------------------------
+FINISH
+/SOLU
+ANTYPE,STATIC
+SOLVE
+FINISH
+
+! ---- post: PIC ring-array gradient + absolute temps -----------------------
+/POST1
+SET,LAST
+ESEL,S,MAT,,3 $ NSLE,S           ! PIC nodes
+NSORT,TEMP
+*GET,TPMAX,SORT,,MAX
+*GET,TPMIN,SORT,,MIN
+DTPIC = TPMAX-TPMIN              ! ring-array gradient  [K]  <-- key feasibility metric
+ALLSEL
+ESEL,S,MAT,,5 $ NSLE,S $ NSORT,TEMP $ *GET,TDMAX,SORT,,MAX $ ALLSEL
+ESEL,S,MAT,,1 $ NSLE,S $ NSORT,TEMP $ *GET,TBMIN,SORT,,MIN $ ALLSEL
+
+! ---- thermo-optic trim power implied by the gradient ----------------------
+! per-ring trim ~ P0_ring * (local dT); NRING rings, mean dT ~ DTPIC/2
+NRING   = 1915
+P0_RING = 1.2e-3               ! W per K per ring (Si MRR thermo-optic heater ~1 mW/K)
+PTRIM_W = NRING*P0_RING*(DTPIC/2.0)
+
+! ---- append one CSV row (numeric only; matflag+pitch identify the case) ----
+*CFOPEN,%CSVOUT%,,,APPEND
+*VWRITE,MATFLAG,PITCH_UM,KSUB_Z,PGPU_W,PPIC_W,TPMAX,DTPIC,TDMAX,PTRIM_W
+(F4.0,',',F7.1,',',F10.2,',',F7.1,',',F6.1,',',F10.3,',',F10.4,',',F10.3,',',F10.3)
+*CFCLOS
+FINISH

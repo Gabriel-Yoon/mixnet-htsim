@@ -1,0 +1,75 @@
+! ==========================================================================
+! thermal_stab_body.inp -- STABILIZATION scenario: PIC temperature response to a
+! FLUCTUATING GPU power (square wave idle<->TDP at period T_PER).  Shows the
+! excursion the microrings see and how the package thermal mass low-passes fast
+! fluctuations -> a thermo-optic control loop can stabilize the rings.
+! Params: MATFLAG, PGPU_HI, PGPU_LO, PPIC_W, TCP_C, HCP, T_PER, NCYC, DT_S, CSVOUT.
+! No /CLEAR (fresh process; would wipe wrapper params).
+! ==========================================================================
+/PREP7
+! ---- MATERIAL PROPERTIES (verified vs literature, Jul 2026) ----------------
+!  MAT k[W/mK]  rho[kg/m3] Cp[J/kgK]  source
+!  1 board  1.0    1900    1100   organic laminate EFFECTIVE (FR-4/BT/ABF ~0.3-1; secondary layer)
+!  2 glass  1.2    2230     830   Corning Pyrex 7740 borosilicate datasheet
+!    (Si ctrl 150; Si can't host the FLDW optics -- reference only)
+!  3 PIC    80     2300     700   Si-photonics EFFECTIVE (Si core k~150 + SiO2 clad k~1.4)
+!  4 RDL   200/60  2500     800   Cu+underfill EFFECTIVE, anisotropic (Cu 401 handbook)
+!  5 die   150     2330     700   silicon: Shanks et al., Phys.Rev.130,1743 (1963); textbook rho/Cp
+! ---------------------------------------------------------------------------
+W=28.3e-3 $ ND=20
+T_BRD=1.0e-3 $ T_SUB=0.7e-3 $ T_PIC=0.05e-3 $ T_RDL=0.1e-3 $ T_DIE=0.75e-3
+*IF,MATFLAG,EQ,1,THEN
+  KMAT=1.2
+*ELSE
+  KMAT=150.0
+*ENDIF
+MP,KXX,1,1.0 $ MP,KYY,1,1.0 $ MP,KZZ,1,1.0 $ MP,DENS,1,1900 $ MP,C,1,1100
+MP,KXX,2,KMAT $ MP,KYY,2,KMAT $ MP,KZZ,2,KMAT $ MP,DENS,2,2230 $ MP,C,2,830
+MP,KXX,3,80.0 $ MP,KYY,3,80.0 $ MP,KZZ,3,80.0 $ MP,DENS,3,2300 $ MP,C,3,700
+MP,KXX,4,200.0 $ MP,KYY,4,200.0 $ MP,KZZ,4,60.0 $ MP,DENS,4,2500 $ MP,C,4,800
+MP,KXX,5,150.0 $ MP,KYY,5,150.0 $ MP,KZZ,5,150.0 $ MP,DENS,5,2330 $ MP,C,5,700
+ET,1,SOLID70
+ESIZE,W/ND
+Z0=0 $ Z1=Z0+T_BRD $ Z2=Z1+T_SUB $ Z3=Z2+T_PIC $ Z4=Z3+T_RDL $ Z5=Z4+T_DIE
+BLOCK,0,W,0,W,Z0,Z1 $ VSEL,S,LOC,Z,(Z0+Z1)/2 $ VATT,1,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,W,0,W,Z1,Z2 $ VSEL,S,LOC,Z,(Z1+Z2)/2 $ VATT,2,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,W,0,W,Z2,Z3 $ VSEL,S,LOC,Z,(Z2+Z3)/2 $ VATT,3,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,W,0,W,Z3,Z4 $ VSEL,S,LOC,Z,(Z3+Z4)/2 $ VATT,4,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,W,0,W,Z4,Z5 $ VSEL,S,LOC,Z,(Z4+Z5)/2 $ VATT,5,,1 $ VMESH,ALL $ ALLSEL
+ALLSEL $ NUMMRG,NODE,1e-6 $ NUMCMP,NODE
+
+VOL_DIE=W*W*T_DIE $ VOL_PIC=W*W*T_PIC
+ESEL,S,MAT,,3 $ BFE,ALL,HGEN,1,PPIC_W/VOL_PIC $ ALLSEL
+ASEL,S,LOC,Z,Z5 $ SFA,ALL,,CONV,HCP,TCP_C $ ALLSEL
+ASEL,S,LOC,Z,Z0 $ SFA,ALL,,CONV,50.0,40.0 $ ALLSEL
+NPIC=NODE(W/2,W/2,(Z2+Z3)/2)
+FINISH
+
+/SOLU
+ANTYPE,TRANS
+TRNOPT,FULL
+OUTRES,ALL,ALL
+! ---- LS1: idle steady-state initial condition ---------------------------
+TIMINT,OFF
+ESEL,S,MAT,,5 $ BFE,ALL,HGEN,1,PGPU_LO/VOL_DIE $ ALLSEL
+TIME,1e-3 $ KBC,1 $ SOLVE
+! ---- square-wave GPU power: NCYC cycles of [HI half, LO half] ------------
+TIMINT,ON
+TNOW=1e-3
+*DO,IC,1,NCYC
+  ESEL,S,MAT,,5 $ BFE,ALL,HGEN,1,PGPU_HI/VOL_DIE $ ALLSEL
+  TNOW=TNOW+T_PER/2
+  TIME,TNOW $ KBC,1 $ AUTOTS,ON $ DELTIM,DT_S,DT_S/10,DT_S*4 $ SOLVE
+  ESEL,S,MAT,,5 $ BFE,ALL,HGEN,1,PGPU_LO/VOL_DIE $ ALLSEL
+  TNOW=TNOW+T_PER/2
+  TIME,TNOW $ KBC,1 $ AUTOTS,ON $ DELTIM,DT_S,DT_S/10,DT_S*4 $ SOLVE
+*ENDDO
+FINISH
+
+/POST26
+NUMVAR,200
+NSOL,2,NPIC,TEMP
+/OUTPUT,%CSVOUT%,csv
+PRVAR,2
+/OUTPUT
+FINISH

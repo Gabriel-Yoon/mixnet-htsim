@@ -1,0 +1,11 @@
+MATFLAG=1   
+PGPU_HI=700 
+PGPU_LO=200 
+PPIC_W=25   
+TCP_C=60
+HCP=70000   
+T_PER=0.02  
+NCYC=40 
+DT_S=0.0008 
+CSVOUT='stab_p0p02' 
+/INPUT,thermal_stab_body,inp

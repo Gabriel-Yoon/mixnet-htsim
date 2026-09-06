@@ -1,0 +1,17 @@
+paper_ref,artifact,substrate,tile_i,tile_j,pic_max_C,pic_min_C,pic_spread_C,die_max_C,hcp_W_m2K,tcp_in_C,tcp_rise_C,p_gpu_W,fhot,ndpt,source_rth
+thermal,panel_steady,glass,0,0,104.312,59.021,45.291,104.349,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,0,1,104.312,59.021,45.291,104.349,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,0,2,104.312,59.021,45.291,104.349,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,0,3,104.312,58.463,45.848,104.349,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,1,0,109.308,62.392,46.916,109.345,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,1,1,109.308,62.392,46.916,109.345,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,1,2,109.308,62.392,46.916,109.345,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,1,3,109.308,62.010,47.298,109.345,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,2,0,114.304,67.388,46.916,114.342,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,2,1,114.304,67.388,46.916,114.342,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,2,2,114.304,67.388,46.916,114.342,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,2,3,114.304,67.006,47.298,114.342,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,3,0,119.300,72.384,46.916,119.338,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,3,1,119.300,72.384,46.916,119.338,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,3,2,119.300,72.384,46.916,119.338,70000,55,20,700,0.5,32,panhq_glass.rth
+thermal,panel_steady,glass,3,3,119.300,72.002,47.298,119.338,70000,55,20,700,0.5,32,panhq_glass.rth

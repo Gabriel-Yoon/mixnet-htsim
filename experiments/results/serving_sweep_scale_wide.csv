@@ -1,0 +1,9 @@
+workload,ep,nodes,topology,design,opt_bw,inter_bw,G,fair_speed_mbps,makespan_ps,makespan_ms,rtos
+decode,128,128,glassfb_mesh,wide,640,1600,4,,1259874014,1.260,0
+decode,144,144,glassfb_mesh,wide,640,1600,4,,1110630326,1.111,0
+coding_prefill,128,128,glassfb_mesh,wide,640,1600,4,,26188369177,26.188,3594
+coding_prefill,144,144,glassfb_mesh,wide,640,1600,4,,26135563064,26.136,5961
+chat_prefill,128,128,glassfb_mesh,wide,640,1600,4,,52055084239,52.055,502
+chat_prefill,144,144,glassfb_mesh,wide,640,1600,4,,53117985639,53.118,2165
+agentic_prefill,128,128,glassfb_mesh,wide,640,1600,4,,35109714137,35.110,4428
+agentic_prefill,144,144,glassfb_mesh,wide,640,1600,4,,34723289887,34.723,7049

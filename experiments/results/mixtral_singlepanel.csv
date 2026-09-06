@@ -1,0 +1,17 @@
+workload,config,makespan_ps,makespan_ms,rtos
+mixtral_decode,onepanel_8,456652247,0.457,0
+mixtral_decode,split_4x2,456644983,0.457,0
+mixtral_decode,split_2x4,456644023,0.457,0
+mixtral_decode,fattree,456710551,0.457,0
+mixtral_coding_prefill,onepanel_8,1833556485,1.834,0
+mixtral_coding_prefill,split_4x2,1833608402,1.834,0
+mixtral_coding_prefill,split_2x4,1833607442,1.834,0
+mixtral_coding_prefill,fattree,1786066789,1.786,0
+mixtral_chat_prefill,onepanel_8,791831580,0.792,0
+mixtral_chat_prefill,split_4x2,791883497,0.792,0
+mixtral_chat_prefill,split_2x4,791882537,0.792,0
+mixtral_chat_prefill,fattree,744341884,0.744,0
+mixtral_agentic_prefill,onepanel_8,2648451175,2.648,0
+mixtral_agentic_prefill,split_4x2,2648503092,2.649,0
+mixtral_agentic_prefill,split_2x4,2648502676,2.649,0
+mixtral_agentic_prefill,fattree,2648568660,2.649,0

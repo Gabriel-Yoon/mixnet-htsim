@@ -1,0 +1,7 @@
+workload,ep,nodes,topology,design,opt_bw,inter_bw,G,fair_speed_mbps,makespan_ps,makespan_ms,rtos
+decode,32,32,fattree,wide,,,,3523600,909589372,0.910,0
+decode,32,32,flat,wide,,,,3523600,488723036,0.489,0
+decode,64,64,fattree,wide,,,,3523600,823313602,0.823,0
+decode,64,64,flat,wide,,,,3523600,410025604,0.410,0
+coding_prefill,32,32,fattree,wide,,,,3523600,6393472616,6.393,0
+coding_prefill,32,32,flat,wide,,,,3523600,2677226996,2.677,0

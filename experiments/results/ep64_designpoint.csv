@@ -1,0 +1,11 @@
+experiment,workload,ep,opt_bw,inter_bw,G,makespan_ps,makespan_ms,rtos
+pareto_n5,coding_prefill,64,640,1600,4,23711448605,23.711,186
+pareto_n3,coding_prefill,64,384,3200,4,6448818088,6.449,0
+pareto_n5,agentic_prefill,64,640,1600,4,24993021747,24.993,163
+pareto_n3,agentic_prefill,64,384,3200,4,11698443723,11.698,0
+knob_base,coding_prefill,64,640,1600,4,23711448605,23.711,186
+knob_opt_x2,coding_prefill,64,1280,1600,4,25276160733,25.276,609
+knob_opt_half,coding_prefill,64,320,1600,4,8761446221,8.761,0
+knob_inter_x2,coding_prefill,64,640,3200,4,47657446140,47.657,53
+knob_inter_half,coding_prefill,64,640,800,4,24812207060,24.812,263
+knob_g1,coding_prefill,64,640,1600,1,25253760515,25.254,582

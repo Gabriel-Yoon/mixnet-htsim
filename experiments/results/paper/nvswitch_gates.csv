@@ -1,0 +1,5 @@
+gate,config,makespan_ps,makespan_ms,rtos,flows,max_flow_GB,max_flow_fct_ms,single_flow_GBps,note
+G4_reduce,-nvs_domain 8 -nvs_switches 1 -nvs_link 900 -nvs_lat 0 -nvs_q 200000 -nvs_ecn_k 100000 -speed 7200000 -rtt 2000 -q 5000 -port-cap-pkts 2400,89320058286,89.320,0,32768,0.1359,0.1806,752.15,
+G3_run1,-nvs_domain 64 -nvs_switches 18 -nvs_link 50 -nvs_lat 250 -nvs_q 136 -nvs_ecn_k 68 -speed 800000 -rtt 2000 -q 540 -port-cap-pkts 270,147050760070,147.051,1227,32768,0.1359,2.7182,49.98,
+G3_run2,-nvs_domain 64 -nvs_switches 18 -nvs_link 50 -nvs_lat 250 -nvs_q 136 -nvs_ecn_k 68 -speed 800000 -rtt 2000 -q 540 -port-cap-pkts 270,147050760070,147.051,1227,32768,0.1359,2.7182,49.98,
+G1_nvl64,-nvs_domain 64 -nvs_switches 18 -nvs_link 50 -nvs_lat 250 -nvs_q 136 -nvs_ecn_k 68 -speed 800000 -rtt 2000 -q 540 -port-cap-pkts 270,147050760070,147.051,1227,32768,0.1359,2.7182,49.98,

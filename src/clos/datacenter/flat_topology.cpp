@@ -23,6 +23,12 @@
 #define EDGE(a, b, n) ((a) > (b) ? ((a) * (n) + (b)) : ((b) * (n) + (a)))
 
 extern uint32_t RTT;
+
+// Per-node egress port cap. Default OFF: without it this topology is an ideal
+// non-blocking bound with unbounded injection, which is how every existing
+// result row was produced. See docs/paper_todo.md B28.
+bool FLAT_PORT_CAP = false;
+uint32_t FLAT_PORT_CAP_PKTS = FEEDER_BUFFER;
 extern uint32_t SPEED;
 extern ofstream fct_util_out;
 
@@ -227,6 +233,40 @@ void FlatTopology::init_network()
       switchs[j] = new Switch("Switch_LowerPod_" + ntoa(j));
     }
 
+  src_queues.clear();
+  if (FLAT_PORT_CAP)
+  {
+    src_queues.resize(_no_of_nodes, nullptr);
+    for (int j = 0; j < _no_of_nodes; j++)
+    {
+      src_queues[j] = new PriorityQueue(speedFromMbps((uint64_t)SPEED),
+                                        memFromPkt(FLAT_PORT_CAP_PKTS),
+                                        *eventlist, NULL);
+      src_queues[j]->setName("PORT" + ntoa(j));
+    }
+    // Report the feeder as a multiple of the port's bandwidth-delay product, so the
+    // row documents whether the buffer was derived or guessed. BDP here is the
+    // port rate x the one-way link latency; 2-4x BDP is the provisioning rule used
+    // throughout this project (docs/paper_todo.md A3).
+    {
+      double port_GBps = SPEED / 8000.0;                  // Mbps -> GB/s
+      double bdp_bytes = port_GBps * 1e9 * (RTT * 1e-9);  // GB/s x s
+      double bdp_pkts  = bdp_bytes / 1500.0;
+      std::cerr << "Flat port cap: ENABLED, one " << port_GBps << " GB/s egress port per node, "
+                << FLAT_PORT_CAP_PKTS << " pkt feeder buffer";
+      if (bdp_pkts > 0)
+        std::cerr << " (" << (FLAT_PORT_CAP_PKTS / bdp_pkts) << "x BDP at "
+                  << RTT << " ns)";
+      std::cerr << " -- EGRESS ONLY; ingress is uncapped, so incast is optimistic"
+                << std::endl;
+    }
+  }
+  else
+  {
+    std::cerr << "Flat port cap: DISABLED (ideal non-blocking bound; per-node "
+                 "injection is (N-1) x link rate, uncapped)" << std::endl;
+  }
+
   for (int j = 0; j < _no_of_nodes; j++)
   {
     for (int k = 0; k < j; k++)
@@ -323,7 +363,8 @@ vector<const Route *> *FlatTopology::get_paths(int src, int dest)
   {
     // forward path
     routeout = new Route();
-    //routeout->push_back(pqueue);
+    if (FLAT_PORT_CAP)
+      routeout->push_back(src_queues[src]);
 
     const vector<size_t> &route = *r;
 
@@ -340,6 +381,8 @@ vector<const Route *> *FlatTopology::get_paths(int src, int dest)
       routeout->push_back(queues[src][dest]->getRemoteEndpoint());
 
     routeback = new Route();
+    if (FLAT_PORT_CAP)
+      routeback->push_back(src_queues[dest]);
     // reverse path for RTS packets
     // assert(_routes.find(dest * _no_of_nodes + src) != _routes.end());
     // route = *(_routes[dest * _no_of_nodes + src]);

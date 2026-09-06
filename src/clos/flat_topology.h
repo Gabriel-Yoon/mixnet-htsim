@@ -27,6 +27,11 @@ public:
 
   vector<vector<Pipe*>> pipes;
   vector<vector<Queue*>> queues;
+
+  // Per-node egress port. Empty unless the port cap is enabled; when enabled it
+  // is prepended to every route so a node's total injection is one link rate,
+  // which is what makes a switch-based crossbar finite.
+  vector<Queue*> src_queues;
   
   FirstFit* ff;
   Logfile* logfile;

@@ -365,8 +365,8 @@ int main(int argc, char **argv)
 
     //FlatTopology *top = new FlatTopology(no_of_nodes, flowfile, queuesize, nullptr /* &logfile */, &eventlist, ff, ECN);
     std::cerr << "Island: " << GLASS_ISLAND_GPUS << " GPUs at "
-              << (GLASS_ISLAND_BW_BYTES / 1e9) << " GB/s (analytic, contention-free)"
-              << std::endl;
+              << (GLASS_ISLAND_BW_BYTES / 1e9) << " GB/s decimal (analytic, contention-free)"
+              << "  [default 600 GiB/s prints as 644.245]" << std::endl;
     std::cerr << "Scale-out: " << (SPEED / 8000.0) << " GB/s per node, link latency "
               << RTT << " ns" << std::endl;
     FlatTopology *top = new FlatTopology(no_of_nodes, queuesize, nullptr /* &logfile */, &eventlist, ff, ECN);

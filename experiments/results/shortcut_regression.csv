@@ -1,0 +1,7 @@
+mode,flag,inter_bw,banner,makespan_ps,makespan_ms,rtos,intra_node_flows,total_flows
+default_on,none,2000,ENABLED,46028299484,46.028,68,1024,8192
+default_on,none,2400,ENABLED,6448818088,6.449,0,1024,8192
+explicit_on,-enable-intra-shortcut,2000,ENABLED,46028299484,46.028,68,1024,8192
+explicit_on,-enable-intra-shortcut,2400,ENABLED,6448818088,6.449,0,1024,8192
+explicit_off,-disable-intra-shortcut,2000,DISABLED,44145082020,44.145,70,1024,8192
+explicit_off,-disable-intra-shortcut,2400,DISABLED,6418341050,6.418,0,1024,8192

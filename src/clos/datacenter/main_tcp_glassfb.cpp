@@ -125,6 +125,14 @@ int main(int argc, char **argv)
     TcpPacket::set_packet_size(packet_size - DEFAULT_HEADER_SIZE); // MTU
     mem_b queuesize = DEFAULT_QUEUE_SIZE * packet_size;
 
+    // Intra-node NVLink/NVSwitch shortcut (ffapp.cpp: src_gpu/8 == dst_gpu/8 completes
+    // at nvlink_bandwidth without entering the topology). A glass panel has no 8-GPU
+    // NVLink server behind it, so for glass-FB this shortcut hands the fabric free
+    // bandwidth it does not have -- measured, it bypassed 50% of flows at EP=16 and
+    // 100% of in-domain traffic in the NVLink-domain configs. This commit only adds
+    // the switch; the default is unchanged so the hook is verifiably inert.
+    bool disable_intra_shortcut = false;
+
     int algo = UNCOUPLED;
     double epsilon = 1;
     int ssthresh = 15;
@@ -238,6 +246,14 @@ int main(int argc, char **argv)
             weight_matrix_file = argv[i + 1];
             i++;
         }
+        else if (!strcmp(argv[i], "-enable-intra-shortcut"))
+        {
+            disable_intra_shortcut = false;
+        }
+        else if (!strcmp(argv[i], "-disable-intra-shortcut"))
+        {
+            disable_intra_shortcut = true;
+        }
         else if (!strcmp(argv[i], "-simtime"))
         {
             simtime = atof(argv[i + 1]);
@@ -337,6 +353,13 @@ int main(int argc, char **argv)
 
     // FFApplication app = FFApplication(top, ssthresh, sinkLogger, traffic_logger, tcpRtxScanner, eventlist);
     FFApplication app = FFApplication(top, ssthresh, logdir, &fct_util_out, tcpRtxScanner, eventlist);
+    app.disable_intra_node_shortcut = disable_intra_shortcut;
+    // Print the mode that actually ran: a setting is not considered active until the
+    // log shows evidence it was used (see docs/interconnect_parameters.md 4b).
+    std::cerr << "Intra-node NVLink shortcut: "
+              << (disable_intra_shortcut ? "DISABLED (all traffic routed through the topology)"
+                                         : "ENABLED (same-8-GPU-node pairs bypass the topology)")
+              << std::endl;
     // Dispatch by extension: ".pb" flow files use the (revived) TaskGraphProtoBuf
     // schema (see taskgraph.proto) -- a simpler, non-FlexFlow-training-specific
     // bridge intended for serving/inference workloads (e.g. exported from

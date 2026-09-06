@@ -185,3 +185,20 @@ are the sourced ones only: multi-tier rail-optimized scale-out (DGX SuperPOD RA)
 measured RDMA end-to-end latency (De Sensi inter-node, 2–4 µs), PCIe Gen5 cap where it
 binds, 8 of 72 stranded GPUs, scale-out switch-port power, 1.55–5 pJ/bit SerDes, NVSwitch
 tray power.
+
+### 3a. Correction and decision on striping (2026-09-06)
+
+The claim in §3.2 that "every ffapp start_flow site already calls set_paths()" was wrong:
+5 of 11 sites did, and the all-to-all site (ffapp.cpp:2368) did not — a `-DPACKET_SCATTER`
+build as-was would have striped everything except the A2A. Fixed by the peer: set_paths at
+9 sites, both rotted destructor blocks (TcpSrc and TcpSink), CRLF preserved. **Decision:
+mode 2 (per-packet spray) is the striping mode; mode 3 (subflows) is not built** — it would
+touch 11 creation sites and change the meaning of every FCT / flow-count column, whereas
+mode 2 is ~14 lines, keeps the accounting, and is NVLink's actual behaviour. Mode 3 only if
+mode 2 measurably misbehaves (G1/G2 + the DUPACK_TH caveat).
+
+k sweep so far (EP=16 LLaMA-MoE, nvl64_pkt, mode 1): k=4 151.9 ms / 6423 RTO / max FCT
+12.6 ms; k=8 147.1 / 1227 / 12.7; k=16 281.1 / 166 / 100.4 — the buffer-vs-tail trade seen
+on the glass edge (fewer, deeper timeouts, starved tail). k=32/64 invalid (binary removed
+mid-sweep by the scatter build; being re-run). No number is quoted until the sweep is
+complete and the mode-2 row exists; the row quoted for NVL is the most NVL-favourable one.

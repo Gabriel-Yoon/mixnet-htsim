@@ -1,0 +1,5 @@
+model,nodes,fabric,intra_bw,inter_bw,panel,makespan_ps,makespan_ms
+llamaMoE,128,glass,400,200,16,100412372144,100.412
+llamaMoE,128,fattree50,50,0,0,246847865111,246.848
+llamaMoE,128,fattree100,100,0,0,161213422382,161.213
+llamaMoE,128,flat100,100,0,0,95320986780,95.321

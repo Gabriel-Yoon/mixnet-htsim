@@ -1,0 +1,13 @@
+model,mb,fabric,nodes,detail,makespan_ps,makespan_ms
+llamaMoE,4,glass,128,fb2-deg4-design,85466055764,85.466
+llamaMoE,4,h100,128,flat50+free8,97155183254,97.155
+llamaMoE,4,gb200,128,dom64-900-nic3200,85031868349,85.032
+llamaMoE,8,glass,128,fb2-deg4-design,98303345138,98.303
+llamaMoE,8,h100,128,flat50+free8,110473222232,110.473
+llamaMoE,8,gb200,128,dom64-900-nic3200,86566321487,86.566
+llamaMoE,16,glass,128,fb2-deg4-design,187302763471,187.303
+llamaMoE,16,h100,128,flat50+free8,148572007221,148.572
+llamaMoE,16,gb200,128,dom64-900-nic3200,89349736381,89.350
+llamaMoE,32,glass,128,fb2-deg4-design,365728182772,365.728
+llamaMoE,32,h100,128,flat50+free8,224403405427,224.403
+llamaMoE,32,gb200,128,dom64-900-nic3200,95240255723,95.240

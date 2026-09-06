@@ -1,0 +1,10 @@
+model,nodes,ep,microbatch,topology,link_gbps,makespan_ps,makespan_ms
+deepseekv2,1280,160,8,fattree,400,0,0.000
+deepseekv2,1280,160,8,os_fattree,400,0,0.000
+deepseekv2,1280,160,8,flat,400,187486311580,187.486
+deepseekv2,1280,160,8,mixnet,400,0,0.000
+deepseekv2,1280,160,8,fattree,800,0,0.000
+deepseekv2,1280,160,8,os_fattree,800,0,0.000
+deepseekv2,1280,160,8,flat,800,136294634311,136.295
+deepseekv2,1280,160,8,mixnet,800,0,0.000
+deepseekv2,1280,160,8,glass_fb,4096,2440742619581,2440.743

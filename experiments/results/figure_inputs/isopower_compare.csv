@@ -1,0 +1,3 @@
+model,fabric,link_gbps,power_note,makespan_ps,makespan_ms
+llamaMoE,fattree,100,iso-power high,160186054641,160.186
+llamaMoE,fattree,200,optimistic,118456188075,118.456

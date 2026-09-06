@@ -1,0 +1,10 @@
+model,nodes,ep,microbatch,topology,link_gbps,makespan_ps,makespan_ms
+qwen2_57b,512,64,8,fattree,400,729405691195,729.406
+qwen2_57b,512,64,8,os_fattree,400,0,0.000
+qwen2_57b,512,64,8,flat,400,189647449077,189.647
+qwen2_57b,512,64,8,mixnet,400,0,0.000
+qwen2_57b,512,64,8,fattree,800,359978476261,359.978
+qwen2_57b,512,64,8,os_fattree,800,0,0.000
+qwen2_57b,512,64,8,flat,800,127899018517,127.899
+qwen2_57b,512,64,8,mixnet,800,0,0.000
+qwen2_57b,512,64,8,glass_fb,4096,576261228167,576.261

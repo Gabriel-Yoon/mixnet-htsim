@@ -1,0 +1,4 @@
+topology,link_gbps,makespan_ms
+fc,100,84.953
+fc,200,84.254
+fc,512,83.755

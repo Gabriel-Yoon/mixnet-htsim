@@ -1,0 +1,10 @@
+model,nodes,ep,microbatch,topology,link_gbps,makespan_ps,makespan_ms
+arctic,1024,128,8,fattree,400,0,0.000
+arctic,1024,128,8,os_fattree,400,0,0.000
+arctic,1024,128,8,flat,400,208773124939,208.773
+arctic,1024,128,8,mixnet,400,0,0.000
+arctic,1024,128,8,fattree,800,0,0.000
+arctic,1024,128,8,os_fattree,800,0,0.000
+arctic,1024,128,8,flat,800,187875899273,187.876
+arctic,1024,128,8,mixnet,800,0,0.000
+arctic,1024,128,8,glass_fb,4096,460412845874,460.413

@@ -1,0 +1,5 @@
+test,fabric,link_gbs,makespan_ps,makespan_ms
+isopower,fattree,200,105322295966,105.322
+fair512,fattree,512,90673561005,90.674
+fair512,flat,512,84749624905,84.750
+fair512,glass_uniform512,512,86075989242,86.076

@@ -1,0 +1,9 @@
+model,nodes,ep,microbatch,topology,link_gbps,makespan_ps,makespan_ms
+qwen3_235b,1024,128,8,fattree,400,0,0.000
+qwen3_235b,1024,128,8,os_fattree,400,0,0.000
+qwen3_235b,1024,128,8,flat,400,176818358016,176.818
+qwen3_235b,1024,128,8,mixnet,400,0,0.000
+qwen3_235b,1024,128,8,fattree,800,0,0.000
+qwen3_235b,1024,128,8,os_fattree,800,0,0.000
+qwen3_235b,1024,128,8,flat,800,117429761913,117.430
+qwen3_235b,1024,128,8,mixnet,800,0,0.000

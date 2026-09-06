@@ -83,17 +83,33 @@ The ~70 W/GPU figure charges all **60** waveguides the package fields
 (60 × 1.024 Tb/s × 1.15 pJ/bit ≈ 71 W). The design lights only a fraction of them, and unlit
 passive waveguides consume nothing.
 
-**How large that fraction is, is itself under revision.** main.tex states "~19 of 60", but the
-manuscript-revision session found that figure compares a *per-direction* waveguide count against
-a *both-directions* budget (uni/bi mismatch); their corrected model puts the 400 GB/s design at
-**~25 of 59.8 WG**. So the overcharge is ~2.4×, not the ~3.2× that "19 of 60" implies. Their fix
-also raises the intra-panel cap (512 → 896 GB/s/dir, 640 with a 1600 GB/s edge reserved) — see
-LLMServingSim `research/asp-dac-2027` commit `0862e73` and its `scripts/wg_budget.py`.
+**Two different "used" numbers exist and both are correct** — they answer different questions
+(confirmed with the manuscript-revision session, whose `wg_budget.py` in LLMServingSim
+`research/asp-dac-2027` `0862e73` carries the corrected model):
 
-Either way the direction is the same: charging all 60 is conservative in our own disfavour,
-which is defensible, but it should be *stated* rather than left for a reader to derive. Both
-ends are in the sensitivity table below (`--budget used|provisioned`); `used` is parameterised
-by `WG_USED` in the script, currently 19 and worth updating to 25 once their model lands.
+| number | what it is | what it is for |
+|---|---|---|
+| **~19.5 WG/GPU** | panel **average** | **energy / power** — this is what `WG_USED` is |
+| ~26.6 WG/GPU | corner-GPU **worst case** | link **feasibility** capping in `wg_budget.py` |
+
+Derivation of the average: a 4×4 panel has 24 distance-≥2 (optical) links — each row of 4
+contributes 3 of its 6 links, times 4 rows + 4 columns. That is 48 endpoints over 16 GPUs =
+**3.00 optical links per GPU on average** (corner 4, edge-middle 3, interior 2). At the current
+400 GB/s design: 3.00 × 3 WG/dir × 2 = 18.8, plus 0.78 inter-panel = **19.5**. Distance-1 peers
+ride the electrical RDL and consume no waveguide at all.
+
+So main.tex's "~19 of 60" is right as written. (The old text reached it via 6 links × 3 WG where
+the correct route is 3 optical links × 6 WG — same product, different reasoning.) The manuscript
+number that *is* wrong is line ~659's "1600 GB/s ≈ 13 waveguides", which compares per-direction
+against a both-directions budget; it should be 25 WG.
+
+At the corrected-budget **wide** design (640 intra / 1600 inter) the average rises to
+3.00 × 5 × 2 + 6.25 = **36.25 WG/GPU**. Both are selectable via `--design {current,wide}`.
+
+Charging all 60 is conservative in our own disfavour either way, and should be *stated* rather
+than left for a reader to derive. Worth noting: the wide design makes the energy claim **more**
+robust, not less — lighting 36 of 60 wastes far less of the provisioned budget than lighting 19,
+so the provisioned-basis advantage rises from 3.1× to 5.8× (at 1.15 pJ/bit, per-hop).
 
 Note this also resolves an inconsistency: an earlier iso-power sweep
 (`serving_sweep_isopower.csv`) computed the per-GPU aggregate as
@@ -112,23 +128,25 @@ byte volumes the workload exports already carry, so it needs no new simulation. 
 
 Sensitivity across every accounting choice above — **fat-tree joules ÷ Glass-FB joules**:
 
-| charge | glass pJ/bit | budget | min | mean | max |
-|---|---|---|---|---|---|
-| per-NIC | 1.15 | used (19 wg) | 17.4× | 17.4× | 17.4× |
-| per-NIC | 1.15 | provisioned (60 wg) | 5.5× | 5.5× | 5.5× |
-| per-NIC | 2.62 | used | 7.6× | 7.6× | 7.6× |
-| per-NIC | 2.62 | provisioned | 2.4× | 2.4× | 2.4× |
-| per-hop | 1.15 | used | 9.6× | 19.1× | 32.1× |
-| per-hop | 1.15 | provisioned | 3.0× | 6.1× | 10.2× |
-| per-hop | 2.62 | used | 4.2× | 9.3× | 17.0× |
-| **per-hop** | **2.62** | **provisioned** | **1.34×** | **2.95×** | **5.38×** |
+| charge | glass pJ/bit | budget | design | min | mean | max |
+|---|---|---|---|---|---|---|
+| per-NIC | 1.15 | used | — | 17.4× | 17.4× | 17.4× |
+| per-NIC | 2.62 | used | — | 7.6× | 7.6× | 7.6× |
+| per-hop | 1.15 | used | — | 9.6× | 19.1× | 32.1× |
+| per-hop | 2.62 | used | — | 4.2× | 9.3× | 17.0× |
+| per-hop | 1.15 | provisioned | current | 3.1× | 6.2× | 10.4× |
+| per-hop | 1.15 | provisioned | wide | 5.8× | 11.6× | 19.4× |
+| **per-hop** | **2.62** | **provisioned** | **current** | **1.37×** | **3.02×** | **5.52×** |
+| per-hop | 2.62 | provisioned | wide | 2.6× | 5.6× | 10.3× |
 
-The bottom row stacks *every* conservative choice simultaneously — the pessimistic end of the
-paper's own pJ/bit range, the full 60-waveguide budget, and per-hop charging that helps the
-fat-tree nowhere — and Glass-FB still wins by 1.34× at worst.
+(`used` is unaffected by `--design`, since the design only rescales the provisioned/lit ratio.)
+
+The bold row stacks *every* conservative choice simultaneously — the pessimistic end of the
+paper's own pJ/bit range, the full 60-waveguide budget, per-hop charging that helps the fat-tree
+nowhere, and the narrower current provisioning — and Glass-FB still wins by 1.37× at worst.
 
 **This is the strongest defensible claim available from the data we have:** Glass-FB delivers
-1.3–32× lower interconnect energy per token, and the direction never reverses under any
+1.4–32× lower interconnect energy per token, and the direction never reverses under any
 combination of the accounting choices that are genuinely arguable.
 
 That matters because the latency picture is mixed — 15/48 configs beat fat-tree at iso-power

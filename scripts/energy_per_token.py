@@ -43,10 +43,21 @@ PJ_COPPER_SHORT = 2.0  # copper short-reach hop (intra-cabinet), dragonfly H_sr
 PANEL = 16        # GPUs per panel
 PCOLS = PROWS = 4  # intra-panel grid
 
-# Waveguides per GPU: the design lights ~19 of the 60 the package fields.
-# main.tex derives ~70 W/GPU from all 60 (7.66 TB/s); the links the simulator
-# actually models correspond to ~19.
-WG_USED, WG_PROVISIONED = 19, 60
+# Waveguides per GPU. main.tex derives ~70 W/GPU from all 60 the package fields
+# (60 x 1.024 Tb/s x 1.15 pJ/bit). What the design actually lights is a panel
+# AVERAGE, and it depends which provisioning point is being costed:
+#
+#   current (400 intra / 200 inter): 3.00 avg optical links x 3 WG/dir x 2
+#                                    + 0.78 inter = ~19.5 WG/GPU
+#   wide    (640 intra / 1600 inter): 3.00 x 5 x 2 + 6.25 = ~36.25 WG/GPU
+#
+# 3.00 is the per-GPU average count of distance->=2 (optical) links in a 4x4
+# panel: 24 optical links, 48 endpoints, 16 GPUs. Distance-1 peers ride the
+# electrical RDL and consume no waveguide. The corner-GPU worst case (4 optical
+# links -> ~26.6 / ~52.5 WG) is what link *feasibility* is capped against in
+# wg_budget.py; the average is what *energy* is charged against, which is this.
+WG_PROVISIONED = 60
+WG_USED = {"current": 19.5, "wide": 36.25}
 WG_BW_GBPS = 128.0  # one waveguide = 32 lambda x 32 Gb/s = 128 GB/s
 
 
@@ -144,6 +155,10 @@ def main():
     ap.add_argument("--glass-pj", type=float, default=PJ_GLASS)
     ap.add_argument("--copper-pj", type=float, default=PJ_COPPER)
     ap.add_argument("--budget", choices=["used", "provisioned"], default="used")
+    ap.add_argument("--design", choices=["current", "wide"], default="current",
+                    help="current = 400 intra / 200 inter GB/s (what every "
+                         "serving_sweep*.csv was run at); wide = 640 / 1600, the "
+                         "buildable point after the waveguide-budget correction")
     args = ap.parse_args()
 
     rows = []
@@ -180,10 +195,11 @@ def main():
         if args.budget == "provisioned":
             # charge the full 60-waveguide package budget rather than the lit
             # subset, matching how the ~70 W/GPU headline figure is derived
-            e_glass *= WG_PROVISIONED / WG_USED
+            e_glass *= WG_PROVISIONED / WG_USED[args.design]
 
         rows.append({
             "workload": os.path.basename(path).replace(".json", ""),
+            "design": args.design,
             "ep": ep,
             "panels": g["panels"],
             "tokens": tokens,
@@ -203,7 +219,8 @@ def main():
         w.writeheader()
         w.writerows(rows)
 
-    print(f"charge={args.charge} glass={args.glass_pj} copper={args.copper_pj} "
+    print(f"design={args.design} (WG_USED={WG_USED[args.design]}) "
+          f"charge={args.charge} glass={args.glass_pj} copper={args.copper_pj} "
           f"budget={args.budget}")
     print(f"wrote {len(rows)} rows -> {args.out}")
     adv = [r["energy_advantage_x"] for r in rows if r["energy_advantage_x"] != ""]

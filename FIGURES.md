@@ -73,3 +73,11 @@ directory. Any *regenerated* figure must use a script with those paths parameter
 A figure is admissible only if this table has a row for it whose script, CSV and
 graph `.meta` all exist in the repo, and whose CSV rows carry `workload_type` and
 `ep_source`. Regenerating a figure means updating its row, not just the PNG.
+
+## DATE 2027 regeneration (pending data)
+
+`scripts/figures/plot_paper.py` draws every data figure of the DATE draft from
+`experiments/results/paper/<paper_ref>.csv` (schema in the script header; only rows with
+`status=final`). Figure ← paper_ref: `fig_cliff` ← cliff; `fig_decomp` ← decomp; `fig_beyond` ← beyond
+(+ serving_secondary); `fig_mb` ← mb + load; `fig_ladder` ← ladder; `fig_energy` ← power. Until a CSV
+exists the script prints `skip: missing …` and the DATE repo carries the watermarked ASPDAC PNG.

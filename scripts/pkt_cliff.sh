@@ -11,11 +11,18 @@
 # Both systems carry a `model` column so the figure can draw the contention-free
 # island as a dashed bound above the queued curve.
 set -uo pipefail
+# Unique output directory per invocation. The binary's default is a
+# one-second timestamp, which two concurrent cells can share; see
+# scripts/logdir_collisions.py and methods_provenance.md sub-class I.
+_LOGDIR_N=0
+_logdir() { _LOGDIR_N=$((_LOGDIR_N + 1)); printf './logs/%s_%s_%s_%s' "$(basename "$0" .sh)" "${SLURM_JOB_ID:-local}" "$$" "$_LOGDIR_N"; }
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; PAPER=../../../experiments/results/paper
 mkdir -p "$PAPER" ./pktcliff_logs
 CSV=$PAPER/cliff_pkt.csv
+csv_warn_truncate "$CSV" "paper_ref,model,workload_type,ep_source,model_name,topk,ep,mb,nodes,system,domain,switches,link_gbps,nvs_lat_ns,nic_bw,rtt_ns,q_nvs,q_over_bdp_4lat,q_nic,rto_min_us,mtu,makespan_ms,rtos,flows,mean_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note"
 echo "paper_ref,model,workload_type,ep_source,model_name,topk,ep,mb,nodes,system,domain,switches,link_gbps,nvs_lat_ns,nic_bw,rtt_ns,q_nvs,q_over_bdp_4lat,q_nic,rto_min_us,mtu,makespan_ms,rtos,flows,mean_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note" > "$CSV"
 
 run () { # sys model topk ep nodes fbuf wm D S L nic q_nvs q_nic
@@ -25,7 +32,7 @@ run () { # sys model topk ep nodes fbuf wm D S L nic q_nvs q_nic
   # so a ${tag} reference on that same line is unbound under set -u
   local log=./pktcliff_logs/${tag}.log t0 t1 wall
   t0=$(date +%s)
-  GLASS_RTO_MIN_US=100 timeout 30000 ./htsim_tcp_nvswitch -nodes "$nodes" -flowfile "$R/$fb" \
+  GLASS_RTO_MIN_US=100 timeout 30000 ./htsim_tcp_nvswitch -logdir "$(_logdir)" -nodes "$nodes" -flowfile "$R/$fb" \
     -nvs_domain "$D" -nvs_switches "$S" -nvs_link "$L" -nvs_lat 250 \
     -nvs_q "$qn" -nvs_ecn_k $((qn / 2)) \
     -speed $((nic * 8000)) -rtt 2000 -q "$qc" -port-cap-pkts $((qc / 2)) \

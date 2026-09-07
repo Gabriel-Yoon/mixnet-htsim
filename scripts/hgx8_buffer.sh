@@ -11,6 +11,11 @@
 # thousands of timeouts and 8x does not, 8x becomes the quoted row and the reason
 # is on record here rather than in a message.
 set -uo pipefail
+# Unique output directory per invocation. The binary's default is a
+# one-second timestamp, which two concurrent cells can share; see
+# scripts/logdir_collisions.py and methods_provenance.md sub-class I.
+_LOGDIR_N=0
+_logdir() { _LOGDIR_N=$((_LOGDIR_N + 1)); printf './logs/%s_%s_%s_%s' "$(basename "$0" .sh)" "${SLURM_JOB_ID:-local}" "$$" "$_LOGDIR_N"; }
 source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
@@ -24,7 +29,7 @@ run () { # q feeder mult status
   local q=$1 feed=$2 mult=$3 st=$4
   local log=./island_logs/hgx8_buf_q${q}.log t0 t1 wall
   t0=$(date +%s)
-  GLASS_RTO_MIN_US=100 timeout 25200 ./htsim_tcp_flat -nodes 128 -flowfile "$R/$FB" \
+  GLASS_RTO_MIN_US=100 timeout 25200 ./htsim_tcp_flat -logdir "$(_logdir)" -nodes 128 -flowfile "$R/$FB" \
     -speed 400000 -rtt 2000 -port-cap -port-cap-pkts "$feed" \
     -island_gpus 8 -island_bw 450 -mtu 1500 -q "$q" \
     -weightmatrix "$T/wm_ep16.txt" > "$log" 2>&1

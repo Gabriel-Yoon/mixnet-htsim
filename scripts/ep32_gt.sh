@@ -13,6 +13,11 @@
 #
 # Gate: relay must be 0. A row with any relayed pair is recorded blocked.
 set -uo pipefail
+# Unique output directory per invocation. The binary's default is a
+# one-second timestamp, which two concurrent cells can share; see
+# scripts/logdir_collisions.py and methods_provenance.md sub-class I.
+_LOGDIR_N=0
+_logdir() { _LOGDIR_N=$((_LOGDIR_N + 1)); printf './logs/%s_%s_%s_%s' "$(basename "$0" .sh)" "${SLURM_JOB_ID:-local}" "$$" "$_LOGDIR_N"; }
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
@@ -32,7 +37,7 @@ run () { # tag dim
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_EP_PLACE=1 GLASS_DIM_A2A=$dim GLASS_PORT_MAP="$MAP" \
-    timeout 7200 $BIN -nodes 256 -flowfile "$R/$L32" \
+    timeout 7200 $BIN -logdir "$(_logdir)" -nodes 256 -flowfile "$R/$L32" \
       -disable-intra-shortcut -mtu 1500 -q 1064 -weightmatrix "$T/wm_ep32.txt" > "$log" 2>&1
   local rc=$?; t1=$(date +%s)
   local relay ps ms rtos flows ports comp status

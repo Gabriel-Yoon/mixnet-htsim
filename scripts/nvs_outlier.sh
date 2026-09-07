@@ -24,6 +24,11 @@
 # straggler is the glass 3200 GB/s signature (a small number of flows in deep
 # exponential backoff) or something else.
 set -uo pipefail
+# Unique output directory per invocation. The binary's default is a
+# one-second timestamp, which two concurrent cells can share; see
+# scripts/logdir_collisions.py and methods_provenance.md sub-class I.
+_LOGDIR_N=0
+_logdir() { _LOGDIR_N=$((_LOGDIR_N + 1)); printf './logs/%s_%s_%s_%s' "$(basename "$0" .sh)" "${SLURM_JOB_ID:-local}" "$$" "$_LOGDIR_N"; }
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
@@ -39,7 +44,7 @@ run () { # k q
   local log=./nvsout_logs/out_k${k}.log t0 t1
   local ek=$((q / 2))
   t0=$(date +%s)
-  GLASS_RTO_MIN_US=100 timeout 20000 ./htsim_tcp_nvswitch -nodes 128 -flowfile "$R/$FB" \
+  GLASS_RTO_MIN_US=100 timeout 20000 ./htsim_tcp_nvswitch -logdir "$(_logdir)" -nodes 128 -flowfile "$R/$FB" \
     -nvs_domain 64 -nvs_switches 18 -nvs_link 50 -nvs_lat 250 -nvs_q "$q" -nvs_ecn_k "$ek" \
     -speed 800000 -rtt 2000 -q 540 -port-cap-pkts 270 -mtu 1500 \
     -weightmatrix "$T/wm_ep16.txt" > "$log" 2>&1

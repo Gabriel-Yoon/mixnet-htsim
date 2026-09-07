@@ -108,6 +108,31 @@ uncommitted change across every rebase is, at runtime, indistinguishable from a 
 the binary builds, the results are real, and `git status` reports it only in a section nobody
 reads while checking what was staged. The rule that follows is narrow and mechanical:
 
+**D's guard, added after it recurred twice in one session.** The rule above says a result is
+attributable only once a binary built from that commit reproduces it. Nothing enforced the weaker
+precondition — that the commit can be built *at all*. Twice the tree reached a state where targets
+were unbuildable while their existing binaries kept producing results:
+
+- the hierarchical all-to-all's `dynamic_cast<GlassFBTopology *>` put a typeinfo dependency into
+  `ffapp.o`, which every binary links, while only the four glass targets linked `glassfb_topology.o`
+  — twelve targets silently stopped building;
+- the fix for *that* paired `glassfb_topology.o` with `flat_topology.o` and struck a latent duplicate
+  definition of `check_non_null(Route *)` present in **eleven** translation units, dormant only
+  because no binary had ever linked two of them.
+
+Both were found by a build happening to fail, not by anything checking.
+
+> **Every paper row's job is submitted through a gate that links every target first.**
+> `scripts/submit_paper_job.sh` runs `linkcheck.sbatch` with `sbatch --wait` and refuses to submit
+> if any target fails to link.
+
+The gate must not use `make all`: that would relink the binaries running jobs are executing, which is
+exactly how a mid-sweep `make clean` destroyed a binary and invalidated two cells earlier in this
+project. The Makefile's link outputs are therefore prefixed with `$(OUTDIR)`, and the gate links the
+whole target list into a scratch directory. Verified on first run: **11 targets linked, and the
+mtimes of every production binary were unchanged.** `SKIP_LINK_GATE=1` exists for a deliberate
+override and requires saying so in the row's note.
+
 > **Attribution requires a rebuild from the SHA.** A result is attributable to a commit only once
 > a binary built from that commit has reproduced it. "The committed source is identical to what
 > ran" is the same *it must be fine* inference this document exists to refuse.

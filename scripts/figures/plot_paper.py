@@ -345,9 +345,13 @@ def tail():
                 step[b] = (2 ** b, mk, rto, mx, quo)
         groups[k] = list(step.values())
     want = [("nvl64_pkt", 16), ("glassfb", 32), ("nvl64_pkt", 32), ("glassfb", 64), ("nvl64_pkt", 64)]
+    # TAIL_ONLY="nvl64_pkt:16,glassfb:64" selects a subset (the paper's two-ladder panel); OUT name follows
+    only = os.environ.get("TAIL_ONLY")
+    if only:
+        want = [(t.split(":")[0], int(t.split(":")[1])) for t in only.split(",")]
     panels = [(k, sorted(groups[k])) for k in want if k in groups and len(groups[k]) >= 2]
     if not panels: sys.exit("buffer_sweeps: no multi-point sweeps")
-    fig, axes = plt.subplots(1, len(panels), figsize=(DBL_W_ if False else 7.16, 2.2), dpi=200)
+    fig, axes = plt.subplots(1, len(panels), figsize=((7.16 if len(panels) > 2 else 3.6), 2.2), dpi=200)
     axes = list(axes) if len(panels) > 1 else [axes]
     for ax, ((sysname, ep), pts) in zip(axes, panels):
         xs = list(range(len(pts))); c = SYS_COLOR.get(sysname, "#333")
@@ -365,7 +369,8 @@ def tail():
         if ax is axes[-1]: ax2.set_ylabel("max FCT (ms)", color="#b22222", fontsize=6)
     axes[0].set_ylabel("iteration (ms); label = timeouts", fontsize=6)
     fig.text(0.5, 0.005, "queue depth (× port round-trip BDP); filled = quoted row", ha="center", fontsize=6)
-    fig.tight_layout(pad=0.3, rect=(0, 0.03, 1, 1)); fig.savefig(f("fig_tail.png")); print("wrote fig_tail.png")
+    name = "fig_tail2.png" if only else "fig_tail.png"
+    fig.tight_layout(pad=0.3, rect=(0, 0.03, 1, 1)); fig.savefig(f(name)); print(f"wrote {name}")
 
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]

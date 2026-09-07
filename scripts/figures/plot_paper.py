@@ -56,7 +56,7 @@ def f(name):
 
 def cliff():
     rows = load("cliff_all")   # single source built by build_cliff_table.py (carries quotable + source)
-    rows = [r for r in rows if (r.get("mb") or "8") == "8"]
+    rows = [r for r in rows if str(r.get("mb") or 8) == "8"]   # mb is int after load()
     # one drawn point per (system, ep): the quotable row with the lowest makespan; otherwise the
     # lowest non-quotable (drawn hollow). Repeated sensitivity rows (same makespan at several q)
     # collapse to one.

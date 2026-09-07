@@ -131,6 +131,7 @@ cliff,,nvl64_pkt_s1,qwenMoE,,64,,512,1200,2.00,,,47.202,219258,no,not the first 
 cliff,,nvl64_pkt_s1,qwenMoE,,64,,512,2400,4.00,,,58.532,164150,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,,nvl64_pkt_s1,qwenMoE,,64,,512,600,1.00,,,60.197,291332,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,,nvl64_pkt_s1,qwenMoE,,64,,512,4800,8.00,,,70.616,62129,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
+cliff,,nvl64_pkt_s1,arctic,,128,,1024,1200,2.00,,,298.660,443656,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 mb,glass,glassfb,llamaMoE,,16,4,128,1064,4.0,100,1500,85.271,0,no,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),shared_logdir,mb_sweep.csv,vanishing-timeout rule; quoted=yes is the shallowest zero-RTO buffer,,
 cliff,glass,glassfb,llamaMoE,,16,4,128,1064,3.99,,,85.622,0,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,glass,glassfb,llamaMoE,,16,4,128,2128,7.98,,,85.622,0,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector

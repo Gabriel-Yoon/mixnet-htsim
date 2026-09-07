@@ -1,224 +1,225 @@
-system,ep,model_name,q,q_over_bdp,q_over_bdp_source,makespan_ms,rtos,drops,max_fct_ms,fct_status,quotable,link_rate_fixed,binary_sha,quoted_by,source
-calib_nvswitch,8,,34,,2.04,1.010716,56,3494,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,34,,2.04,1.086578,7,4150,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,34,,2.04,1.003204,7,84,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,34,,2.04,3.198078,7,4183,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,34,,2.04,1.023681,7,4102,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,34,,2.04,6.147676,7,4183,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,34,,2.04,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,34,,2.04,1.338222,7,4183,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,68,,4.08,1.008763,56,1828,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,68,,4.08,1.086578,7,2780,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,68,,4.08,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,68,,4.08,3.193613,7,2780,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,68,,4.08,1.023681,7,2724,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,68,,4.08,6.158838,7,2780,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,68,,4.08,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,68,,4.08,1.338222,7,2780,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,136,,8.16,1.005457,7,336,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,136,,8.16,0.185078,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,136,,8.16,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,136,,8.16,2.901703,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,136,,8.16,0.067225,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,136,,8.16,5.811843,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,136,,8.16,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,136,,8.16,0.728633,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,272,,16.32,0.047942,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,272,,16.32,0.188410,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,272,,16.32,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,272,,16.32,2.836796,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,272,,16.32,0.048552,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,272,,16.32,5.669450,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,272,,16.32,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,272,,16.32,0.721913,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,544,,32.64,0.047942,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,544,,32.64,0.169053,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,544,,32.64,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,544,,32.64,2.689577,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,544,,32.64,0.048552,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,544,,32.64,5.373978,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,544,,32.64,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,544,,32.64,0.674180,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,600,,2.00,1.003870,8,352,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,600,,2.00,1.035603,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,600,,2.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,600,,2.00,1.529333,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,600,,2.00,1.011020,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,600,,2.00,2.051989,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,600,,2.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,600,,2.00,1.134270,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1088,,65.28,0.047942,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1088,,65.28,0.169053,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1088,,65.28,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1088,,65.28,2.691990,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1088,,65.28,0.048552,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1088,,65.28,5.403273,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1088,,65.28,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1088,,65.28,0.673720,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1200,,4.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1200,,4.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1200,,4.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1200,,4.00,0.525416,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1200,,4.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1200,,4.00,1.046907,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1200,,4.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,1200,,4.00,0.135313,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,2400,,8.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,2400,,8.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,2400,,8.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,2400,,8.00,0.524866,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,2400,,8.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,2400,,8.00,1.046815,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,2400,,8.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,2400,,8.00,0.133411,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,4800,,16.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,4800,,16.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,4800,,16.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,4800,,16.00,0.524866,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,4800,,16.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,4800,,16.00,1.046815,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,4800,,16.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,4800,,16.00,0.133411,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,9600,,32.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,9600,,32.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,9600,,32.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,9600,,32.00,0.524866,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,9600,,32.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,9600,,32.00,1.046815,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,9600,,32.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,9600,,32.00,0.133411,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,19200,,64.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,19200,,64.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,19200,,64.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,19200,,64.00,0.524866,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,19200,,64.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,19200,,64.00,1.046815,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,19200,,64.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-calib_nvswitch,8,,19200,,64.00,0.133411,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,133,0.50,0.50,132.714,2042,,21.3705,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,133,0.50,0.50,135.127,2156,,27.4203,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,133,0.50,0.50,115.035,2085,,9.7980,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,133,0.50,0.50,121.058,2010,,13.8788,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,266,1.00,1.00,93.696,33,,7.7380,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,266,1.00,1.00,102.731,56,,14.7203,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,266,1.00,1.00,86.642,27,,1.6560,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,266,1.00,1.00,88.198,22,,3.1223,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,532,2.00,2.00,91.471,0,2003,6.1287,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,532,2.00,2.00,102.703,0,3855,14.8226,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,532,2.00,2.00,85.625,0,1987,1.5588,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,532,2.00,2.00,87.613,0,1987,3.1337,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,1064,3.99,3.99,91.464,0,0,6.1432,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,1064,3.99,3.99,102.763,0,0,15.0997,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,1064,3.99,3.99,85.622,0,0,1.5602,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,1064,3.99,3.99,87.599,0,0,3.1620,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,2128,7.98,7.98,91.464,0,,6.1432,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,2128,7.98,7.98,102.763,0,,15.0997,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,2128,7.98,7.98,85.622,0,,1.5602,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,2128,7.98,7.98,87.599,0,,3.1620,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,4256,15.96,15.96,91.464,0,,6.1432,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,4256,15.96,15.96,102.763,0,,15.0997,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,4256,15.96,15.96,85.622,0,,1.5602,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,16,llamaMoE,4256,15.96,15.96,87.599,0,,3.1620,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,266,1.00,1.00,97.087,8688,,10.5343,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,266,1.00,1.00,145.088,8701,2730015,31.5519,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,266,1.00,1.00,130.086,8191,2494898,24.3653,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,533,2.00,2.00,113.593,3022,,24.4999,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,533,2.00,2.00,99.445,2751,1687924,14.7538,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,533,2.00,2.00,88.951,2509,1571343,15.9474,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,1064,3.99,3.99,234.346,36447,3184028,24.8645,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,1064,3.99,3.99,224.940,35537,3199112,23.8415,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,1064,3.99,3.99,112.376,413,717283,15.8291,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,1064,3.99,3.99,87.358,362,727947,6.6501,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,1066,4.00,4.00,81.360,360,,5.9830,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,1066,4.00,4.00,78.374,296,698408,7.1596,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,1066,4.00,4.00,84.992,413,625896,5.9586,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,2133,8.00,8.00,77.918,0,147,5.9920,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,2133,8.00,8.00,202.683,0,0,18.2139,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,2133,8.00,8.00,74.814,0,4,6.6815,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,2133,8.00,8.00,81.419,0,0,6.0024,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,4267,16.00,16.00,77.957,0,,5.9888,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,4267,16.00,16.00,74.867,0,0,6.6815,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,4267,16.00,16.00,81.419,0,0,6.0024,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,8533,32.00,32.00,77.957,0,,5.9888,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,8533,32.00,32.00,74.867,0,0,6.6815,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,32,llamaMoE,8533,32.00,32.00,81.419,0,0,6.0024,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-glassfb,64,qwenMoE,533,2.00,2.00,50.169,69106,,3.9053,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,64,qwenMoE,1064,3.99,3.99,52.103,37144,,7.1875,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,64,qwenMoE,2133,8.00,8.00,55.990,12840,,7.8575,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,64,qwenMoE,4267,16.00,16.00,46.997,2373,,6.2757,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,64,qwenMoE,8533,32.00,32.00,43.157,42,,3.1277,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-glassfb,64,qwenMoE,17067,64.00,64.00,43.088,0,0,3.0835,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8,32,llamaMoE,270,4.05,4.05,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv
-hgx8,32,llamaMoE,540,8.10,8.10,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv
-hgx8,32,llamaMoE,1080,16.20,16.20,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv
-hgx8,32,llamaMoE,2160,32.40,32.40,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,270,4.05,4.05,144.519,2192,,,shared_logdir,no,,,,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,540,8.10,8.10,144.519,2192,,,shared_logdir,no,,,,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,1080,16.20,16.20,144.519,2192,,,shared_logdir,no,,,,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,2160,32.40,32.40,144.519,2192,,,shared_logdir,no,,,,island_vanishing_timeout.csv
-hgx8_pkt,16,llamaMoE,306,4.08,4.08,149.041,79,41405,22.8042,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,16,llamaMoE,612,8.16,8.16,145.497,0,0,,shared_logdir,yes,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,16,llamaMoE,1224,16.32,16.32,145.497,0,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,16,llamaMoE,2448,32.64,32.64,145.497,0,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,16,llamaMoE,4896,65.28,65.28,145.497,0,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,16,llamaMoE,9792,130.56,130.56,145.497,0,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,32,llamaMoE,306,4.08,4.08,541.653,224,80924,251.9810,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,32,llamaMoE,612,8.16,8.16,164.522,105,313,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,32,llamaMoE,1224,16.32,16.32,164.522,105,0,,shared_logdir,yes,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,32,llamaMoE,2448,32.64,32.64,164.522,105,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,32,llamaMoE,4896,65.28,65.28,164.522,105,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,32,llamaMoE,9792,130.56,130.56,164.522,105,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,64,qwenMoE,306,4.08,4.08,185.613,9098,175118,36.3059,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,64,qwenMoE,612,8.16,8.16,144.519,2192,163,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,64,qwenMoE,1224,16.32,16.32,144.519,2192,0,,shared_logdir,yes,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,64,qwenMoE,2448,32.64,32.64,144.519,2192,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,64,qwenMoE,4896,65.28,65.28,144.519,2192,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-hgx8_pkt,64,qwenMoE,9792,130.56,130.56,144.519,2192,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64,32,llamaMoE,540,4.05,4.05,64.139,0,,1.0416,clean,yes,,,,island_vanishing_timeout.csv
-nvl64,64,qwenMoE,540,4.05,4.05,24.365,0,,1.0416,clean,yes,,,,island_vanishing_timeout.csv
-nvl64_pkt,16,llamaMoE,68,2.04,1.95296,151.895,6423,,12.5839,clean,no,,,,nvl64_ksweep.csv
-nvl64_pkt,16,llamaMoE,136,4.08,4.08,147.051,1227,463301,12.7167,clean,no,,,,nvl64_ep16_clean.csv
-nvl64_pkt,16,llamaMoE,272,8.16,8.16,281.100,166,56356,100.4170,clean,no,,,,nvl64_ep16_clean.csv
-nvl64_pkt,16,llamaMoE,544,16.32,16.32,130.797,0,375,6.7361,clean,yes,,,,nvl64_ep16_clean.csv
-nvl64_pkt,16,llamaMoE,1088,32.64,31.2474,130.295,0,,6.4933,clean,yes,,,,nvl64_ksweep_hi.csv
-nvl64_pkt,32,llamaMoE,544,16.32,15.6237,159.948,73,,17.1386,clean,no,,,,pkt_vanishing_timeout.csv
-nvl64_pkt,32,llamaMoE,1088,32.64,31.2474,119.397,0,0,,shared_logdir,yes,,,,pkt_vanishing_timeout.csv
-nvl64_pkt,64,qwenMoE,544,16.32,15.6237,86.163,7237,,17.1386,clean,no,,,,pkt_vanishing_timeout.csv
-nvl64_pkt,64,qwenMoE,1088,32.64,31.2474,81.272,13,,,shared_logdir,no,,,,pkt_vanishing_timeout.csv
-nvl64_pkt,64,qwenMoE,2176,65.28,62.4947,82.502,0,0,,shared_logdir,yes,,,,pkt_vanishing_timeout.csv
-nvl64_pkt_s1,16,llamaMoE,600,,1.00,148.020,9488,1046753,22.7490,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,600,,1.00,123.083,9502,1058296,9.9450,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,600,,1.00,138.170,9392,1052468,16.9114,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,600,,1.00,148.007,9489,1054613,19.7024,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,1200,,2.00,190.241,3239,308045,51.3560,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,1200,,2.00,166.169,3331,308543,39.8914,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,1200,,2.00,176.064,3240,309097,55.3610,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,1200,,2.00,211.051,3264,307886,51.3595,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,2400,,4.00,89.430,0,0,1.3597,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,2400,,4.00,95.115,0,0,2.7018,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,2400,,4.00,111.027,0,0,5.3862,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,2400,,4.00,86.435,0,0,0.6886,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,4800,,8.00,89.411,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,4800,,8.00,95.062,0,0,2.7018,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,4800,,8.00,110.190,0,0,5.3862,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,4800,,8.00,86.413,0,0,0.6886,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,9600,,16.00,89.411,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,9600,,16.00,95.062,0,0,2.7018,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,9600,,16.00,109.443,0,0,5.3862,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,9600,,16.00,86.413,0,0,0.6886,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,19200,,32.00,89.411,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,19200,,32.00,95.062,0,0,2.7018,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,19200,,32.00,109.443,0,0,5.3862,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,16,llamaMoE,19200,,32.00,86.413,0,0,0.6886,clean,no,yes,1b1cc47,collector,cliff_postfix.csv
-nvl64_pkt_s1,32,llamaMoE,600,,1.00,103.579,54709,5797460,12.7609,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,32,llamaMoE,1200,,2.00,96.348,40884,4698612,12.5222,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,32,llamaMoE,2400,,4.00,162.810,14654,1426043,30.0330,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,32,llamaMoE,4800,,8.00,69.989,0,0,1.3597,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,32,llamaMoE,9600,,16.00,69.989,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,32,llamaMoE,19200,,32.00,69.989,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,64,qwenMoE,600,,1.00,60.197,291332,25260410,6.0207,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,64,qwenMoE,1200,,2.00,47.202,219258,23900483,10.9935,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,64,qwenMoE,2400,,4.00,58.532,164150,19955228,15.4362,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,64,qwenMoE,4800,,8.00,70.616,62129,6240338,18.5718,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,64,qwenMoE,9600,,16.00,29.904,0,0,0.9752,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv
-nvl64_pkt_s1,64,qwenMoE,19200,,32.00,29.904,0,0,0.9803,clean,no,yes,9ac4f76,collector,cliff_postfix.csv
+system,ep,model_name,q,q_over_bdp,q_over_bdp_source,makespan_ms,rtos,drops,max_fct_ms,fct_status,quotable,link_rate_fixed,binary_sha,quoted_by,source,quotable_why
+calib_nvswitch,8,,34,,2.04,1.010716,56,3494,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,34,,2.04,1.086578,7,4150,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,34,,2.04,1.003204,7,84,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,34,,2.04,3.198078,7,4183,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,34,,2.04,1.023681,7,4102,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,34,,2.04,6.147676,7,4183,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,34,,2.04,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,34,,2.04,1.338222,7,4183,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,68,,4.08,1.008763,56,1828,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,68,,4.08,1.086578,7,2780,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,68,,4.08,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,68,,4.08,3.193613,7,2780,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,68,,4.08,1.023681,7,2724,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,68,,4.08,6.158838,7,2780,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,68,,4.08,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,68,,4.08,1.338222,7,2780,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,136,,8.16,1.005457,7,336,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,136,,8.16,0.185078,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,136,,8.16,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,136,,8.16,2.901703,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,136,,8.16,0.067225,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,136,,8.16,5.811843,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,136,,8.16,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,136,,8.16,0.728633,0,864,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,272,,16.32,0.047942,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,272,,16.32,0.188410,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,272,,16.32,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,272,,16.32,2.836796,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,272,,16.32,0.048552,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,272,,16.32,5.669450,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,272,,16.32,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,272,,16.32,0.721913,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,544,,32.64,0.047942,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,544,,32.64,0.169053,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,544,,32.64,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,544,,32.64,2.689577,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,544,,32.64,0.048552,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,544,,32.64,5.373978,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,544,,32.64,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,544,,32.64,0.674180,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,600,,2.00,1.003870,8,352,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,600,,2.00,1.035603,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,600,,2.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,600,,2.00,1.529333,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,600,,2.00,1.011020,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,600,,2.00,2.051989,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,600,,2.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,600,,2.00,1.134270,8,801,,no_run_log,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1088,,65.28,0.047942,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1088,,65.28,0.169053,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1088,,65.28,0.047789,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1088,,65.28,2.691990,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1088,,65.28,0.048552,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1088,,65.28,5.403273,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1088,,65.28,0.047751,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1088,,65.28,0.673720,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1200,,4.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1200,,4.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1200,,4.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1200,,4.00,0.525416,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1200,,4.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1200,,4.00,1.046907,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1200,,4.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,1200,,4.00,0.135313,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,2400,,8.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,2400,,8.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,2400,,8.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,2400,,8.00,0.524866,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,2400,,8.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,2400,,8.00,1.046815,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,2400,,8.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,2400,,8.00,0.133411,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,4800,,16.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,4800,,16.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,4800,,16.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,4800,,16.00,0.524866,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,4800,,16.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,4800,,16.00,1.046815,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,4800,,16.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,4800,,16.00,0.133411,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,9600,,32.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,9600,,32.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,9600,,32.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,9600,,32.00,0.524866,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,9600,,32.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,9600,,32.00,1.046815,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,9600,,32.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,9600,,32.00,0.133411,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,19200,,64.00,0.047748,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,19200,,64.00,0.050800,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,19200,,64.00,0.047596,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,19200,,64.00,0.524866,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,19200,,64.00,0.048359,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,19200,,64.00,1.046815,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,19200,,64.00,0.047558,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+calib_nvswitch,8,,19200,,64.00,0.133411,0,0,,no_run_log,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,133,0.50,0.50,132.714,2042,,21.3705,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,133,0.50,0.50,135.127,2156,,27.4203,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,133,0.50,0.50,115.035,2085,,9.7980,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,133,0.50,0.50,121.058,2010,,13.8788,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,266,1.00,1.00,93.696,33,,7.7380,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,266,1.00,1.00,102.731,56,,14.7203,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,266,1.00,1.00,86.642,27,,1.6560,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,266,1.00,1.00,88.198,22,,3.1223,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,532,2.00,2.00,91.471,0,2003,6.1287,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,532,2.00,2.00,102.703,0,3855,14.8226,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,532,2.00,2.00,85.625,0,1987,1.5588,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,532,2.00,2.00,87.613,0,1987,3.1337,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,1064,3.99,3.99,91.464,0,0,6.1432,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,1064,3.99,3.99,102.763,0,0,15.0997,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,1064,3.99,3.99,85.622,0,0,1.5602,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,1064,3.99,3.99,87.599,0,0,3.1620,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,2128,7.98,7.98,91.464,0,,6.1432,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,2128,7.98,7.98,102.763,0,,15.0997,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,2128,7.98,7.98,85.622,0,,1.5602,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,2128,7.98,7.98,87.599,0,,3.1620,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,4256,15.96,15.96,91.464,0,,6.1432,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,4256,15.96,15.96,102.763,0,,15.0997,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,4256,15.96,15.96,85.622,0,,1.5602,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,16,llamaMoE,4256,15.96,15.96,87.599,0,,3.1620,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,266,1.00,1.00,97.087,8688,,10.5343,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,266,1.00,1.00,145.088,8701,2730015,31.5519,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,266,1.00,1.00,130.086,8191,2494898,24.3653,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,533,2.00,2.00,113.593,3022,,24.4999,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,533,2.00,2.00,99.445,2751,1687924,14.7538,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,533,2.00,2.00,88.951,2509,1571343,15.9474,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,1064,3.99,3.99,234.346,36447,3184028,24.8645,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,1064,3.99,3.99,224.940,35537,3199112,23.8415,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,1064,3.99,3.99,112.376,413,717283,15.8291,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,1064,3.99,3.99,87.358,362,727947,6.6501,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,1066,4.00,4.00,81.360,360,,5.9830,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,1066,4.00,4.00,78.374,296,698408,7.1596,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,1066,4.00,4.00,84.992,413,625896,5.9586,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,2133,8.00,8.00,77.918,0,147,5.9920,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,2133,8.00,8.00,202.683,0,0,18.2139,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,2133,8.00,8.00,74.814,0,4,6.6815,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,2133,8.00,8.00,81.419,0,0,6.0024,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,4267,16.00,16.00,77.957,0,,5.9888,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,4267,16.00,16.00,74.867,0,0,6.6815,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,4267,16.00,16.00,81.419,0,0,6.0024,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,8533,32.00,32.00,77.957,0,,5.9888,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,8533,32.00,32.00,74.867,0,0,6.6815,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,32,llamaMoE,8533,32.00,32.00,81.419,0,0,6.0024,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,64,qwenMoE,533,2.00,2.00,50.169,69106,,3.9053,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,64,qwenMoE,1064,3.99,3.99,52.103,37144,,7.1875,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,64,qwenMoE,2133,8.00,8.00,55.990,12840,,7.8575,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,64,qwenMoE,4267,16.00,16.00,46.997,2373,,6.2757,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,64,qwenMoE,8533,32.00,32.00,43.157,42,,3.1277,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,64,qwenMoE,17067,64.00,64.00,43.088,0,0,3.0835,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8,32,llamaMoE,270,4.05,4.05,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8,32,llamaMoE,540,8.10,8.10,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8,32,llamaMoE,1080,16.20,16.20,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8,32,llamaMoE,2160,32.40,32.40,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8,64,qwenMoE,270,4.05,4.05,144.519,2192,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+hgx8,64,qwenMoE,540,8.10,8.10,144.519,2192,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+hgx8,64,qwenMoE,1080,16.20,16.20,144.519,2192,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+hgx8,64,qwenMoE,2160,32.40,32.40,144.519,2192,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+hgx8_pkt,16,llamaMoE,306,4.08,4.08,149.041,79,41405,22.8042,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,16,llamaMoE,612,8.16,8.16,145.497,0,0,,shared_logdir,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,16,llamaMoE,1224,16.32,16.32,145.497,0,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,16,llamaMoE,2448,32.64,32.64,145.497,0,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,16,llamaMoE,4896,65.28,65.28,145.497,0,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,16,llamaMoE,9792,130.56,130.56,145.497,0,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,32,llamaMoE,306,4.08,4.08,541.653,224,80924,251.9810,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,32,llamaMoE,612,8.16,8.16,164.522,105,313,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,32,llamaMoE,1224,16.32,16.32,164.522,105,0,,shared_logdir,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,32,llamaMoE,2448,32.64,32.64,164.522,105,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,32,llamaMoE,4896,65.28,65.28,164.522,105,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,32,llamaMoE,9792,130.56,130.56,164.522,105,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,64,qwenMoE,306,4.08,4.08,185.613,9098,175118,36.3059,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,64,qwenMoE,612,8.16,8.16,144.519,2192,163,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,64,qwenMoE,1224,16.32,16.32,144.519,2192,0,,shared_logdir,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,64,qwenMoE,2448,32.64,32.64,144.519,2192,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,64,qwenMoE,4896,65.28,65.28,144.519,2192,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+hgx8_pkt,64,qwenMoE,9792,130.56,130.56,144.519,2192,0,,shared_logdir,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64,32,llamaMoE,540,4.05,4.05,64.139,0,,1.0416,clean,yes,,,,island_vanishing_timeout.csv,relay-clean and zero timeouts
+nvl64,64,qwenMoE,540,4.05,4.05,24.365,0,,1.0416,clean,yes,,,,island_vanishing_timeout.csv,relay-clean and zero timeouts
+nvl64_pkt,16,llamaMoE,68,2.04,1.95296,151.895,6423,,12.5839,clean,no,,,,nvl64_ksweep.csv,"timeouts present: 6423, loss not measured"
+nvl64_pkt,16,llamaMoE,136,4.08,4.08,147.051,1227,463301,12.7167,clean,no,,,,nvl64_ep16_clean.csv,"timeouts present: 1227, loss not measured"
+nvl64_pkt,16,llamaMoE,272,8.16,8.16,281.100,166,56356,100.4170,clean,no,,,,nvl64_ep16_clean.csv,"timeouts present: 166, loss not measured"
+nvl64_pkt,16,llamaMoE,544,16.32,16.32,130.797,0,375,6.7361,clean,yes,,,,nvl64_ep16_clean.csv,relay-clean and zero timeouts
+nvl64_pkt,16,llamaMoE,1088,32.64,31.2474,130.295,0,,6.4933,clean,yes,,,,nvl64_ksweep_hi.csv,relay-clean and zero timeouts
+nvl64_pkt,32,llamaMoE,544,16.32,15.6237,159.948,73,,17.1386,clean,no,,,,pkt_vanishing_timeout.csv,"timeouts present: 73, loss not measured"
+nvl64_pkt,32,llamaMoE,1088,32.64,31.2474,119.397,0,0,,shared_logdir,yes,,,,pkt_vanishing_timeout.csv,relay-clean and zero timeouts
+nvl64_pkt,64,qwenMoE,544,16.32,15.6237,86.163,7237,,17.1386,clean,no,,,,pkt_vanishing_timeout.csv,"timeouts present: 7237, loss not measured"
+nvl64_pkt,64,qwenMoE,1088,32.64,31.2474,81.272,13,,,shared_logdir,no,,,,pkt_vanishing_timeout.csv,"timeouts present: 13, loss not measured"
+nvl64_pkt,64,qwenMoE,2176,65.28,62.4947,82.502,0,0,,shared_logdir,yes,,,,pkt_vanishing_timeout.csv,relay-clean and zero timeouts
+nvl64_pkt_s1,16,llamaMoE,600,,1.00,148.020,9488,1046753,22.7490,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,600,,1.00,123.083,9502,1058296,9.9450,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,600,,1.00,138.170,9392,1052468,16.9114,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,600,,1.00,148.007,9489,1054613,19.7024,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,1200,,2.00,190.241,3239,308045,51.3560,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,1200,,2.00,166.169,3331,308543,39.8914,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,1200,,2.00,176.064,3240,309097,55.3610,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,1200,,2.00,211.051,3264,307886,51.3595,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,2400,,4.00,89.430,0,0,1.3597,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,2400,,4.00,95.115,0,0,2.7018,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,2400,,4.00,111.027,0,0,5.3862,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,2400,,4.00,86.435,0,0,0.6886,clean,yes,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,4800,,8.00,89.411,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,4800,,8.00,95.062,0,0,2.7018,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,4800,,8.00,110.190,0,0,5.3862,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,4800,,8.00,86.413,0,0,0.6886,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,9600,,16.00,89.411,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,9600,,16.00,95.062,0,0,2.7018,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,9600,,16.00,109.443,0,0,5.3862,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,9600,,16.00,86.413,0,0,0.6886,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,19200,,32.00,89.411,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,19200,,32.00,95.062,0,0,2.7018,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,19200,,32.00,109.443,0,0,5.3862,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,16,llamaMoE,19200,,32.00,86.413,0,0,0.6886,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,32,llamaMoE,600,,1.00,103.579,54709,5797460,12.7609,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,32,llamaMoE,1200,,2.00,96.348,40884,4698612,12.5222,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,32,llamaMoE,2400,,4.00,162.810,14654,1426043,30.0330,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,32,llamaMoE,4800,,8.00,69.989,0,0,1.3597,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,32,llamaMoE,9600,,16.00,69.989,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,32,llamaMoE,19200,,32.00,69.989,0,0,1.3597,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,64,qwenMoE,600,,1.00,60.197,291332,25260410,6.0207,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,64,qwenMoE,1200,,2.00,47.202,219258,23900483,10.9935,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,64,qwenMoE,2400,,4.00,58.532,164150,19955228,15.4362,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,64,qwenMoE,4800,,8.00,70.616,62129,6240338,18.5718,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,64,qwenMoE,9600,,16.00,29.904,0,0,0.9752,clean,yes,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,64,qwenMoE,19200,,32.00,29.904,0,0,0.9803,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+nvl64_pkt_s1,128,arctic,1200,,2.00,298.660,443656,44813539,54.6837,clean,no,yes,1b1cc47,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here

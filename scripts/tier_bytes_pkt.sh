@@ -54,4 +54,5 @@ run tier_nvl64_ep64 512 "$QME" wm_ep64.txt 64 18 50    100 2176 540
 echo "########## HGX-8 ##########"
 run tier_hgx8_ep16  128 "$L16" wm_ep16.txt  8  4 112.5  50 1224 270
 run tier_hgx8_ep32  256 "$L32" wm_ep32.txt  8  4 112.5  50 1224 270
+run tier_hgx8_ep64  512 "$QME" wm_ep64.txt  8  4 112.5  50 1224 270
 echo "=== DONE ==="

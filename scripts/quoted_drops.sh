@@ -38,7 +38,7 @@ emit () { # system ep nodes q log wall
   csv_row "$CSV" paper_ref=drops system="$sys" ep="$ep" nodes="$nodes" q="$q" \
     makespan_ms="$ms" rtos="$rtos" drops="${drops:-}" loss_verdict="$verdict" \
     wall_s="$wall" status=measured \
-    note="drop counter validated: 2317980 on the mesh control, 0 on the island; zero here means no loss, not no counting"
+    note="drop counter validated: 2317980 on the mesh control; 0 on the island; zero here means no loss rather than no counting"
   printf "  %-12s ep=%-4s q=%-6s %10s ms  timeouts=%-8s drops=%-10s %s\n" \
     "$sys" "$ep" "$q" "$ms" "$rtos" "${drops:-?}" "$verdict"
 }

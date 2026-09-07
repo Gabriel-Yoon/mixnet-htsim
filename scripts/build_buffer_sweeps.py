@@ -228,6 +228,38 @@ rows = [r for r in rows
 if before != len(rows):
     print("superseded %d spliced row(s) with clean re-runs" % (before - len(rows)))
 
+# One point per (system, ep, q, makespan). The same measurement can reach this
+# table from two files: cliff_ep64_gt_ext.csv holds the walk's rows and
+# cliff_ep64_tail.csv the re-run that measured their tails, and both describe
+# q=8533 and q=17067 at 39.410 and 39.395 ms. R4 would then plot each point
+# twice.
+#
+# Keep the row that carries a tail, and among those the one whose OWN run
+# measured it. The walk's rows only have a tail because this builder matched
+# their makespan to the re-run's output directory -- sound, since the configs are
+# identical and the model is deterministic, but it is an inference, and where a
+# row measured the thing itself that row should win.
+#
+# The makespan is part of the key, so two genuinely different measurements at the
+# same buffer stay as two points rather than being silently collapsed.
+_TAIL_OWNERS = ("cliff_ep64_tail.csv",)
+_seen = {}
+for r in rows:
+    k = (r["system"], r["ep"], r["q"], r["makespan_ms"])
+    prev = _seen.get(k)
+    if prev is None:
+        _seen[k] = r
+        continue
+    def _rank(x):
+        return (x["source"] in _TAIL_OWNERS, bool(x["max_fct_ms"]))
+    if _rank(r) > _rank(prev):
+        _seen[k] = r
+_dropped = len(rows) - len(_seen)
+rows = list(_seen.values())
+if _dropped:
+    print("collapsed %d duplicate sweep point(s) reaching the table from two files"
+          % _dropped, file=sys.stderr)
+
 rows.sort(key=lambda r: (r["system"], num(r["ep"]), num(r["q"])))
 with open(OUT, "w", newline="") as fh:
     w = csv.DictWriter(fh, fieldnames=["system", "ep", "model_name", "q", "q_over_bdp",

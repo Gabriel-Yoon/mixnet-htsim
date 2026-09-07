@@ -81,6 +81,9 @@ SOURCES = {
     "cliff_ep64_gt_ext.csv":     ("glassfb",   "qwenMoE",  64),
     "pkt_vanishing_timeout.csv": (None,        None,       None),
     "island_vanishing_timeout.csv": (None,     None,       None),
+    # Re-runs with -logdir, so their FCT is this run's alone. They SUPERSEDE the
+    # spliced originals for the same (system, ep, q) -- see the dedup below.
+    "nvl64_ep16_clean.csv":      ("nvl64_pkt", "llamaMoE", 16),
 }
 
 RE_LOGDIR = re.compile(r"Log directory is:\s*(\S+)")
@@ -179,11 +182,15 @@ for name, (dsys, dmodel, dep) in SOURCES.items():
         # FCT provenance: a value from a shared output directory is spliced and
         # must not reach the plotter, whether it was copied from the source row
         # or computed here.
-        fct_status = (r.get("fct_logdir") or "").strip()
-        if ms in shared_dirs:
-            fct_status = "shared_logdir"
-        elif not fct_status:
-            fct_status = "clean" if ms in idx else "no_run_log"
+        # A row's own fct_status wins over the makespan-based inference. The
+        # inference keys on makespan, and this simulator is deterministic: a
+        # clean re-run reproduces the spliced original's makespan exactly, so
+        # the index cannot tell them apart and would mark the re-run collided.
+        # The re-run knows it wrote its own -logdir; believe it.
+        fct_status = (r.get("fct_status") or r.get("fct_logdir") or "").strip()
+        if not fct_status:
+            fct_status = "shared_logdir" if ms in shared_dirs else (
+                "clean" if ms in idx else "no_run_log")
         mx = pick(r, "max_fct_ms")
         if fct_status != "clean":
             mx = ""
@@ -194,7 +201,10 @@ for name, (dsys, dmodel, dep) in SOURCES.items():
             q=q, q_over_bdp=qbdp(sysname, q),
             q_over_bdp_source=pick(r, "q_over_bdp", "q_over_bdp_banner", "q_over_bdp_4lat"),
             makespan_ms=ms, rtos=pick(r, "rtos"),
-            drops=drops.get((sysname, ep, q), ""), max_fct_ms=mx,
+            # A row's own drops win over the quoted_row_drops join, for the same
+            # reason its fct_status does: the sweep re-runs measured their own.
+            drops=((r.get("drops") or "").strip() or drops.get((sysname, ep, q), "")),
+            max_fct_ms=mx,
             fct_status=fct_status, quotable=pick(r, "quotable"), source=name))
 
 
@@ -204,6 +214,18 @@ def num(v):
     except (TypeError, ValueError):
         return 0.0
 
+
+# Where a cell was re-run on a clean log, drop the spliced original: same
+# (system, ep, q), and the re-run reproduced the original makespan exactly, so
+# they are the same measurement with and without a usable FCT file.
+clean_keys = {(r["system"], r["ep"], r["q"]) for r in rows
+              if r["source"] == "nvl64_ep16_clean.csv"}
+before = len(rows)
+rows = [r for r in rows
+        if not ((r["system"], r["ep"], r["q"]) in clean_keys
+                and r["source"] != "nvl64_ep16_clean.csv")]
+if before != len(rows):
+    print("superseded %d spliced row(s) with clean re-runs" % (before - len(rows)))
 
 rows.sort(key=lambda r: (r["system"], num(r["ep"]), num(r["q"])))
 with open(OUT, "w", newline="") as fh:

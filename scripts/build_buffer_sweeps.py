@@ -24,6 +24,46 @@ PAPER = os.path.join(ROOT, "experiments/results/paper")
 DC = os.path.join(ROOT, "src/clos/datacenter")
 OUT = os.path.join(PAPER, "buffer_sweeps.csv")
 
+# Canonical BDP per tier: link rate x that link's own round trip.
+#   glass inter-panel port  400 GB/s x 2 x 500 ns = 400 000 B
+#   NVLink port              50 GB/s x 4 x 250 ns =  50 000 B   (two hops each way)
+#   NIC tier                 50-100 GB/s x 2000 ns rtt
+BDP_BYTES = {"glassfb": 400000.0, "glassfb_hier": 400000.0,
+             "nvl64_pkt": 50000.0, "hgx8_pkt": 112.5e9 * 1e-6,
+             "nvl64": 100e9 * 2e-6, "hgx8": 50e9 * 2e-6}
+MTU = 1500.0
+
+# Family labels are not workload names. Several sweep CSVs carry model=pkt_glass
+# with no model_name, which put a family label in the workload column of
+# cliff_all before and does the same here if copied blindly.
+FAMILY_LABELS = {"island", "pkt", "glass", "pkt_glass", "portmap", "mesh"}
+
+
+def workload(r, default):
+    for key in ("model_name", "model"):
+        v = (r.get(key) or "").strip()
+        if v and v not in FAMILY_LABELS:
+            return v
+    return default or ""
+
+
+def qbdp(system, q):
+    """q in MTU-sized packets against the tier's BDP, one convention everywhere.
+
+    The source columns disagree: qfine_ep32.csv carries the old one-way-latency
+    convention (2.0 / 3.75 for q about 1064) where the cliff rows say 4.0. The
+    simulator's own NVSwitch banner uses a third value again -- it converts the
+    queue to MSS-sized (1436 B) packets and then multiplies by 1500, so it reads
+    15.6237 where q x MTU / BDP is 16.32, a 4.3% difference. This column is
+    q x MTU / BDP for every row; the banner value is preserved separately so the
+    discrepancy stays visible rather than being silently resolved.
+    """
+    b = BDP_BYTES.get(system)
+    try:
+        return "%.2f" % (float(q) * MTU / b) if b else ""
+    except (TypeError, ValueError):
+        return ""
+
 # gate first, so `quotable` is current before the table is built
 try:
     runpy.run_path(os.path.join(ROOT, "scripts/gate_quotable.py"), run_name="__gated__")
@@ -48,7 +88,18 @@ RE_ITER = re.compile(r"finished one iter.*?now (\d+)")
 
 
 def index_runs():
+    """makespan -> fct path, plus the set of makespans whose output directory was
+    claimed by more than one run.
+
+    The simulator names its output directory from a one-second timestamp, so two
+    concurrent runs can share one fct_util_out.txt and splice each other's lines.
+    A spliced file yields nonsense that still parses: the glass EP=32 q=1000 row
+    carried a max FCT of 5644288 ms, which is a flow size in bytes. The plotter
+    should never have to know that, so such values are blanked here and the
+    reason recorded in fct_status.
+    """
     idx = {}
+    claims = collections.defaultdict(list)
     for lg in glob.glob(os.path.join(DC, "*_logs", "*.log")):
         ld = ps = None
         try:
@@ -66,8 +117,14 @@ def index_runs():
             continue
         if ld and ps:
             base = ld if os.path.isabs(ld) else os.path.join(DC, ld.lstrip("./"))
-            idx.setdefault("%.3f" % (ps / 1e9), os.path.join(base, "fct_util_out.txt"))
-    return idx
+            key = "%.3f" % (ps / 1e9)
+            idx.setdefault(key, os.path.join(base, "fct_util_out.txt"))
+            claims[ld].append(key)
+    shared = set()
+    for ld, keys in claims.items():
+        if len(keys) > 1:
+            shared.update(keys)
+    return idx, shared
 
 
 def payload_max(path, mss=1436):
@@ -106,7 +163,7 @@ def pick(r, *names):
     return ""
 
 
-idx, drops = index_runs(), load_drops()
+(idx, shared_dirs), drops = index_runs(), load_drops()
 rows, filled = [], 0
 for name, (dsys, dmodel, dep) in SOURCES.items():
     p = os.path.join(PAPER, name)
@@ -119,15 +176,26 @@ for name, (dsys, dmodel, dep) in SOURCES.items():
         sysname = pick(r, "system") or dsys or ""
         q = pick(r, "q", "q_pkts", "q_nvs")
         ep = pick(r, "ep") or (str(dep) if dep else "")
+        # FCT provenance: a value from a shared output directory is spliced and
+        # must not reach the plotter, whether it was copied from the source row
+        # or computed here.
+        fct_status = (r.get("fct_logdir") or "").strip()
+        if ms in shared_dirs:
+            fct_status = "shared_logdir"
+        elif not fct_status:
+            fct_status = "clean" if ms in idx else "no_run_log"
         mx = pick(r, "max_fct_ms")
-        if not mx and ms in idx:
+        if fct_status != "clean":
+            mx = ""
+        elif not mx and ms in idx:
             mx = payload_max(idx[ms]); filled += 1 if mx else 0
         rows.append(dict(
-            system=sysname, ep=ep, model_name=pick(r, "model_name", "model") or dmodel or "",
-            q=q, q_over_bdp=pick(r, "q_over_bdp", "q_over_bdp_banner", "q_over_bdp_4lat"),
+            system=sysname, ep=ep, model_name=workload(r, dmodel),
+            q=q, q_over_bdp=qbdp(sysname, q),
+            q_over_bdp_source=pick(r, "q_over_bdp", "q_over_bdp_banner", "q_over_bdp_4lat"),
             makespan_ms=ms, rtos=pick(r, "rtos"),
             drops=drops.get((sysname, ep, q), ""), max_fct_ms=mx,
-            quotable=pick(r, "quotable"), source=name))
+            fct_status=fct_status, quotable=pick(r, "quotable"), source=name))
 
 
 def num(v):
@@ -140,11 +208,13 @@ def num(v):
 rows.sort(key=lambda r: (r["system"], num(r["ep"]), num(r["q"])))
 with open(OUT, "w", newline="") as fh:
     w = csv.DictWriter(fh, fieldnames=["system", "ep", "model_name", "q", "q_over_bdp",
-                                       "makespan_ms", "rtos", "drops", "max_fct_ms",
-                                       "quotable", "source"])
+                                       "q_over_bdp_source", "makespan_ms", "rtos", "drops",
+                                       "max_fct_ms", "fct_status", "quotable", "source"])
     w.writeheader(); w.writerows(rows)
 
-print("wrote %s: %d sweep points (%d max-FCT values read from run logs)" % (OUT, len(rows), filled))
+blanked = sum(1 for r in rows if r["fct_status"] != "clean")
+print("wrote %s: %d sweep points (%d max-FCT read from run logs, %d blanked as not clean)"
+      % (OUT, len(rows), filled, blanked))
 by = collections.Counter((r["system"], r["ep"]) for r in rows)
 for (s, e), n in sorted(by.items()):
     print("  %-12s ep=%-4s %d point(s)" % (s, e, n))

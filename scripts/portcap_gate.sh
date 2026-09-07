@@ -59,7 +59,7 @@ for cfg in "16 128 llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf wm
   for mode in capped uncapped; do
     flag=""; capl=off; feeder="-"
     if [ "$mode" = capped ]; then flag="-port-cap -port-cap-pkts 2400"; capl=on; feeder=2400; fi
-    log=./portcap_logs/flat900_ep${ep}_${mode}.log
+    log=./portcap_logs/flat900_ep${ep}_${mode}_${SLURM_JOB_ID:-local}.log
     t0=$(date +%s)
     GLASS_RTO_MIN_US=100 timeout 21600 ./htsim_tcp_flat -nodes "$nodes" -flowfile "$R/$fb" \
       -speed 7200000 $flag -mtu 1500 -q 5000 -weightmatrix "$T/$wm" > "$log" 2>&1

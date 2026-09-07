@@ -34,7 +34,7 @@ echo "arm,workload_type,ep_source,workload,ep,nodes,system,panel,elec_bw,opt_bw,
 
 cell() { # arm wtype src wl ep nodes flowfile wm system panel elec opt inter G scflag tag
   local arm=$1 wt=$2 src=$3 wl=$4 ep=$5 nodes=$6 ff=$7 wm=$8 sys=$9 panel=${10} elec=${11} opt=${12} inter=${13} g=${14} sc=${15} tag=${16}
-  local log=./beyond64_logs/${tag}.log t0 t1 wall
+  local log=./beyond64_logs/${tag}_${SLURM_JOB_ID:-local}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_INTER=mesh GLASS_PANEL=$panel GLASS_ELEC_BW=$elec \
   GLASS_OPT_BW=$opt GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=$g \

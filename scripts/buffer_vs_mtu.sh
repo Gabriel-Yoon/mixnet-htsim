@@ -31,7 +31,7 @@ echo "arm,mtu,q,queue_bytes,inter_bw,shortcut,makespan_ps,makespan_ms,rtos" > "$
 
 run() {  # arm mtu q inter
   local arm=$1 mtu=$2 q=$3 inter=$4
-  local log=./bufmtu_logs/${arm}_mtu${mtu}_q${q}_i${inter}.log
+  local log=./bufmtu_logs/${arm}_mtu${mtu}_q${q}_i${inter}_${SLURM_JOB_ID:-local}.log
   GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=4 \
     timeout 5000 ./htsim_tcp_glassfb -nodes 64 -flowfile "$PB/coding_prefill_ep64.pb" \

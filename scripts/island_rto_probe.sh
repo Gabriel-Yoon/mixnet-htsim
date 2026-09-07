@@ -32,7 +32,7 @@ BASE=164.522
 
 run () { # rto_us
   local rto=$1
-  local log=./islrto_logs/hgx8_ep32_rto${rto}.log t0 t1
+  local log=./islrto_logs/hgx8_ep32_rto${rto}_${SLURM_JOB_ID:-local}.log t0 t1
   t0=$(date +%s)
   GLASS_RTO_MIN_US=$rto timeout 30000 ./htsim_tcp_flat -logdir "$(_logdir)" \
     -nodes 256 -flowfile "$R/$L32" \

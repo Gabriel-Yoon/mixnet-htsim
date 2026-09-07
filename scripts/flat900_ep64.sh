@@ -14,7 +14,7 @@ csv_warn_truncate "$CSV" "paper_ref,workload_type,ep_source,model,ep,nodes,syste
 echo "paper_ref,workload_type,ep_source,model,ep,nodes,system,port_cap,speed_gbs,q,rto_min_us,mtu,cap_banner,makespan_ps,makespan_ms,rtos,wall_s" > "$CSV"
 FB=$R/qwen2_57b_paper_dp2tp1pp4_ep64top8_L4_seq1024_mb8_H100.fbuf
 run() { # tag flag caplabel
-  local tag=$1 flag=$2 cap=$3 log=./flat64_logs/$1.log t0 t1 wall
+  local tag=$1 flag=$2 cap=$3 log=./flat64_logs/$1_${SLURM_JOB_ID:-local}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 timeout 25200 ./htsim_tcp_flat -nodes 512 -flowfile "$FB" \
     -speed 7200000 $flag -mtu 1500 -q 5000 -weightmatrix "$T/wm_ep64.txt" > "$log" 2>&1

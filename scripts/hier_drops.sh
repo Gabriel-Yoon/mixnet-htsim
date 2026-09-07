@@ -21,7 +21,7 @@ mkdir -p ./hd_logs
 [ -f "$CSV" ] || { echo "FATAL: $CSV missing; run quoted_drops.sh first" >&2; exit 1; }
 
 QME=qwenMoE_paper_dp2tp1pp4_ep64top4_L4_seq1024_mb8_H100.fbuf
-log=./hd_logs/hier_ep64_q1064.log
+log=./hd_logs/hier_ep64_q1064_${SLURM_JOB_ID:-local}.log
 t0=$(date +%s)
 GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
 GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 GLASS_PORT_MAP="$PM/ep64_gt.txt" \

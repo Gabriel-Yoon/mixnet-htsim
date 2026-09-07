@@ -10,7 +10,7 @@ mkdir -p ./diag_logs
 
 probe() {  # label elec opt inter
   local label=$1 elec=$2 opt=$3 inter=$4
-  local log=./diag_logs/diag_${label}.log
+  local log=./diag_logs/diag_${label}_${SLURM_JOB_ID:-local}.log
   GLASS_INTER=fb2 GLASS_PANEL=16 GLASS_EP_PLACE=1 GLASS_TP=1 GLASS_EP=16 \
   GLASS_ELEC_BW=$elec GLASS_OPT_BW=$opt GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=1 \
     timeout 1200 ./htsim_tcp_glassfb -nodes 128 -flowfile "$FB" \

@@ -13,7 +13,7 @@ csv_warn_truncate "$CSV" "workload,ep,nodes,config,domain,intra_bw,inter_bw,G,ma
 echo "workload,ep,nodes,config,domain,intra_bw,inter_bw,G,makespan_ps,makespan_ms,rtos" > "$CSV"
 for wl in decode coding_prefill chat_prefill agentic_prefill; do
   for ep in 8 16 32 64; do
-    log=./cliff_logs/glassfb384_${wl}_ep${ep}.log
+    log=./cliff_logs/glassfb384_${wl}_ep${ep}_${SLURM_JOB_ID:-local}.log
     env GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 \
         GLASS_OPT_BW=384 GLASS_INTER_BW=3200 GLASS_GW_PARALLEL=4 \
       timeout 3000 ./htsim_tcp_glassfb -nodes "$ep" -flowfile "$PB/${wl}_ep${ep}.pb" \

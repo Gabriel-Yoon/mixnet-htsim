@@ -35,7 +35,7 @@ parse() {  # $1 = log path -> prints "ps ms rtos"
 
 run_glassfb_wide() {  # wl ep nodes csv
   local wl=$1 ep=$2 nodes=$3 csv=$4
-  local log=./wide_logs/glassfb_wide_${wl}_ep${ep}.log
+  local log=./wide_logs/glassfb_wide_${wl}_ep${ep}_${SLURM_JOB_ID:-local}.log
   GLASS_INTER=mesh GLASS_OPT_BW=640 GLASS_INTER_BW=1600 GLASS_GW_PARALLEL=4 \
     timeout 5400 ./htsim_tcp_glassfb -nodes "$nodes" -flowfile "$PB/${wl}_ep${ep}.pb" \
       -mtu 1500 -q 10000 -weightmatrix "$T/wm_ep${ep}.txt" > "$log" 2>&1
@@ -45,7 +45,7 @@ run_glassfb_wide() {  # wl ep nodes csv
 
 run_baseline_wide() {  # bin label wl ep nodes csv
   local bin=$1 label=$2 wl=$3 ep=$4 nodes=$5 csv=$6
-  local log=./wide_logs/${label}_wide_${wl}_ep${ep}.log
+  local log=./wide_logs/${label}_wide_${wl}_ep${ep}_${SLURM_JOB_ID:-local}.log
   timeout 5400 "$bin" -nodes "$nodes" -flowfile "$PB/${wl}_ep${ep}.pb" \
     -speed "$FAIR_SPEED_MBPS" -mtu 1500 -q 10000 \
     -weightmatrix "$T/wm_ep${ep}.txt" > "$log" 2>&1

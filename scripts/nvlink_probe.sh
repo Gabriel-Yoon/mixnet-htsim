@@ -16,7 +16,7 @@ mkdir -p ./nvl_logs
 
 probe() {  # label panel pcols elec opt inter extra_env
   local label=$1 panel=$2 pcols=$3 elec=$4 opt=$5 inter=$6
-  local log=./nvl_logs/${label}.log
+  local log=./nvl_logs/${label}_${SLURM_JOB_ID:-local}.log
   env GLASS_PANEL=$panel GLASS_PCOLS=$pcols \
       GLASS_ELEC_BW=$elec GLASS_OPT_BW=$opt GLASS_INTER_BW=$inter \
       GLASS_ELEC_LAT=500 GLASS_OPT_LAT=500 GLASS_INTER_LAT=500 \

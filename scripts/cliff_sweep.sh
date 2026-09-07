@@ -23,7 +23,7 @@ echo "workload,ep,nodes,config,domain,intra_bw,scaleout_bw,makespan_ps,makespan_
 
 run() {  # label domain pcols intra scaleout wl ep  [extra env pairs...]
   local label=$1 dom=$2 pcols=$3 intra=$4 so=$5 wl=$6 ep=$7
-  local log=./cliff_logs/${label}_${wl}_ep${ep}.log
+  local log=./cliff_logs/${label}_${wl}_ep${ep}_${SLURM_JOB_ID:-local}.log
   if [ "$label" = "glassfb" ]; then
     env GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=640 \
         GLASS_INTER_BW=1600 GLASS_GW_PARALLEL=4 \

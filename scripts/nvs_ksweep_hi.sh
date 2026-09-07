@@ -25,7 +25,7 @@ for k in 32 64; do
   # sweep produced was 2x the multiple actually run.
   BDP_PKTS=33
   q=$((BDP_PKTS * k)); ek=$((q / 2))
-  log=./nvs_logs/ksweep_k${k}.log; t0=$(date +%s)
+  log=./nvs_logs/ksweep_k${k}_${SLURM_JOB_ID:-local}.log; t0=$(date +%s)
   GLASS_RTO_MIN_US=100 timeout 20000 ./htsim_tcp_nvswitch -logdir "$(_logdir)" -nodes 128 -flowfile "$R/$FB" \
     -nvs_domain 64 -nvs_switches 18 -nvs_link 50 -nvs_lat 250 -nvs_q $q -nvs_ecn_k $ek \
     -speed 800000 -rtt 2000 -q 540 -port-cap-pkts 270 -mtu 1500 \

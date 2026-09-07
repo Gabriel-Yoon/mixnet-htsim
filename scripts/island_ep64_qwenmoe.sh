@@ -27,7 +27,7 @@ CSV=$PAPER/cliff.csv
 island () { # tag model topk ep nodes fbuf wm sys nic_gbs island_n island_bw q feeder
   local tag=$1 model=$2 topk=$3 ep=$4 nodes=$5 fb=$6 wm=$7 sys=$8 nic=$9 ign=${10} ibw=${11} q=${12} feed=${13}
   # separate statement: bash expands every RHS before local binds any of them
-  local log=./island_logs/${tag}.log t0 t1 wall
+  local log=./island_logs/${tag}_${SLURM_JOB_ID:-local}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 timeout 30000 ./htsim_tcp_flat -nodes "$nodes" -flowfile "$R/$fb" \
     -speed $((nic * 8000)) -rtt 2000 -port-cap -port-cap-pkts "$feed" \

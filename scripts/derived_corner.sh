@@ -42,7 +42,7 @@ echo "q,queue_bytes,bdp_ratio_intra,bdp_ratio_inter,rto_min_us,inter_bw,shortcut
 
 run() {  # q rto_us inter
   local q=$1 rto=$2 inter=$3
-  local log=./corner_logs/q${q}_rto${rto}_i${inter}.log
+  local log=./corner_logs/q${q}_rto${rto}_i${inter}_${SLURM_JOB_ID:-local}.log
   GLASS_RTO_MIN_US=$rto GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 \
   GLASS_OPT_BW=384 GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=4 \
     timeout 5000 ./htsim_tcp_glassfb -nodes 64 -flowfile "$PB/coding_prefill_ep64.pb" \

@@ -21,7 +21,7 @@ EXPECT_2400=6448818088
 
 run() {  # mode flag inter
   local mode=$1 flag=$2 inter=$3
-  local log=./shortcut_logs/${mode}_i${inter}.log
+  local log=./shortcut_logs/${mode}_i${inter}_${SLURM_JOB_ID:-local}.log
   env GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
       GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=4 \
     timeout 4000 ./htsim_tcp_glassfb -nodes 64 -flowfile "$PB/coding_prefill_ep64.pb" \

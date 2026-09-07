@@ -41,7 +41,7 @@ FB=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf
 
 run () { # k q
   local k=$1 q=$2
-  local log=./nvsout_logs/out_k${k}.log t0 t1
+  local log=./nvsout_logs/out_k${k}_${SLURM_JOB_ID:-local}.log t0 t1
   local ek=$((q / 2))
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 timeout 20000 ./htsim_tcp_nvswitch -logdir "$(_logdir)" -nodes 128 -flowfile "$R/$FB" \

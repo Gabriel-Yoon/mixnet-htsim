@@ -36,7 +36,7 @@ EXPECT=11690301651
 
 run() {  # arm flag label
   local arm=$1 flag=$2 label=$3
-  local log=./e37_logs/${arm}.log
+  local log=./e37_logs/${arm}_${SLURM_JOB_ID:-local}.log
   GLASS_RTO_MIN_US=100 GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 \
   GLASS_OPT_BW=384 GLASS_INTER_BW=1600 GLASS_GW_PARALLEL=4 \
     timeout 5400 ./htsim_tcp_glassfb -nodes 64 -flowfile "$PB/coding_prefill_ep64.pb" \

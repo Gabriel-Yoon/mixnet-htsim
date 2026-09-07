@@ -59,7 +59,7 @@ found=0
 run () { # k q
   local k=$1 q=$2
   [ "$found" = 1 ] && return 0
-  local log=./gt128_logs/k${k}.log t0 t1
+  local log=./gt128_logs/k${k}_${SLURM_JOB_ID:-local}.log t0 t1
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 GLASS_PORT_MAP="$MAP" \

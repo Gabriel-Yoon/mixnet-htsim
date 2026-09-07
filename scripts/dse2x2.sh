@@ -35,7 +35,7 @@ L32=llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
 
 cell () { # tag cabling dim
   local tag=$1 cab=$2 dim=$3
-  local log=./dse_logs/${tag}.log t0 t1
+  local log=./dse_logs/${tag}_${SLURM_JOB_ID:-local}.log t0 t1
   t0=$(date +%s)
   if [ "$cab" = mesh ]; then
     GLASS_RTO_MIN_US=100 GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 \

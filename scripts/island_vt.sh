@@ -31,7 +31,7 @@ sweep () { # sys model topk ep nodes fb wm nic ign ibw q...
   local q feed log t0 t1 rc ps ms rtos qob st quoted found=0
   for q in "$@"; do
     feed=$((q / 2))
-    log=./islvt_logs/${sys}_ep${ep}_q${q}.log
+    log=./islvt_logs/${sys}_ep${ep}_q${q}_${SLURM_JOB_ID:-local}.log
     t0=$(date +%s)
     GLASS_RTO_MIN_US=100 timeout 30000 ./htsim_tcp_flat -logdir "$(_logdir)" \
       -nodes "$nodes" -flowfile "$R/$fb" \

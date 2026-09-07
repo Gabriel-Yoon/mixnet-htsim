@@ -27,7 +27,7 @@ BASE=75.542
 
 run () { # skew wmfile
   local sk=$1 wm=$2
-  local log=./skew_logs/skew${sk}.log t0 t1
+  local log=./skew_logs/skew${sk}_${SLURM_JOB_ID:-local}.log t0 t1
   # share of a row's tokens held by its single hottest expert: a one-number
   # summary of what the exponent actually did to the matrix
   local hot

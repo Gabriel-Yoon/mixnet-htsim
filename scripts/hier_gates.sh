@@ -27,7 +27,7 @@ csv_open "$CSV" "paper_ref,system,cabling,ep,nodes,mb,q,a2a_mode,relayed_pairs,c
 
 cell () { # tag nodes fbuf wm map q mode(flat|hier) ref_ms
   local tag=$1 nodes=$2 fb=$3 wm=$4 map=$5 q=$6 mode=$7 ref=$8
-  local log=./hier_logs/${tag}.log t0 extra=""
+  local log=./hier_logs/${tag}_${SLURM_JOB_ID:-local}.log t0 extra=""
   [ "$mode" = hier ] && extra="-a2a_hier"
   t0=$(date +%s)
   GLASS_LOG_FLOWS=1 GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \

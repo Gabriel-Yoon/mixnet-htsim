@@ -10,7 +10,7 @@ mkdir -p ./pm_logs
 L32=llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
 for mode in flat hier; do
   extra=""; [ "$mode" = hier ] && extra="-a2a_hier"
-  log=./pm_logs/hier2_${mode}.log
+  log=./pm_logs/hier2_${mode}_${SLURM_JOB_ID:-local}.log
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 GLASS_PORT_MAP="$PM/ep32_12_2_1.txt" \
     timeout 600 ./htsim_tcp_glassfb_pm -nodes 256 -flowfile "$R/$L32" \

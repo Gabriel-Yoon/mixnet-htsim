@@ -22,7 +22,7 @@ L16=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf
 
 run () { # tag q feed
   local tag=$1 q=$2 feed=$3
-  local log=./dropctl_logs/${tag}.log
+  local log=./dropctl_logs/${tag}_${SLURM_JOB_ID:-local}.log
   GLASS_RTO_MIN_US=100 timeout 20000 $BIN -logdir "$(_logdir)" -nodes 128 \
     -flowfile "$R/$L16" -speed 400000 -rtt 2000 -port-cap -port-cap-pkts "$feed" \
     -island_gpus 8 -island_bw 450 -mtu 1500 -q "$q" \

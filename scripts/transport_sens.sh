@@ -24,7 +24,7 @@ echo "knob,value,inter_bw,makespan_ps,makespan_ms,rtos,rto_waves" > "$CSV"
 
 run() {  # knob value inter q ecn mtu
   local knob=$1 val=$2 inter=$3 q=$4 ecn=$5 mtu=$6
-  local log=./transport_logs/${knob}${val}_i${inter}.log
+  local log=./transport_logs/${knob}${val}_i${inter}_${SLURM_JOB_ID:-local}.log
   env GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
       GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=4 GLASS_ECN_K=$ecn \
     timeout 4000 ./htsim_tcp_glassfb -nodes 64 -flowfile "$PB/coding_prefill_ep64.pb" \

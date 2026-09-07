@@ -23,7 +23,7 @@ smoke() {  # model ep topk dp tp pp fbuf
   local model=$1 ep=$2 topk=$3 dp=$4 tp=$5 pp=$6 fbuf=$7
   local nodes=$((dp * tp * pp * ep))
   local wm=$T/wm_ep${ep}.txt
-  local log=./smoke_train_logs/${model}_ep${ep}.log
+  local log=./smoke_train_logs/${model}_ep${ep}_${SLURM_JOB_ID:-local}.log
   local mb=$(du -m "$R/$fbuf" 2>/dev/null | cut -f1)
 
   if [ ! -f "$R/$fbuf" ]; then

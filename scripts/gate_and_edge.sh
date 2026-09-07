@@ -28,7 +28,7 @@ echo "paper_ref,workload_type,ep_source,model,topk,ep,nodes,inter_bw,q,queue_byt
 
 gate () { # tag expected cmd...
   local tag=$1 exp=$2; shift 2
-  local log=./edge_logs/gate_${tag}.log
+  local log=./edge_logs/gate_${tag}_${SLURM_JOB_ID:-local}.log
   "$@" > "$log" 2>&1
   local ps; ps=$(grep "finished one iter" "$log" | tail -1 | grep -oE "now [0-9]+" | awk '{print $2}')
   [ -z "$ps" ] && ps=0
@@ -49,7 +49,7 @@ gate flat900_ep32_capped 67821406601 env GLASS_RTO_MIN_US=100 ./htsim_tcp_flat -
 
 edge () { # model topk fbuf wm ep nodes inter q tag
   local model=$1 topk=$2 fb=$3 wm=$4 ep=$5 nodes=$6 inter=$7 q=$8 tag=$9
-  local log=./edge_logs/${tag}.log t0 t1 wall
+  local log=./edge_logs/${tag}_${SLURM_JOB_ID:-local}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 \
   GLASS_OPT_BW=384 GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=4 \

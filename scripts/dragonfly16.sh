@@ -37,7 +37,7 @@ run () { # tag model topk ep nodes fbuf wm panels interbw G q
   # per_gpu_xpanel_gbs wrong for every row.
   local P_arg=$P
   P=$((nodes / 16))
-  local log=./df16_logs/${tag}.log t0 t1 wall
+  local log=./df16_logs/${tag}_${SLURM_JOB_ID:-local}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_INTER=dragonfly GLASS_PANEL=16 GLASS_ELEC_BW=1800 \
   GLASS_OPT_BW=384 GLASS_INTER_BW=$ibw GLASS_GW_PARALLEL=$G \

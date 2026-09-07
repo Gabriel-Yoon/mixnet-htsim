@@ -21,7 +21,7 @@ echo "workload_type,model,ep,nodes,system,elec_lat_ns,opt_lat_ns,inter_lat_ns,ma
 FB=$R/llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
 
 run() { # tag elec_lat opt_lat inter_lat
-  local tag=$1 el=$2 ol=$3 il=$4 log=./latmatch_logs/$1.log t0 t1 wall
+  local tag=$1 el=$2 ol=$3 il=$4 log=./latmatch_logs/$1_${SLURM_JOB_ID:-local}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 \
   GLASS_OPT_BW=384 GLASS_INTER_BW=1600 GLASS_GW_PARALLEL=4 \

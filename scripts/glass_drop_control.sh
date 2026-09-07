@@ -19,7 +19,7 @@ mkdir -p ./gdc_logs
 L32=llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
 
 echo "########## mesh cabling, q=1064 -- known to post 16068 timeouts ##########"
-log=./gdc_logs/mesh_q1064.log
+log=./gdc_logs/mesh_q1064_${SLURM_JOB_ID:-local}.log
 GLASS_RTO_MIN_US=100 GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 \
 GLASS_OPT_BW=384 GLASS_INTER_BW=1600 GLASS_GW_PARALLEL=4 \
 GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 \

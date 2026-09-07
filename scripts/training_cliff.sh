@@ -27,7 +27,7 @@ echo "workload_type,ep_source,model,ep,nodes,system,panel,elec_bw,opt_bw,inter_b
 
 cell() {  # model ep nodes fbuf wm system panel elec opt inter G scflag tag
   local model=$1 ep=$2 nodes=$3 fbuf=$4 wm=$5 sys=$6 panel=$7 elec=$8 opt=$9 inter=${10} g=${11} scflag=${12} tag=${13}
-  local log=./traincliff_logs/${tag}.log
+  local log=./traincliff_logs/${tag}_${SLURM_JOB_ID:-local}.log
   local t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_INTER=mesh GLASS_PANEL=$panel GLASS_ELEC_BW=$elec \

@@ -23,7 +23,7 @@ echo "experiment,workload,ep,opt_bw,inter_bw,G,makespan_ps,makespan_ms,rtos" > "
 
 run() {  # exp wl ep opt inter g
   local exp=$1 wl=$2 ep=$3 opt=$4 inter=$5 g=$6
-  local log=./ep64_logs/${exp}_${wl}_ep${ep}_o${opt}_i${inter}_g${g}.log
+  local log=./ep64_logs/${exp}_${wl}_ep${ep}_o${opt}_i${inter}_g${g}_${SLURM_JOB_ID:-local}.log
   env GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 \
       GLASS_OPT_BW=$opt GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=$g \
     timeout 4000 ./htsim_tcp_glassfb -nodes "$ep" -flowfile "$PB/${wl}_ep${ep}.pb" \

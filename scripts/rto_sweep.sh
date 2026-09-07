@@ -15,7 +15,7 @@ echo "rto_min_us,inter_bw,makespan_ps,makespan_ms,rtos,rto_waves" > "$CSV"
 
 run() {  # rto_us inter  ("" rto_us = unset, i.e. default)
   local rto=$1 inter=$2 label=${1:-default}
-  local log=./rto_logs/rto${label}_i${inter}.log
+  local log=./rto_logs/rto${label}_i${inter}_${SLURM_JOB_ID:-local}.log
   if [ -z "$rto" ]; then
     env GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
         GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=4 \

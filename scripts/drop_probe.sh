@@ -22,7 +22,7 @@ mkdir -p ./drop_logs
 
 run () { # tag nodes fb wm nic ign ibw q feed
   local tag=$1 nodes=$2 fb=$3 wm=$4 nic=$5 ign=$6 ibw=$7 q=$8 feed=$9
-  local log=./drop_logs/${tag}.log
+  local log=./drop_logs/${tag}_${SLURM_JOB_ID:-local}.log
   GLASS_RTO_MIN_US=100 timeout 30000 $BIN -logdir "$(_logdir)" -nodes "$nodes" \
     -flowfile "$R/$fb" -speed $((nic * 8000)) -rtt 2000 -port-cap -port-cap-pkts "$feed" \
     -island_gpus "$ign" -island_bw "$ibw" -mtu 1500 -q "$q" \

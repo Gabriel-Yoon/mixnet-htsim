@@ -34,7 +34,7 @@ WM=$T/wm_ep32.txt
 
 cell() {  # system panel elec opt inter G shortcut_flag
   local sys=$1 panel=$2 elec=$3 opt=$4 inter=$5 g=$6 scflag=$7
-  local log=./train32_logs/${sys}.log
+  local log=./train32_logs/${sys}_${SLURM_JOB_ID:-local}.log
   local t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_INTER=mesh GLASS_PANEL=$panel GLASS_ELEC_BW=$elec \

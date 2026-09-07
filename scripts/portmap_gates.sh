@@ -18,7 +18,7 @@ mkdir -p "$PAPER" ./pm_logs
 
 banner () { # tag nodes fbuf wm map extra...
   local tag=$1 nodes=$2 fb=$3 wm=$4 map=$5; shift 5
-  local log=./pm_logs/${tag}.log
+  local log=./pm_logs/${tag}_${SLURM_JOB_ID:-local}.log
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 GLASS_PORT_MAP="$PM/$map" \
     timeout 240 $BIN -nodes "$nodes" -flowfile "$R/$fb" \

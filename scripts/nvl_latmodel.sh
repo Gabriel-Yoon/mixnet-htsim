@@ -26,7 +26,7 @@ echo "workload_type,model,ep,nodes,system,lat_model,elec_lat_ns,opt_lat_ns,inter
 
 run() { # model ep nodes fbuf wm system panel elec inter latmodel el ol il
   local model=$1 ep=$2 nodes=$3 fbuf=$4 wm=$5 sys=$6 panel=$7 elec=$8 inter=$9 lm=${10} el=${11} ol=${12} il=${13}
-  local log=./nvllat_logs/${sys}_ep${ep}_${lm}.log t0 t1 wall
+  local log=./nvllat_logs/${sys}_ep${ep}_${lm}_${SLURM_JOB_ID:-local}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_INTER=mesh GLASS_PANEL=$panel GLASS_ELEC_BW=$elec \
   GLASS_OPT_BW=$elec GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=1 \

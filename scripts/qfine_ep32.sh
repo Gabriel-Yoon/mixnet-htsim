@@ -31,7 +31,7 @@ BASE=91.367
 
 run () { # q
   local q=$1
-  local log=./qfine_logs/q${q}.log t0 t1
+  local log=./qfine_logs/q${q}_${SLURM_JOB_ID:-local}.log t0 t1
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 GLASS_PORT_MAP="$MAP" \

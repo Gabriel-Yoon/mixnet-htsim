@@ -34,7 +34,7 @@ csv_open "$CSV" "paper_ref,model,model_name,workload_type,system,ep,mb,nodes,q,q
 
 glass_cell () { # mb q
   local mb=$1 q=$2
-  local log=./mb_logs/glass_mb${mb}_q${q}.log t0 t1
+  local log=./mb_logs/glass_mb${mb}_q${q}_${SLURM_JOB_ID:-local}.log t0 t1
   local fb=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb${mb}_H100.fbuf
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
@@ -46,7 +46,7 @@ glass_cell () { # mb q
 
 pkt_cell () { # mb q
   local mb=$1 q=$2
-  local log=./mb_logs/nvl64_mb${mb}_q${q}.log t0
+  local log=./mb_logs/nvl64_mb${mb}_q${q}_${SLURM_JOB_ID:-local}.log t0
   local fb=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb${mb}_H100.fbuf
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 \

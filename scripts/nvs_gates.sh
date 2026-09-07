@@ -26,7 +26,7 @@ FB=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf
 
 run () { # tag args...
   local tag=$1; shift
-  local log=./nvs_logs/${tag}.log
+  local log=./nvs_logs/${tag}_${SLURM_JOB_ID:-local}.log
   GLASS_RTO_MIN_US=100 timeout 20000 ./htsim_tcp_nvswitch -logdir "$(_logdir)" -nodes 128 -flowfile "$R/$FB" \
     -mtu 1500 -weightmatrix "$T/wm_ep16.txt" "$@" > "$log" 2>&1
   local ps ms rtos flows ld

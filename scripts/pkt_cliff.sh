@@ -30,7 +30,7 @@ run () { # sys model topk ep nodes fbuf wm D S L nic q_nvs q_nic
   local tag=${sys}_ep${ep}
   # separate statement: bash expands every RHS before local binds any of them,
   # so a ${tag} reference on that same line is unbound under set -u
-  local log=./pktcliff_logs/${tag}.log t0 t1 wall
+  local log=./pktcliff_logs/${tag}_${SLURM_JOB_ID:-local}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 timeout 30000 ./htsim_tcp_nvswitch -logdir "$(_logdir)" -nodes "$nodes" -flowfile "$R/$fb" \
     -nvs_domain "$D" -nvs_switches "$S" -nvs_link "$L" -nvs_lat 250 \

@@ -27,7 +27,7 @@ FB=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf
 
 run () { # q feeder mult status
   local q=$1 feed=$2 mult=$3 st=$4
-  local log=./island_logs/hgx8_buf_q${q}.log t0 t1 wall
+  local log=./island_logs/hgx8_buf_q${q}_${SLURM_JOB_ID:-local}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 timeout 25200 ./htsim_tcp_flat -logdir "$(_logdir)" -nodes 128 -flowfile "$R/$FB" \
     -speed 400000 -rtt 2000 -port-cap -port-cap-pkts "$feed" \

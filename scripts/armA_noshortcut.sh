@@ -25,7 +25,7 @@ echo "arm,mb,shortcut,inter_mode,opt_bw,inter_bw,gw_parallel,banner,makespan_ps,
 run() {  # mb opt flag shortcut_label
   local mb=$1 opt=$2 flag=$3 sc=$4
   local fbuf=$R/llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb${mb}_H100.fbuf
-  local log=./armA_ns_logs/armA_mb${mb}_opt${opt}_${sc}.log
+  local log=./armA_ns_logs/armA_mb${mb}_opt${opt}_${sc}_${SLURM_JOB_ID:-local}.log
   GLASS_INTER=fb2 GLASS_PANEL=16 GLASS_EP_PLACE=1 GLASS_TP=1 GLASS_EP=16 \
   GLASS_ELEC_BW=1800 GLASS_OPT_BW=$opt GLASS_INTER_BW=200 GLASS_GW_PARALLEL=1 \
     timeout 3000 ./htsim_tcp_glassfb -nodes 128 -flowfile "$fbuf" \

@@ -29,7 +29,7 @@ emit() { # exp wl ep cfg intra inter lat log
 echo "########## (A) knee: intra fixed 384, sweep inter ##########"
 for wl in coding_prefill agentic_prefill; do
   for inter in 1600 2000 2400 2800 3200; do
-    log=./knee_logs/knee_${wl}_i${inter}.log
+    log=./knee_logs/knee_${wl}_i${inter}_${SLURM_JOB_ID:-local}.log
     env GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
         GLASS_INTER_BW=$inter GLASS_GW_PARALLEL=4 \
       timeout 4000 ./htsim_tcp_glassfb -nodes 64 -flowfile "$PB/${wl}_ep64.pb" \
@@ -41,7 +41,7 @@ done
 echo "########## (B) EP=16 matched hop latency ##########"
 for wl in decode coding_prefill; do
   # our design at NVSwitch latency (handicap us)
-  log=./knee_logs/lat_glassfb500_${wl}.log
+  log=./knee_logs/lat_glassfb500_${wl}_${SLURM_JOB_ID:-local}.log
   env GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
       GLASS_INTER_BW=3200 GLASS_GW_PARALLEL=4 \
       GLASS_ELEC_LAT=500 GLASS_OPT_LAT=500 GLASS_INTER_LAT=500 \
@@ -50,7 +50,7 @@ for wl in decode coding_prefill; do
   emit matched_lat "$wl" 16 glassfb_at500ns 384 3200 "500/500/500" "$log"
 
   # dom64 at CPO latency (give them our latency)
-  log=./knee_logs/lat_dom64_100_${wl}.log
+  log=./knee_logs/lat_dom64_100_${wl}_${SLURM_JOB_ID:-local}.log
   env GLASS_PANEL=64 GLASS_PCOLS=64 GLASS_ELEC_BW=900 GLASS_OPT_BW=900 \
       GLASS_INTER_BW=100 GLASS_ELEC_LAT=100 GLASS_OPT_LAT=100 GLASS_INTER_LAT=100 \
     timeout 3000 ./htsim_tcp_glassfb -nodes 16 -flowfile "$PB/${wl}_ep16.pb" \
@@ -58,14 +58,14 @@ for wl in decode coding_prefill; do
   emit matched_lat "$wl" 16 dom64_at100ns 900 100 "100/100/100" "$log"
 
   # references at their native latencies
-  log=./knee_logs/lat_glassfb_native_${wl}.log
+  log=./knee_logs/lat_glassfb_native_${wl}_${SLURM_JOB_ID:-local}.log
   env GLASS_INTER=mesh GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
       GLASS_INTER_BW=3200 GLASS_GW_PARALLEL=4 \
     timeout 3000 ./htsim_tcp_glassfb -nodes 16 -flowfile "$PB/${wl}_ep16.pb" \
       -mtu 1500 -q 10000 -weightmatrix "$T/wm_ep16.txt" > "$log" 2>&1
   emit matched_lat "$wl" 16 glassfb_native 384 3200 "100/300/500" "$log"
 
-  log=./knee_logs/lat_dom64_native_${wl}.log
+  log=./knee_logs/lat_dom64_native_${wl}_${SLURM_JOB_ID:-local}.log
   env GLASS_PANEL=64 GLASS_PCOLS=64 GLASS_ELEC_BW=900 GLASS_OPT_BW=900 \
       GLASS_INTER_BW=100 GLASS_ELEC_LAT=500 GLASS_OPT_LAT=500 GLASS_INTER_LAT=500 \
     timeout 3000 ./htsim_tcp_glassfb -nodes 16 -flowfile "$PB/${wl}_ep16.pb" \

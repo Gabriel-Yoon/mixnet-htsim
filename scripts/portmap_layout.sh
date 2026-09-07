@@ -21,7 +21,7 @@ L32=llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
 
 run () { # tag nodes fbuf wm map timeout
   local tag=$1 nodes=$2 fb=$3 wm=$4 map=$5 tmo=$6
-  local log=./pm_logs/${tag}.log
+  local log=./pm_logs/${tag}_${SLURM_JOB_ID:-local}.log
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 GLASS_PORT_MAP="$PM/$map" \
     timeout "$tmo" $BIN -nodes "$nodes" -flowfile "$R/$fb" \
@@ -51,7 +51,7 @@ run truth_ep16_ppmajor 128 "$L16" wm_ep16.txt ep16_0_8_4_ppmajor.txt  3600
 echo "########## hierarchical A2A smoke (flat vs hier, same topology) ##########"
 for mode in flat hier; do
   extra=""; [ "$mode" = hier ] && extra="-a2a_hier"
-  log=./pm_logs/hiersmoke_${mode}.log
+  log=./pm_logs/hiersmoke_${mode}_${SLURM_JOB_ID:-local}.log
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 GLASS_PORT_MAP="$PM/ep32_12_2_1.txt" \
     timeout 300 $BIN -nodes 256 -flowfile "$R/$L32" \

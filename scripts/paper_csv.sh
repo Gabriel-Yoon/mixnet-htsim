@@ -114,6 +114,17 @@ csv_row() {
         k=${pair%%=*}; v=${pair#*=}
         kv[$k]=$v
     done
+    # A value containing a comma shifts every column after it, and nothing
+    # downstream can tell a shifted row from a short one. This is the port-cap
+    # banner defect (awk $1 kept "ENABLED," from the sentence it was cut from) and
+    # it recurred here from a note written by hand. Replace and say so: a silent
+    # quote would hide that the caller wrote something the format cannot carry.
+    for k in "${!kv[@]}"; do
+        case "${kv[$k]}" in
+            *,*) echo "csv_row: value for '$k' contains a comma; replaced with ';' to keep the row aligned" >&2
+                 kv[$k]=${kv[$k]//,/;} ;;
+        esac
+    done
     # every supplied key must exist in the header
     local col missing=""
     for k in "${!kv[@]}"; do

@@ -111,13 +111,13 @@ FSTAT=$(awk '/^FCT/{n++; v=$5+0; if($4>1436){m++; p[m]=v; s+=v}}
 # re-derived. It is very likely low here, which flatters this fabric, so the row
 # says so rather than a caption remembering to.
 PBNOTE=""
-[ "${RUNG_PORT_BW:-400}" != "400" ] && PBNOTE="; 200G/lane: static laser+tune NOT re-budgeted, same 5.3 W/panel as 100G/lane and likely low for the higher-rate lanes; link pJ/bit unchanged (dynamic)"
+[ "${RUNG_PORT_BW:-400}" != "400" ] && PBNOTE="; 200G/lane: static laser+tune NOT re-budgeted -- same 5.3 W/panel as 100G/lane and likely low for the higher-rate lanes; link pJ/bit unchanged (dynamic)"
 FLD="$LD"
 FSTATUS=no_fct
 [ "$(echo "$FSTAT"|cut -d, -f2)" -gt 0 ] 2>/dev/null && FSTATUS=clean
 
 if [ "$IS_GLASS" = 1 ]; then
-  csv_row "$CSV" paper_ref=cliff system=glassfb cabling="$CAB" ep="$EP" nodes="$NODES" \
+  csv_row "$CSV" paper_ref=cliff system="$SYS" cabling="$CAB" ep="$EP" nodes="$NODES" \
     mb="$MB" q="$Q" relayed_pairs="$RELAY" completed="$([ "$RC" = 124 ] && echo TRUNCATED || echo COMPLETE)" \
     makespan_ms="$MS" rtos="$RTOS" drops="${DROPS:-}" \
     flows_total="$(echo "$FSTAT"|cut -d, -f1)" flows_payload="$(echo "$FSTAT"|cut -d, -f2)" \

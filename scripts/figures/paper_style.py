@@ -3,7 +3,7 @@
 Conventions (from the fabric papers we compare against):
   * one colour per SYSTEM, kept identical in every figure (MixNet, FRED);
   * solid = simulated with queues, dashed = analytic / vendor-claim bound (our addition);
-  * marker per system: o Glass-FB, s NVL-64, ^ HGX-8;
+  * marker per system: o Glass-FB, s NVL72, ^ HGX-8;
   * makespan in ms on a log axis when the range exceeds 5x (Rail-only), linear otherwise;
   * every bar/point carries its number when there are <= 8 of them (WATOS);
   * a second y-axis or an inset gives "speedup over <baseline>" (FRED normalises to the
@@ -17,8 +17,8 @@ COL = {
     "glassfb":      "#1f6f8b",   # Glass-FB, port map (headline)
     "glassfb_mesh": "#8fbcd4",   # Glass-FB, 4-edge mesh (as first submitted)
     "glassfb_hier": "#0b3d4f",   # Glass-FB + gateway-aggregated A2A
-    "nvl64_pkt":    "#7a0177",   # NVL-64, packet-level NVSwitch
-    "nvl64":        "#7a0177",   # NVL-64, analytic island (dashed)
+    "nvl64_pkt":    "#7a0177",   # NVL72, packet-level NVSwitch
+    "nvl64":        "#7a0177",   # NVL72, analytic island (dashed)
     "hgx8_pkt":     "#d95f0e",
     "hgx8":         "#d95f0e",
     "bound":        "#9a9a9a",
@@ -27,7 +27,7 @@ COL = {
 }
 LABEL = {
     "glassfb": "Glass-FB", "glassfb_mesh": "Glass-FB (4-edge mesh)", "glassfb_hier": "Glass-FB + hier. A2A",
-    "nvl64_pkt": "NVL-64 (queued NVSwitch)", "nvl64": "NVL-64 (vendor-claim bound)",
+    "nvl64_pkt": "NVL72 (queued NVSwitch)", "nvl64": "NVL72 (vendor-claim bound)",
     "hgx8_pkt": "HGX-8 (queued NVSwitch)", "hgx8": "HGX-8 (bound)",
 }
 MARK = {"glassfb": "o", "glassfb_mesh": "o", "glassfb_hier": "o", "nvl64_pkt": "s", "nvl64": "s", "hgx8_pkt": "^", "hgx8": "^"}

@@ -31,35 +31,41 @@ OBJS=../eventlist.o ../tcppacket.o ../pipe.o ../queue.o ../queue_lossless.o ../q
 all: htsim_tcp_nvswitch htsim_tcp_glassfb htsim_tcp_wafer htsim_tcp_fc htsim_tcp_fattree htsim_tcp_os_fattree htsim_tcp_flat htsim_tcp_aggosft htsim_tcp_dyn_flat htsim_tcp_fattree_multijob htsim_tcp_aggos_fattree_multijob htsim_tcp_mixnet
 
 htsim_tcp_fattree_multijob: main_tcp_multijob_fattree.o firstfit.o fat_tree_topology.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_multijob_fattree.o fat_tree_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_fattree_multijob
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_multijob_fattree.o fat_tree_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_fattree_multijob
 
 htsim_tcp_aggos_fattree_multijob: main_tcp_multijob_aggos_fattree.o firstfit.o agg_os_fattree.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_multijob_aggos_fattree.o agg_os_fattree.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_aggos_fattree_multijob
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_multijob_aggos_fattree.o agg_os_fattree.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_aggos_fattree_multijob
 
 htsim_tcp_dyn_flat: main_tcp_dyn_flat.o firstfit.o flat_topology.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_dyn_flat.o flat_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_dyn_flat
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_dyn_flat.o flat_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_dyn_flat
 
 
 htsim_tcp_mixnet: main_tcp_mixnet.o firstfit.o fat_tree_topology.o mixnet.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_mixnet.o fat_tree_topology.o mixnet.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_mixnet
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_mixnet.o fat_tree_topology.o mixnet.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_mixnet
 
 htsim_tcp_fc: main_tcp_fc.o firstfit.o  fc_topology.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_fc.o fc_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_fc
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_fc.o fc_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_fc
 
 htsim_tcp_fattree: main_tcp_fattree.o firstfit.o fat_tree_topology.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_fattree.o fat_tree_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_fattree
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_fattree.o fat_tree_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_fattree
 
 htsim_tcp_os_fattree: main_tcp_os_fattree.o firstfit.o os_fattree.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_os_fattree.o os_fattree.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_os_fattree
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_os_fattree.o os_fattree.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_os_fattree
 
 htsim_tcp_nvswitch: main_tcp_nvswitch.o firstfit.o nvswitch_topology.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_nvswitch.o nvswitch_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_nvswitch
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_nvswitch.o nvswitch_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_nvswitch
+
+# Carries GLASS_LOG_HOPS (in-domain vs NIC hop classification from the topology)
+# and GLASS_LOG_FLOWS. Separate output name so htsim_tcp_nvswitch stays untouched
+# while jobs are running it.
+htsim_tcp_nvswitch_hop: main_tcp_nvswitch.o firstfit.o nvswitch_topology.o
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_nvswitch.o nvswitch_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_nvswitch_hop
 
 htsim_tcp_flat: main_tcp_flat.o firstfit.o flat_topology.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_flat.o flat_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_flat
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_flat.o flat_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_flat
 
 htsim_tcp_aggosft: main_tcp_aggosft.o firstfit.o agg_os_fattree.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_aggosft.o agg_os_fattree.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_aggosft
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_aggosft.o agg_os_fattree.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_aggosft
 
 
 
@@ -154,7 +160,7 @@ glassfb_topology.o: glassfb_topology.cpp glassfb_topology.h topology.h
 	$(CC) $(INCLUDE) $(CFLAGS) -c glassfb_topology.cpp
 
 htsim_tcp_wafer: main_tcp_wafer.o firstfit.o wafer_rowcol_topology.o
-	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_wafer.o wafer_rowcol_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_wafer
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_wafer.o wafer_rowcol_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_wafer
 
 main_tcp_wafer.o: main_tcp_wafer.cpp
 	$(CC) $(INCLUDE) $(CFLAGS) -c main_tcp_wafer.cpp

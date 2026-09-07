@@ -27,20 +27,30 @@ FIELDS = ["paper_ref", "family", "system", "model_name", "topk", "ep", "mb", "no
           "q", "q_over_bdp", "rto_min_us", "mtu", "makespan_ms", "rtos",
           "quotable", "quotable_why", "fct_logdir", "source", "note"]
 
-# files that carry cliff-figure rows, and how to name the system when absent
+# file -> (system when the file has no `system` column, workload when it has no
+# usable `model_name`). Family labels are NOT workload names: several glass files
+# carry model=pkt_glass and no model_name, which leaked into the workload column.
 SOURCES = {
-    "cliff.csv": None,
-    "cliff_pkt.csv": None,
-    "cliff_pkt_ep128.csv": None,
-    "cliff_ep32_gt.csv": "glassfb",
-    "cliff_ep32_gt_ksweep.csv": "glassfb",
-    "cliff_ep64_gt.csv": "glassfb",
-    "cliff_portmap.csv": "glassfb",
-    "mb_sweep.csv": None,
-    "pkt_vanishing_timeout.csv": None,
-    "qplateau_ep32.csv": "glassfb",
-    "qfine_ep32.csv": "glassfb",
+    "cliff.csv":                (None,      None),
+    "cliff_pkt.csv":            (None,      None),
+    "cliff_pkt_ep128.csv":      (None,      None),
+    "cliff_ep32_gt.csv":        ("glassfb", "llamaMoE"),
+    "cliff_ep32_gt_ksweep.csv": ("glassfb", "llamaMoE"),
+    "cliff_ep64_gt.csv":        ("glassfb", "qwenMoE"),
+    "cliff_portmap.csv":        ("glassfb", None),
+    "mb_sweep.csv":             (None,      "llamaMoE"),
+    "pkt_vanishing_timeout.csv":(None,      None),
+    "qplateau_ep32.csv":        ("glassfb", "llamaMoE"),
+    "qfine_ep32.csv":           ("glassfb", "llamaMoE"),
+    # the EP=16 packet-level headline points live here; without them the figure
+    # has no quotable NVL-64 EP=16 row at all
+    "nvl64_ksweep_hi.csv":      ("nvl64_pkt", "llamaMoE"),
+    "nvl64_ksweep.csv":         ("nvl64_pkt", "llamaMoE"),
+    "nvl64_outlier.csv":        ("nvl64_pkt", "llamaMoE"),
+    "cliff_buffer_sensitivity.csv": (None,   None),
 }
+
+FAMILY_LABELS = {"island", "pkt", "glass", "pkt_glass", "portmap", "mesh"}
 
 
 def pick(r, *names):
@@ -68,8 +78,21 @@ def family_of(system, r):
     return m or ""
 
 
+def workload_of(r, default_model):
+    """The workload, never a family label. cliff_ep32_gt_ksweep.csv and friends
+    carry model=pkt_glass with no model_name; taking that as the workload put a
+    family label in the workload column."""
+    v = pick(r, "model_name")
+    if v and v not in FAMILY_LABELS:
+        return v
+    v = pick(r, "model")
+    if v and v not in FAMILY_LABELS:
+        return v
+    return default_model or ""
+
+
 out = []
-for name, default_system in SOURCES.items():
+for name, (default_system, default_model) in SOURCES.items():
     p = os.path.join(PAPER, name)
     if not os.path.exists(p):
         continue
@@ -83,7 +106,7 @@ for name, default_system in SOURCES.items():
                 "paper_ref": pick(r, "paper_ref"),
                 "family": family_of(system, r),
                 "system": system,
-                "model_name": pick(r, "model_name", "model"),
+                "model_name": workload_of(r, default_model),
                 "topk": pick(r, "topk"),
                 "ep": pick(r, "ep"),
                 "mb": pick(r, "mb"),

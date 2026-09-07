@@ -1,3 +1,4 @@
+#include <set>
 #include "nvswitch_topology.h"
 #include <vector>
 #include <iostream>
@@ -113,6 +114,20 @@ void NVSwitchTopology::init_network()
 vector<const Route *> *NVSwitchTopology::get_paths(int src, int dest)
 {
   vector<const Route *> *paths = new vector<const Route *>();
+
+  // Per-tier hop classification for the energy accounting, from the routes this
+  // function actually builds. In-domain is GPU->switch->GPU, two NVLink hops;
+  // cross-domain rides the NIC and touches no NVLink queue at all. Once per
+  // (src,dest) pair; off unless GLASS_LOG_HOPS.
+  static const bool log_hops = getenv("GLASS_LOG_HOPS") != NULL;
+  if (log_hops) {
+    static std::set<std::pair<int, int> > seen;
+    if (seen.insert(std::make_pair(src, dest)).second) {
+      bool same = domain_of(src) == domain_of(dest);
+      cerr << "nvhoplog: " << src << " " << dest << " "
+           << (same ? 2 : 0) << " " << (same ? 0 : 1) << endl;
+    }
+  }
 
   if (domain_of(src) == domain_of(dest)) {
     for (int s = 0; s < _switches; s++) {

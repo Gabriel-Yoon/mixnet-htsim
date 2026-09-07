@@ -82,9 +82,18 @@ with open(out, "a") as fh:
 PY
 }
 
-echo "########## iteration period (86.75 ms) ##########"
-run iter_86p75ms 0.08675 6 700 210
-echo "########## microbatch period (10.84 ms) ##########"
-run mb_10p84ms   0.01084 6 700 210
+# P_LO is the one assumption in this deck: the communication-phase floor is not
+# measured. Bracketing it at 0 / 30% / 50% of TDP stops it being load-bearing --
+# 0 W is the pessimistic extreme (and reduces to the step's own duty), 350 W the
+# optimistic one. Each run is ~45 s, so the bracket costs less than arguing about
+# the midpoint.
+echo "########## iteration period (86.75 ms), P_LO bracket ##########"
+run iter_86p75ms_lo0   0.08675 6 700   0
+run iter_86p75ms       0.08675 6 700 210
+run iter_86p75ms_lo350 0.08675 6 700 350
+echo "########## microbatch period (10.84 ms), P_LO bracket ##########"
+run mb_10p84ms_lo0     0.01084 6 700   0
+run mb_10p84ms         0.01084 6 700 210
+run mb_10p84ms_lo350   0.01084 6 700 350
 echo "=== DONE ==="
 column -s, -t "$OUT" 2>/dev/null | cut -c1-190

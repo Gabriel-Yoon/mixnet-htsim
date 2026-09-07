@@ -58,7 +58,13 @@ run () { # variant p_pic r_int
 rm -f ./_rint_rows.txt
 for ppic in 43 70; do
   echo "########## P_PIC = ${ppic} W ##########"
-  run perfect_p${ppic} "$ppic" 1e-9      # perfect-contact reference
+  # Near-perfect reference at R=1e-4 cm2.K/W, NOT 1e-9. At 1e-9 the layer
+  # conductivity k = t/R is 1e8 W/mK against glass's 1.2 -- a 1e8 contrast that
+  # returned 67.944 C, 18.8 K BELOW the known perfect-contact value of 86.790 C
+  # (the step deck's peak at identical BCs). 1e-4 gives k = 1000 W/mK, a
+  # resistance of 1e-8 m2.K/W (~0.01 K) and a numerically sane contrast.
+  # The run prints the reference against 86.790 so the check is on the record.
+  run ref_p${ppic} "$ppic" 1e-4
   for r in 0.02 0.05 0.10; do
     run r${r}_p${ppic} "$ppic" "$r"
   done
@@ -75,15 +81,19 @@ for L in open("./_rint_rows.txt"):
 base = {p: t for v, p, r, t, s in rows if r <= 1e-8 for _ in [0]}
 base = {}
 for v, p, r, t, s in rows:
-    if r <= 1e-8:
+    if r <= 1e-3:
         base[p] = t
 with open(out, "a") as fh:
+    for p_, t_ in sorted(base.items()):
+        print(f"  CHECK P_PIC={p_:.0f}W reference {t_:.3f} C vs known perfect contact 86.790 C "
+              f"(delta {t_-86.790:+.3f} K)")
     for v, p, r, t, s in sorted(rows, key=lambda x: (x[1], x[2])):
         d = t - base.get(p, t)
         fh.write(f"thermal,{v},glass,200000,60,700,{p:.0f},{r:g},{t:.3f},{d:+.3f},{s},"
                  f"\"interface resistance at die|RDL, RDL|PIC, PIC|substrate as a thin layer of "
                  f"k=t/R; r_int 1e-9 is the perfect-contact reference every delta is taken "
-                 f"against; P_PIC 43 W is the 1600-provisioned corner, 70 W the 1.15 pJ/bit "
+                 f"against (R=1e-4 cm2.K/W, ~0.01 K, not 1e-9 which is numerically ill-conditioned); "
+                 f"P_PIC 43 W is the 1600-provisioned corner, 70 W the 1.15 pJ/bit "
                  f"full-provision figure from docs/energy_model.md\"\n")
         print(f"  P_PIC={p:.0f}W R_int={r:g} -> PIC {t:.3f} C  ({d:+.3f} K vs perfect contact)")
 PY

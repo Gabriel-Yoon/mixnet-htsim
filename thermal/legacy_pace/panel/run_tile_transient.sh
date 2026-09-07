@@ -49,6 +49,16 @@ PY
 
 echo "### PIC transient, outlet tile, calibrated cold plate (die in spec) ###"
 run glass_stack_h200k 1 200000 60 43 16 0.05
+# TEND=0.05 s is only ~1.5 rise-times (10-90 is 33 ms), so the peak this reports
+# is NOT the steady value: a direct steady solve at identical BCs gives 89.572 C
+# against this run's 86.790 C peak, so the published 26.159 K rise understates
+# the steady rise by ~10%. Re-run to 0.30 s (~9 rise-times) to measure the
+# asymptote instead of assuming the shorter run had reached it.
+run glass_stack_h200k_long 1 200000 60 43 16 0.30
 echo "### same at the cited single-phase microchannel h, for comparison ###"
 run glass_stack_h70k  1  70000 60 43 16 0.05
+# Same reason as the h200k long run: at 70k the response is SLOWER (37 ms
+# 10-90), so TEND=0.05 s is even further from the asymptote and the published
+# 43.830 K is a lower bound rather than a measurement.
+run glass_stack_h70k_long  1  70000 60 43 16 0.30
 echo "=== DONE ==="

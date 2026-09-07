@@ -77,7 +77,7 @@ def f(name):
 # threw out g16m8 -- the mb=8 cell IS glass's plain EP=16 walk, there is no separate
 # g16 -- leaving EP=16 drawn hollow from a pre-fix portmap row at 86.750 instead of
 # the post-fix 87.613. Skew, hierarchical A2A and the 2x2 cabling grid only.
-# Skew, hierarchical A2A and the 2x2 cabling grid. NOT a microbatch rule: cliff()
+# Skew, hierarchical A2A, the 2x2 cabling grid, and the placement-off ablation. NOT a microbatch rule: cliff()
 # already keeps mb 8 only, and adding "m\d+$" here additionally threw out g16m8 --
 # the mb=8 cell IS glass's plain EP=16 walk, there is no separate g16 -- which left
 # EP=16 drawn hollow from a pre-fix portmap row at 86.750 instead of the post-fix
@@ -94,7 +94,7 @@ def _rung_key(r):
         q = float("inf")
     return (q, r["makespan_ms"])
 
-_VARIANT_CELL = re.compile(r"hier|sk\d|^x2_")
+_VARIANT_CELL = re.compile(r"hier|sk\d|^x2_|^npl")
 
 
 def headline_only(rows, what):

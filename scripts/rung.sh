@@ -45,17 +45,19 @@ if [ "$IS_GLASS" = 1 ]; then
   # which rate it ran at instead of the reader having to know what was in the
   # environment when it was submitted.
   PORT_BW=${RUNG_PORT_BW:-400}
-  echo "rung knobs: dim_a2a=$DIM portmap=${RUNG_NO_PORTMAP:+OMITTED}${RUNG_NO_PORTMAP:-$MAP} hier=${RUNG_HIER:-0} port_bw=$PORT_BW" >&2
+  # EP-aware placement. 0 is naive rank order, the ablation arm.
+  PLACE=${RUNG_EP_PLACE:-1}
+  echo "rung knobs: dim_a2a=$DIM portmap=${RUNG_NO_PORTMAP:+OMITTED}${RUNG_NO_PORTMAP:-$MAP} hier=${RUNG_HIER:-0} port_bw=$PORT_BW ep_place=$PLACE" >&2
   if [ "${RUNG_NO_PORTMAP:-0}" = 1 ]; then
     # mesh cabling: no port map at all, which is a different fabric, not a
     # different setting of one
     GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
-    GLASS_EP_PLACE=1 GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" \
+    GLASS_EP_PLACE="$PLACE" GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" \
       timeout 43200 $BIN -logdir "$LD" -nodes "$NODES" -flowfile "$R/$FB" \
         -disable-intra-shortcut -mtu 1500 -q "$Q" $HIER -weightmatrix "$T/$WM" > "$LOG" 2>&1
   else
     GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
-    GLASS_EP_PLACE=1 GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" GLASS_PORT_MAP="$PM/$MAP" \
+    GLASS_EP_PLACE="$PLACE" GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" GLASS_PORT_MAP="$PM/$MAP" \
       timeout 43200 $BIN -logdir "$LD" -nodes "$NODES" -flowfile "$R/$FB" \
         -disable-intra-shortcut -mtu 1500 -q "$Q" $HIER -weightmatrix "$T/$WM" > "$LOG" 2>&1
   fi
@@ -122,7 +124,7 @@ if [ "$IS_GLASS" = 1 ]; then
     mean_fct_ms="$(echo "$FSTAT"|cut -d, -f3)" p50_fct_ms="$(echo "$FSTAT"|cut -d, -f4)" \
     p99_fct_ms="$(echo "$FSTAT"|cut -d, -f5)" max_fct_ms="$(echo "$FSTAT"|cut -d, -f6)" \
     fct_logdir="$FLD" fct_status="$FSTATUS" \
-    wall_s="$((T1-T0))" status="$ST" note="post-fix rung ($MODE); dim_a2a=${RUNG_DIM_A2A:-1}; portmap=${RUNG_NO_PORTMAP:+none}${RUNG_NO_PORTMAP:-$MAP}; hier=${RUNG_HIER:-0}; port_bw=${RUNG_PORT_BW:-400}${PBNOTE}"
+    wall_s="$((T1-T0))" status="$ST" note="post-fix rung ($MODE); dim_a2a=${RUNG_DIM_A2A:-1}; portmap=${RUNG_NO_PORTMAP:+none}${RUNG_NO_PORTMAP:-$MAP}; hier=${RUNG_HIER:-0}; port_bw=${RUNG_PORT_BW:-400}; ep_place=${RUNG_EP_PLACE:-1}${PBNOTE}"
 else
   csv_row "$CSV" paper_ref=cliff system="$SYS" ep="$EP" nodes="$NODES" domain="$D" \
     switches="$SW" link_gbps="$L" nic_bw="$NIC" q_nvs="$Q" q_nic="$QC" \

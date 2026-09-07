@@ -207,7 +207,14 @@ for name, (dsys, dmodel, dep) in SOURCES.items():
             # reason its fct_status does: the sweep re-runs measured their own.
             drops=((r.get("drops") or "").strip() or drops.get((sysname, ep, q), "")),
             max_fct_ms=mx,
-            fct_status=fct_status, quotable=pick(r, "quotable"), source=name))
+            fct_status=fct_status, quotable=pick(r, "quotable"),
+            # Carried, not recomputed. Without these the gate cannot tell a post-fix
+            # row from a pre-fix one, and R4's "lowest makespan per step" rule then
+            # draws the pre-fix number -- 39.395 instead of 43.088 at glass EP=64.
+            link_rate_fixed=pick(r, "link_rate_fixed"),
+            binary_sha=pick(r, "binary_sha"),
+            quoted_by=pick(r, "quoted_by"),
+            source=name))
 
 
 def num(v):
@@ -261,11 +268,26 @@ if _dropped:
     print("collapsed %d duplicate sweep point(s) reaching the table from two files"
           % _dropped, file=sys.stderr)
 
+# Drop pre-fix rungs of the affected fabrics. Stated here rather than left to
+# gate_quotable, because this table is rebuilt by a pipeline whose step order has
+# already made one derived table disagree with its own source today.
+_AFFECTED = ("glassfb", "hgx8_pkt", "nvl64_pkt_s1")
+_before = len(rows)
+rows = [r for r in rows
+        if not (str(r.get("system", "")).startswith(_AFFECTED)
+                and (r.get("link_rate_fixed") or "").strip().lower() != "yes")]
+_dropped = _before - len(rows)
+if _dropped:
+    print("dropped %d pre-fix rung(s) of glassfb/hgx8_pkt/nvl64_pkt_s1; "
+          "nvl64_pkt (L=50, always exact) kept" % _dropped, file=sys.stderr)
+
 rows.sort(key=lambda r: (r["system"], num(r["ep"]), num(r["q"])))
 with open(OUT, "w", newline="") as fh:
     w = csv.DictWriter(fh, fieldnames=["system", "ep", "model_name", "q", "q_over_bdp",
                                        "q_over_bdp_source", "makespan_ms", "rtos", "drops",
-                                       "max_fct_ms", "fct_status", "quotable", "source"])
+                                       "max_fct_ms", "fct_status", "quotable",
+                                       "link_rate_fixed", "binary_sha", "quoted_by",
+                                       "source"])
     w.writeheader(); w.writerows(rows)
 
 blanked = sum(1 for r in rows if r["fct_status"] != "clean")

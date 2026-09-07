@@ -1,2 +1,2 @@
 paper_ref,system,cabling,ep,nodes,mb,q,relayed_pairs,completed,makespan_ms,rtos,drops,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note,link_rate_fixed,binary_sha
-,,,,,,,,,,,,,,,,,,,submitted,job=12906000 host=atl1-1-02-005-6-2 start=2026-09-07T11:26:12,,
+cliff,glassfb,ep64_gt.txt,64,512,8,17067,0,COMPLETE,43.088,0,0,1199104,918016,0.0363,0.0003,0.5264,3.0835,,sweep,glass drop cell RECOVERED from its run log; the job died writing its CSV (glassdrop took the pkt row branch). Makespan verified against rung g64_q17067.,yes,9ac4f76

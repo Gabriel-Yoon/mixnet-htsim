@@ -200,7 +200,7 @@ cliff,glass,glassfb,llamaMoE,,32,8,256,1064,3.99,,,224.940,35537,no,not the firs
 cliff,glass,glassfb,llamaMoE,,32,8,256,1064,3.99,,,234.346,36447,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung (glass); dim_a2a=0; portmap=none1; hier=0,yes,collector
 cliff,glass,glassfb,qwenMoE,,64,8,512,17067,64.0,,,39.395,0,no,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),clean,cliff_ep64_gt_ext.csv,EP=64 vanishing-timeout walk continued; 2x/4x/8x all had 6e4-1e5 timeouts,,
 cliff,glass,glassfb,qwenMoE,,64,8,512,8533,32.0,,,39.410,564,no,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),clean,cliff_ep64_gt_ext.csv,EP=64 vanishing-timeout walk continued; 2x/4x/8x all had 6e4-1e5 timeouts,,
-cliff,glass,glassfb,qwenMoE,,64,8,512,17067,64.00,,,43.088,0,yes,first zero-timeout rung (post-fix binary),,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
+cliff,glass,glassfb,qwenMoE,,64,8,512,17067,64.00,,,43.088,0,yes,first zero-timeout rung (post-fix binary),,cliff_postfix.csv,post-fix rung; one job per rung | drops measured on the counter build at the same makespan,yes,collector
 cliff,glass,glassfb,qwenMoE,,64,8,512,8533,32.00,,,43.157,42,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,glass,glassfb,qwenMoE,,64,8,512,4267,16.00,,,46.997,2373,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,glass,glassfb,qwenMoE,,64,8,512,533,2.00,,,50.169,69106,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector

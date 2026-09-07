@@ -48,7 +48,7 @@ def load(ref):
             if r.get(k): r[k] = int(float(r[k]))
         for k in ("makespan_ms", "compute_cp_ms", "mean_fct_ms", "p99_fct_ms", "max_fct_ms"):
             if r.get(k): r[k] = float(r[k])
-    print(f"[{ref}] {len(rows)} final rows:", ", ".join(sorted({f"{r['system']}@EP{r.get('ep')}" for r in rows})))
+    print(f"[{ref}] {len(rows)} final rows:", ", ".join(sorted({f"{r.get('system') or r.get('label')}@EP{r.get('ep')}" for r in rows})))
     return rows
 
 def mname(r):

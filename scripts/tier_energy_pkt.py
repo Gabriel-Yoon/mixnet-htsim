@@ -45,6 +45,10 @@ HOPS_CROSS = 1                 # one NIC link
 FLOWLOG = {
     "tier_nvl64_ep128": os.path.join(
         os.path.dirname(DC), "fl_logs", "fl_ep128_arc.flowlog"),
+    # The same file: the flow set is the workload's, not the fabric's, and only
+    # `domain` (8 vs 64) differs between these two rows.
+    "tier_hgx8_ep128": os.path.join(
+        os.path.dirname(DC), "fl_logs", "fl_ep128_arc.flowlog"),
 }
 
 
@@ -175,12 +179,18 @@ RUNS = {
     # a rate that divided 1000 exactly, so the +11% on its NVLink tier never
     # reached the makespan. Verified, not assumed: the post-fix walk returned
     # 145.497 / 164.522 / 144.519, identical to these.
-    # hgx8_pkt EP=128 is deliberately absent: the only makespan for it is the
-    # pre-fix 365.733, and unlike nvl64_pkt its NVLink tier ran at 112.5 GB/s,
-    # which truncated. Batch 4 is measuring it. Added when it lands, not before.
     "hgx8_pkt":  ((16, 128, 145.497, 1224, 1224),
                   (32, 256, 164.522, 1224, 1224),
-                  (64, 512, 144.519, 1224, 1224)),
+                  (64, 512, 144.519, 1224, 1224),
+                  # EP=128, measured post-fix by batch 4 and quoted at its first
+                  # rung by the drop-aware branch: 139 653 timeouts and ZERO
+                  # measured drops, identical at q=1224, 2448 and 4896 -- the same
+                  # buffer-invariant spurious-timeout signature as at EP<=64, so it
+                  # is not recovering loss and the rule admits it. The pre-fix row
+                  # this replaces was 365.733, 0.4% away; unlike nvl64_pkt its
+                  # NVLink tier ran at 112.5 GB/s and did truncate, so it needed
+                  # re-measuring rather than an argument.
+                  (128, 1024, 364.295, None, 1224)),
 }
 
 # Which tier byte pass a system's rows are measured from. nvl64_pkt_s1 has no byte

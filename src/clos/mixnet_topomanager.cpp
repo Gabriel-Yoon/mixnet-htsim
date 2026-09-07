@@ -340,7 +340,7 @@ void RegionalTopoManager::update_regional_queue_bandwidth()
       }
       else {
         topo->queues[i+start_node][j+start_node]->_bitrate = reconfig_conn_matrix[i][j] * speedFromMbps((uint64_t)SPEED);
-        topo->queues[i+start_node][j+start_node]->_ps_per_byte = (simtime_picosec)((pow(10.0, 12.0) * 8) / topo->queues[i+start_node][j+start_node]->_bitrate);
+        topo->queues[i+start_node][j+start_node]->_ps_per_byte = ((pow(10.0, 12.0) * 8) / topo->queues[i+start_node][j+start_node]->_bitrate);
       }
     }
   }

@@ -1,3 +1,3 @@
 paper_ref,model,workload_type,ep_source,model_name,topk,ep,mb,nodes,system,domain,switches,link_gbps,nvs_lat_ns,nic_bw,rtt_ns,q_nvs,q_over_bdp_4lat,q_nic,rto_min_us,mtu,makespan_ms,rtos,flows,mean_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note
-cliff,pkt,training,flexflow_llamaMoE,llamaMoE,2,32,8,256,nvl64_pkt,64,18,50,250,100,2000,544,16.3,540,100,1500,159.948,73,131072,0.0632,1.3597,38.8130,625,final,packet-level NVSwitch; stripe=ecmp (mode 1); island OFF
-cliff,pkt,training,flexflow_qwenMoE,qwenMoE,4,64,8,512,nvl64_pkt,64,18,50,250,100,2000,544,16.3,540,100,1500,86.163,7237,524288,0.0398,0.8703,9.7654,1707,final,packet-level NVSwitch; stripe=ecmp (mode 1); island OFF
+cliff,pkt,training,flexflow_llamaMoE,llamaMoE,2,32,8,256,nvl64_pkt,64,18,50,250,100,2000,544,15.6237,540,100,1500,159.948,73,131072,0.0632,1.3597,38.8130,625,final,packet-level NVSwitch; stripe=ecmp (mode 1); island OFF
+cliff,pkt,training,flexflow_qwenMoE,qwenMoE,4,64,8,512,nvl64_pkt,64,18,50,250,100,2000,544,15.6237,540,100,1500,86.163,7237,524288,0.0398,0.8703,9.7654,1707,final,packet-level NVSwitch; stripe=ecmp (mode 1); island OFF

@@ -122,6 +122,50 @@ were unbuildable while their existing binaries kept producing results:
 
 Both were found by a build happening to fail, not by anything checking.
 
+**D's third face: a rebuild that reports success and changes nothing.** The datacenter link rules
+*linked* `$(OBJS)` — `../tcp.o`, `../ffapp.o`, `../queue.o` and the rest — but never *declared* them
+as prerequisites, so make would not relink an existing target when a shared library source changed:
+
+```
+01:00  six queue classes edited
+01:01  ../queue.o, ../prioqueue.o rebuilt
+00:42  htsim_tcp_flat_drop unchanged — the build reported COMPLETED in 14 seconds
+```
+
+A control was then run against that binary and a conclusion drawn from code that was not in it. The
+defect only ever bit *rebuilds*: a target whose output does not exist is always built, which is why
+every instrumented binary in that session used a new target name and genuinely carried its change,
+and why the single rebuild of an existing name silently did not. `$(OBJS)` is now declared on all 17
+rules, and the gate detects the condition directly.
+
+**The detector found twelve stale binaries, including the three that produced most of the quoted
+rows** — `htsim_tcp_flat`, `htsim_tcp_nvswitch` and `htsim_tcp_glassfb_pm`, all predating the
+current `libhtsim.a`. Those rows stand, and the argument is recorded here so it can be checked
+rather than taken on trust. The four commits that touched the library after those builds are:
+
+| commit | change | can it move a number? |
+|---|---|---|
+| `008f73c` | `GLASS_LOG_FLOWS` per-flow log | No — `getenv`-gated, no-op when unset |
+| `008f73c` | hierarchical A2A retires zero-byte tasks | No — reachable only via `-a2a_hier` |
+| `cc6efe8` | requested flow size added to the FCT record | No — an extra output column, not a simulation change |
+| `24c99b3`, `c2c4d6b` | drop counters; `check_non_null` given internal linkage | No — counter increments and a linkage keyword |
+
+None can alter a makespan or an RTO count on a run that sets neither the environment variable nor
+the flag, so the stale binaries would produce identical numbers. **This is a reproducibility defect,
+not a correctness one** — and the distinction is only available because the changes were enumerated
+rather than waved at.
+
+> **Staleness is reported, not fatal.** Hard-failing every submission over changes that provably
+> cannot move a number would make the gate something to bypass, and a gate that is routinely
+> bypassed has stopped being one. `STRICT_STALE=1` makes it fatal where that is wanted; link errors
+> are fatal unconditionally.
+
+The verdict is **mtime**, not hash: a binary older than an object it links is unambiguous, whereas
+two links of identical sources need not be byte-identical (build ids, embedded paths), so a hash
+difference alone would cry wolf on every run. The hash comparison is reported beside it as
+information. On the first run both agreed on all twelve, which is reassuring and not something to
+rely on.
+
 > **Every paper row's job is submitted through a gate that links every target first.**
 > `scripts/submit_paper_job.sh` runs `linkcheck.sbatch` with `sbatch --wait` and refuses to submit
 > if any target fails to link.

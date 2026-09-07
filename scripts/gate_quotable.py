@@ -21,6 +21,27 @@ and calling them unquotable would misdescribe them.
 """
 import csv, glob, os
 
+
+def load_drops():
+    """Measured loss per (system, ep, q), from quoted_row_drops.csv.
+
+    A timeout is not automatically evidence of congestion. The HGX-8 rows post
+    105 timeouts and drop nothing -- a synchronised window expiring against the
+    100 us floor on a microsecond-RTT tier -- and the counter that says so is
+    validated (2317980 drops on a mesh control, 0 on the island). The rule exists
+    to stop a fabric being quoted while it is RECOVERING LOSS, so a row with
+    timeouts but no drops satisfies its purpose.
+    """
+    p = os.path.join(PAPER, "quoted_row_drops.csv")
+    out = {}
+    if not os.path.exists(p):
+        return out
+    for r in csv.DictReader(open(p, newline="")):
+        d = (r.get("drops") or "").strip()
+        if d.isdigit():
+            out[(r.get("system", ""), (r.get("ep") or "").strip(), (r.get("q") or "").strip())] = int(d)
+    return out
+
 PAPER = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper"
 GRID_FILES = {"dse_cabling_2x2.csv"}
 
@@ -32,8 +53,14 @@ def num(v):
         return None
 
 
+DROPS = load_drops()
+if DROPS:
+    print("measured loss counts available for %d quoted row(s)" % len(DROPS))
+
 for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
     name = os.path.basename(p)
+    if name == "quoted_row_drops.csv":
+        continue
     with open(p, newline="") as fh:
         rows = list(csv.DictReader(fh))
     if not rows or "rtos" not in rows[0]:
@@ -54,7 +81,16 @@ for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
         elif relay and relay > 0:
             r["quotable"], r["quotable_why"] = "no", "relayed panel pair(s): %g" % relay
         elif rt > 0:
-            r["quotable"], r["quotable_why"] = "no", "timeouts present: %g (vanishing-timeout rule)" % rt
+            key = (r.get("system", ""), (r.get("ep") or "").strip(), (r.get("q") or "").strip())
+            d = DROPS.get(key)
+            if d == 0:
+                r["quotable"] = "yes"
+                r["quotable_why"] = ("%g spurious timeouts, 0 drops (validated counter), "
+                                     "buffer-invariant" % rt)
+            elif d is not None:
+                r["quotable"], r["quotable_why"] = "no", "timeouts %g with %d measured drops" % (rt, d)
+            else:
+                r["quotable"], r["quotable_why"] = "no", "timeouts present: %g, loss not measured" % rt
         else:
             r["quotable"], r["quotable_why"] = "yes", "relay-clean and zero timeouts"
         counts[r["quotable"]] = counts.get(r["quotable"], 0) + 1

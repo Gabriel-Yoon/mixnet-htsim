@@ -64,6 +64,11 @@ htsim_tcp_os_fattree: main_tcp_os_fattree.o firstfit.o os_fattree.o $(OBJS)
 htsim_tcp_nvswitch: main_tcp_nvswitch.o firstfit.o nvswitch_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_nvswitch.o nvswitch_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_nvswitch
 
+# nvswitch with the drop counters, so every quoted incumbent row can carry a
+# measured loss count rather than only the exception.
+htsim_tcp_nvswitch_drop: main_tcp_nvswitch.o firstfit.o nvswitch_topology.o $(OBJS)
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_nvswitch.o nvswitch_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_nvswitch_drop
+
 # Carries GLASS_LOG_HOPS (in-domain vs NIC hop classification from the topology)
 # and GLASS_LOG_FLOWS. Separate output name so htsim_tcp_nvswitch stays untouched
 # while jobs are running it.

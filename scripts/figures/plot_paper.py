@@ -413,7 +413,7 @@ def calib():
     if os.path.exists(sp):
         srows = sorted(csv.DictReader(open(sp)), key=lambda r: float(r["msg_bytes"]))
         ver = (srows[0].get("simai_version") or "").strip() if srows else ""
-        lab = "SimAI (hardware-validated" + (f", {ver}" if ver else "") + ")"
+        lab = "SimAI (aggregate-bandwidth NVSwitch model" + (f", {ver}" if ver else "") + ")"
         a1.plot([float(r["msg_bytes"]) for r in srows], [float(r["efficiency"]) for r in srows], "^--", color="#1b7f3b", lw=1.2, ms=4, label=lab)
         a2.plot([float(r["msg_bytes"]) for r in srows], [float(r["T_us"]) for r in srows], "^--", color="#1b7f3b", lw=1.2, ms=4, label=lab)
         print(f"[calib] SimAI overlay: {len(srows)} points")

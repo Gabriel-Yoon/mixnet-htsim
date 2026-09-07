@@ -112,24 +112,31 @@ def decomp():
     # only rows whose (system, ep, q) is a quotable cliff row (sweep rows with timeouts stay out)
     # keyed on (system, ep, makespan) because the labels spell the buffer three ways
     # ("q=2133", "q2176", "k64"); the makespan is the row's identity in both tables
+    # headline rows only: the quotable cliff row of each (system, ep) at the default microbatch
+    # (mb 8 or unset); variant cells (mb sweep, skew, hier) share system/ep and are excluded by
+    # label, and duplicate decomp rows of one quoted makespan collapse to the first
+    HEAD = ("glassfb", "nvl64_pkt_s1", "nvl64_pkt", "hgx8_pkt")
     quot = set()
     try:
         for c in csv.DictReader(open(os.path.join(RES, "cliff_all.csv"))):
-            if (c.get("quotable") or "").lower() == "yes":
+            if (c.get("quotable") or "").lower() == "yes" and c["system"] in HEAD and str(c.get("mb") or "8") == "8":
                 quot.add((c["system"], str(int(float(c["ep"]))), round(float(c["makespan_ms"]), 3)))
     except Exception:
         quot = None
-    parsed = []
+    parsed = []; seen = set()
     for r in rows:
         m = re.match(r"(\S+) EP=(\d+)", r["label"])
         if not m: continue
+        if re.search(r"hier|sk\d|mb=(4|16|32)\b", r["label"]): continue
         key = (m.group(1), m.group(2), round(float(r["makespan_ms"]), 3))
         if quot is not None and key not in quot:
             print(f"[decomp] skip {r['label']}: not a quotable cliff row"); continue
-        parsed.append((int(m.group(2)), m.group(1), r))
-    parsed.sort(key=lambda t: (t[0], 0 if t[1] == "glassfb" else 1))
-    fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    xs, labels = [], []; x = 0
+        if key in seen: continue
+        seen.add(key); parsed.append((int(m.group(2)), m.group(1), r))
+    parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
+    fig, ax = plt.subplots(figsize=(3.6, 2.7), dpi=200)
+    SHORT = {"glassfb": "Glass", "nvl64_pkt_s1": "NVL\nstr.", "nvl64_pkt": "NVL\npin.", "hgx8_pkt": "HGX-8"}
+    xs, labels = [], []; x = 0; groups = {}
     for ep, sysname, r in parsed:
         bottom = 0.0
         for col, lab, ckey in classes:
@@ -138,10 +145,14 @@ def decomp():
             ax.bar(x, v, bottom=bottom, width=0.7, color=_ps.COL.get(ckey, "#999") if _ps else None,
                    edgecolor=SYS_COLOR.get(sysname, "#333"), linewidth=0.8, label=lab if x == 0 else None)
             bottom += v
-        ax.text(x, bottom * 1.02, f"{bottom:.1f}", ha="center", fontsize=5.5)
-        xs.append(x); labels.append(f"{SYS_LABEL.get(sysname, sysname).split(' (')[0]}\nEP={ep}"); x += 1
-        if sysname != "glassfb": x += 0.5
-    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=5.5)
+        ax.text(x, bottom * 1.02, f"{bottom:.1f}", ha="center", fontsize=5)
+        xs.append(x); labels.append(SHORT.get(sysname, sysname)); groups.setdefault(ep, []).append(x); x += 1
+        if sysname == "hgx8_pkt": x += 0.8
+    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=4.8)
+    ymax = ax.get_ylim()[1]
+    for ep, gx in groups.items():   # EP group label under each quartet
+        ax.text(sum(gx) / len(gx), -0.16 * ymax, f"EP={ep}", ha="center", va="top", fontsize=6, fontweight="bold")
+    ax.set_ylim(0, ymax)
     ax.set_ylabel("critical-path time (ms)", fontsize=7); ax.tick_params(labelsize=6)
     ax.legend(fontsize=5.5, frameon=False, loc="upper left")
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")

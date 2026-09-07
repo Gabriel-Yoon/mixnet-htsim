@@ -25,17 +25,34 @@ mkdir -p "$OUTD" ./rung_logs
 
 MODE=$1; shift
 
-if [ "$MODE" = glass ]; then
+IS_GLASS=0; [ "$MODE" = glass ] || [ "$MODE" = glassdrop ] && IS_GLASS=1
+if [ "$IS_GLASS" = 1 ]; then
   EP=$1 NODES=$2 FB=$3 WM=$4 MAP=$5 Q=$6 MB=$7 TAG=$8
-  BIN=./htsim_tcp_glassfb_pm
+  # glassdrop runs the drop-instrumented build so the row carries a measured
+  # loss count; glass runs the plain one. Same cell either way.
+  if [ "$MODE" = glassdrop ]; then BIN=./htsim_tcp_glassfb_drop; else BIN=./htsim_tcp_glassfb_pm; fi
+  [ -x "$BIN" ] || { echo "FATAL: $BIN missing" >&2; exit 1; }
   CSV=$OUTD/${TAG}.csv
-  csv_open "$CSV" "paper_ref,system,cabling,ep,nodes,mb,q,relayed_pairs,completed,makespan_ms,rtos,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note"
+  csv_open "$CSV" "paper_ref,system,cabling,ep,nodes,mb,q,relayed_pairs,completed,makespan_ms,rtos,drops,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note"
   LD=$(_logdir); LOG=./rung_logs/${TAG}_${SLURM_JOB_ID:-local}.log
   T0=$(date +%s)
-  GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
-  GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 GLASS_PORT_MAP="$PM/$MAP" \
-    timeout 43200 $BIN -logdir "$LD" -nodes "$NODES" -flowfile "$R/$FB" \
-      -disable-intra-shortcut -mtu 1500 -q "$Q" -weightmatrix "$T/$WM" > "$LOG" 2>&1
+  # Optional knobs for the 2x2 (cabling x dim-route) and hierarchical cells.
+  DIM=${RUNG_DIM_A2A:-1}
+  HIER=""; [ "${RUNG_HIER:-0}" = 1 ] && HIER="-a2a_hier"
+  echo "rung knobs: dim_a2a=$DIM portmap=${RUNG_NO_PORTMAP:+OMITTED}${RUNG_NO_PORTMAP:-$MAP} hier=${RUNG_HIER:-0}" >&2
+  if [ "${RUNG_NO_PORTMAP:-0}" = 1 ]; then
+    # mesh cabling: no port map at all, which is a different fabric, not a
+    # different setting of one
+    GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
+    GLASS_EP_PLACE=1 GLASS_DIM_A2A="$DIM" \
+      timeout 43200 $BIN -logdir "$LD" -nodes "$NODES" -flowfile "$R/$FB" \
+        -disable-intra-shortcut -mtu 1500 -q "$Q" $HIER -weightmatrix "$T/$WM" > "$LOG" 2>&1
+  else
+    GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
+    GLASS_EP_PLACE=1 GLASS_DIM_A2A="$DIM" GLASS_PORT_MAP="$PM/$MAP" \
+      timeout 43200 $BIN -logdir "$LD" -nodes "$NODES" -flowfile "$R/$FB" \
+        -disable-intra-shortcut -mtu 1500 -q "$Q" $HIER -weightmatrix "$T/$WM" > "$LOG" 2>&1
+  fi
   RC=$?; T1=$(date +%s)
   RELAY=$(grep -oE "unmapped panel pair \([0-9]+,[0-9]+\)" "$LOG" | sort -u | wc -l)
   SYS=glassfb; CAB=$MAP
@@ -71,14 +88,14 @@ FSTAT=$(awk '/^FCT/{n++; v=$5+0; if($4>1436){m++; p[m]=v; s+=v}}
          printf "%d,%d,%.4f,%.4f,%.4f,%.4f", n, m, s/m, p[int(m*0.5)+1], p[int(m*0.99)+1], p[m]}' \
     "$LD/fct_util_out.txt" 2>/dev/null || echo "0,0,,,,")
 
-if [ "$MODE" = glass ]; then
+if [ "$IS_GLASS" = 1 ]; then
   csv_row "$CSV" paper_ref=cliff system=glassfb cabling="$CAB" ep="$EP" nodes="$NODES" \
     mb="$MB" q="$Q" relayed_pairs="$RELAY" completed="$([ "$RC" = 124 ] && echo TRUNCATED || echo COMPLETE)" \
-    makespan_ms="$MS" rtos="$RTOS" \
+    makespan_ms="$MS" rtos="$RTOS" drops="${DROPS:-}" \
     flows_total="$(echo "$FSTAT"|cut -d, -f1)" flows_payload="$(echo "$FSTAT"|cut -d, -f2)" \
     mean_fct_ms="$(echo "$FSTAT"|cut -d, -f3)" p50_fct_ms="$(echo "$FSTAT"|cut -d, -f4)" \
     p99_fct_ms="$(echo "$FSTAT"|cut -d, -f5)" max_fct_ms="$(echo "$FSTAT"|cut -d, -f6)" \
-    wall_s="$((T1-T0))" status="$ST" note="post-fix rung; one job per rung"
+    wall_s="$((T1-T0))" status="$ST" note="post-fix rung ($MODE); dim_a2a=${RUNG_DIM_A2A:-1}; portmap=${RUNG_NO_PORTMAP:+none}${RUNG_NO_PORTMAP:-$MAP}; hier=${RUNG_HIER:-0}"
 else
   csv_row "$CSV" paper_ref=cliff system="$SYS" ep="$EP" nodes="$NODES" domain="$D" \
     switches="$SW" link_gbps="$L" nic_bw="$NIC" q_nvs="$Q" q_nic="$QC" \

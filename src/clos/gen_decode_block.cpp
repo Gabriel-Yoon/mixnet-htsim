@@ -61,6 +61,10 @@ int main(int argc, char **argv) {
     // taskid layout: 1 = dispatch, 2..(ep+1) = per-rank expert compute, ep+2 = combine.
     const uint64_t DISPATCH_ID = 1;
     const uint64_t COMBINE_ID = (uint64_t)ep + 2;
+    const bool emit_combine = (total_combine_bytes > 0);
+    if (!emit_combine)
+        std::cerr << "combine omitted (0 bytes): a floored one-MSS combine would be "
+                     "17% of payload at M=8kB\n";
 
     // load_taskgraph_protobuf() reconstructs total_xfer_size = xfersize() * ep_degree,
     // then applies the -weightmatrix skew on top; xfersize is therefore the
@@ -95,9 +99,14 @@ int main(int argc, char **argv) {
         c->set_info("expert");
         c->set_counter(1); // one predecessor: the dispatch task
         c->set_name("decode_expert_rank" + std::to_string(i));
-        c->add_nexttasks(COMBINE_ID);
+        // A zero-byte combine is not free: every one of its flows is floored to one
+        // MSS, which is 17% of the payload at M = 8 kB and would corrupt exactly the
+        // small-message cells the calibration compares against hardware. When it has
+        // no bytes it is not emitted, and the computes have no successor.
+        if (emit_combine) c->add_nexttasks(COMBINE_ID);
     }
 
+    if (emit_combine) {
     auto *combine = g.add_tasks();
     combine->set_type(TaskGraphProtoBuf::Task_SimTaskType_TASK_ALLTOALL);
     combine->set_taskid(COMBINE_ID);
@@ -109,6 +118,7 @@ int main(int argc, char **argv) {
     combine->set_counter(ep);                // waits on all ep expert-compute tasks
     combine->set_name("decode_combine");
     for (int i = 0; i < ep; i++) { combine->add_from_node_ids(i); combine->add_to_node_ids(i); }
+    }
 
     std::string out;
     if (!g.SerializeToString(&out)) { std::cerr << "serialize failed\n"; return 1; }
@@ -116,6 +126,6 @@ int main(int argc, char **argv) {
     of.write(out.data(), out.size());
     of.close();
     std::cerr << "wrote " << out.size() << " bytes -> " << argv[2]
-              << " (ep=" << ep << ", " << (2 + ep) << " tasks)\n";
+              << " (ep=" << ep << ", " << g.tasks_size() << " tasks)\n";
     return 0;
 }

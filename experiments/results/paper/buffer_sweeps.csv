@@ -1,109 +1,121 @@
-system,ep,model_name,q,q_over_bdp,q_over_bdp_source,makespan_ms,rtos,drops,max_fct_ms,fct_status,quotable,source
-glassfb,16,,133,0.50,,132.714,2042,,21.3705,clean,no,cliff_postfix.csv
-glassfb,16,,133,0.50,,135.127,2156,,27.4203,clean,no,cliff_postfix.csv
-glassfb,16,,133,0.50,,115.035,2085,,9.7980,clean,no,cliff_postfix.csv
-glassfb,16,,133,0.50,,121.058,2010,,13.8788,clean,no,cliff_postfix.csv
-glassfb,16,,266,1.00,,93.696,33,,7.7380,clean,no,cliff_postfix.csv
-glassfb,16,,266,1.00,,102.731,56,,14.7203,clean,no,cliff_postfix.csv
-glassfb,16,,266,1.00,,86.642,27,,1.6560,clean,no,cliff_postfix.csv
-glassfb,16,,266,1.00,,88.198,22,,3.1223,clean,no,cliff_postfix.csv
-glassfb,16,,532,2.00,,91.471,0,,6.1287,clean,yes,cliff_postfix.csv
-glassfb,16,,532,2.00,,102.703,0,,14.8226,clean,yes,cliff_postfix.csv
-glassfb,16,,532,2.00,,85.625,0,,1.5588,clean,yes,cliff_postfix.csv
-glassfb,16,,532,2.00,,87.613,0,,3.1337,clean,yes,cliff_postfix.csv
-glassfb,16,,1064,3.99,,91.464,0,0,6.1432,clean,no,cliff_postfix.csv
-glassfb,16,,1064,3.99,,102.763,0,0,15.0997,clean,no,cliff_postfix.csv
-glassfb,16,,1064,3.99,,85.622,0,0,1.5602,clean,no,cliff_postfix.csv
-glassfb,16,,1064,3.99,,87.599,0,0,3.1620,clean,no,cliff_postfix.csv
-glassfb,16,,2128,7.98,,91.464,0,,6.1432,clean,no,cliff_postfix.csv
-glassfb,16,,2128,7.98,,102.763,0,,15.0997,clean,no,cliff_postfix.csv
-glassfb,16,,2128,7.98,,85.622,0,,1.5602,clean,no,cliff_postfix.csv
-glassfb,16,,2128,7.98,,87.599,0,,3.1620,clean,no,cliff_postfix.csv
-glassfb,16,,4256,15.96,,91.464,0,,6.1432,clean,no,cliff_postfix.csv
-glassfb,16,,4256,15.96,,102.763,0,,15.0997,clean,no,cliff_postfix.csv
-glassfb,16,,4256,15.96,,85.622,0,,1.5602,clean,no,cliff_postfix.csv
-glassfb,16,,4256,15.96,,87.599,0,,3.1620,clean,no,cliff_postfix.csv
-glassfb,32,,266,1.00,,97.087,8688,,10.5343,clean,no,cliff_postfix.csv
-glassfb,32,,533,2.00,,113.593,3022,,24.4999,clean,no,cliff_postfix.csv
-glassfb,32,llamaMoE,1000,3.75,3.75,88.089,1764,,,shared_logdir,no,qfine_ep32.csv
-glassfb,32,llamaMoE,1032,3.87,3.87,92.088,1639,,14.6336,clean,no,qfine_ep32.csv
-glassfb,32,llamaMoE,1064,3.99,3.99,91.367,1364,,10.5971,clean,no,qfine_ep32.csv
-glassfb,32,,1066,4.00,,81.360,360,,5.9830,clean,no,cliff_postfix.csv
-glassfb,32,llamaMoE,1067,4.00,2.0,85.365,1499,,13.3118,clean,no,cliff_ep32_gt_ksweep.csv
-glassfb,32,llamaMoE,1096,4.11,4.11,88.421,1431,,7.6519,clean,no,qfine_ep32.csv
-glassfb,32,llamaMoE,1128,4.23,4.23,83.381,1096,,5.3778,clean,no,qfine_ep32.csv
-glassfb,32,llamaMoE,2100,7.88,7.88,75.520,0,,,shared_logdir,yes,qplateau_ep32.csv
-glassfb,32,llamaMoE,2133,8.00,4.0,75.542,0,208,7.5426,clean,yes,cliff_ep32_gt_ksweep.csv
-glassfb,32,,2133,8.00,,77.918,0,208,5.9920,clean,yes,cliff_postfix.csv
-glassfb,32,llamaMoE,2166,8.12,8.12,75.522,0,,,shared_logdir,yes,qplateau_ep32.csv
-glassfb,32,llamaMoE,4267,16.00,8.0,75.540,0,,4.9890,clean,yes,cliff_ep32_gt_ksweep.csv
-glassfb,32,,4267,16.00,,77.957,0,,5.9888,clean,no,cliff_postfix.csv
-glassfb,32,,8533,32.00,,77.957,0,,5.9888,clean,no,cliff_postfix.csv
-glassfb,64,qwenMoE,533,2.00,2.00,54.182,128415,,8.2083,clean,no,cliff_ep64_gt.csv
-glassfb,64,,533,2.00,,50.169,69106,,3.9053,clean,no,cliff_postfix.csv
-glassfb,64,qwenMoE,1064,3.99,3.99,52.004,102601,,,shared_logdir,no,cliff_ep64_gt.csv
-glassfb,64,,1064,3.99,,52.103,37144,,7.1875,clean,no,cliff_postfix.csv
-glassfb,64,qwenMoE,2133,8.00,8.00,60.998,64804,,14.9117,clean,no,cliff_ep64_gt.csv
-glassfb,64,,2133,8.00,,55.990,12840,,7.8575,clean,no,cliff_postfix.csv
-glassfb,64,qwenMoE,4267,16.00,16.0,59.485,13812,,,shared_logdir,no,cliff_ep64_gt_ext.csv
-glassfb,64,,4267,16.00,,46.997,2373,,6.2757,clean,no,cliff_postfix.csv
-glassfb,64,qwenMoE,8533,32.00,32.0,39.410,564,,2.5217,clean,no,cliff_ep64_tail.csv
-glassfb,64,,8533,32.00,,43.157,42,,3.1277,clean,no,cliff_postfix.csv
-glassfb,64,qwenMoE,17067,64.00,64.0,39.395,0,0,2.5338,clean,no,cliff_ep64_tail.csv
-glassfb,64,,17067,64.00,,43.088,0,0,3.0835,clean,yes,cliff_postfix.csv
-hgx8,32,llamaMoE,270,4.05,4.05,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,32,llamaMoE,540,8.10,8.10,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,32,llamaMoE,1080,16.20,16.20,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,32,llamaMoE,2160,32.40,32.40,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,270,4.05,4.05,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,540,8.10,8.10,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,1080,16.20,16.20,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,2160,32.40,32.40,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8_pkt,16,,306,4.08,,149.041,79,41405,22.8042,clean,no,cliff_postfix.csv
-hgx8_pkt,16,,612,8.16,,145.497,0,0,,shared_logdir,yes,cliff_postfix.csv
-hgx8_pkt,16,,1224,16.32,,145.497,0,0,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,16,,2448,32.64,,145.497,0,0,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,16,,4896,65.28,,145.497,0,0,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,16,,9792,130.56,,145.497,0,0,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,32,,306,4.08,,541.653,224,80924,251.9810,clean,no,cliff_postfix.csv
-hgx8_pkt,32,,612,8.16,,164.522,105,313,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,32,,1224,16.32,,164.522,105,0,,shared_logdir,yes,cliff_postfix.csv
-hgx8_pkt,32,,2448,32.64,,164.522,105,0,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,32,,4896,65.28,,164.522,105,0,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,32,,9792,130.56,,164.522,105,0,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,64,,306,4.08,,185.613,9098,175118,36.3059,clean,no,cliff_postfix.csv
-hgx8_pkt,64,,612,8.16,,144.519,2192,163,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,64,,1224,16.32,,144.519,2192,0,,shared_logdir,yes,cliff_postfix.csv
-hgx8_pkt,64,,2448,32.64,,144.519,2192,0,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,64,,4896,65.28,,144.519,2192,0,,shared_logdir,no,cliff_postfix.csv
-hgx8_pkt,64,,9792,130.56,,144.519,2192,0,,shared_logdir,no,cliff_postfix.csv
-nvl64,32,llamaMoE,540,4.05,4.05,64.139,0,,1.0416,clean,yes,island_vanishing_timeout.csv
-nvl64,64,qwenMoE,540,4.05,4.05,24.365,0,,1.0416,clean,yes,island_vanishing_timeout.csv
-nvl64_pkt,16,llamaMoE,68,2.04,1.95296,151.895,6423,,12.5839,clean,no,nvl64_ksweep.csv
-nvl64_pkt,16,llamaMoE,136,4.08,4.08,147.051,1227,463301,12.7167,clean,no,nvl64_ep16_clean.csv
-nvl64_pkt,16,llamaMoE,272,8.16,8.16,281.100,166,56356,100.4170,clean,no,nvl64_ep16_clean.csv
-nvl64_pkt,16,llamaMoE,544,16.32,16.32,130.797,0,375,6.7361,clean,yes,nvl64_ep16_clean.csv
-nvl64_pkt,16,llamaMoE,1088,32.64,31.2474,130.295,0,,6.4933,clean,yes,nvl64_ksweep_hi.csv
-nvl64_pkt,32,llamaMoE,544,16.32,15.6237,159.948,73,,17.1386,clean,no,pkt_vanishing_timeout.csv
-nvl64_pkt,32,llamaMoE,1088,32.64,31.2474,119.397,0,0,,shared_logdir,yes,pkt_vanishing_timeout.csv
-nvl64_pkt,64,qwenMoE,544,16.32,15.6237,86.163,7237,,17.1386,clean,no,pkt_vanishing_timeout.csv
-nvl64_pkt,64,qwenMoE,1088,32.64,31.2474,81.272,13,,,shared_logdir,no,pkt_vanishing_timeout.csv
-nvl64_pkt,64,qwenMoE,2176,65.28,62.4947,82.502,0,0,,shared_logdir,yes,pkt_vanishing_timeout.csv
-nvl64_pkt_s1,16,,600,,,148.020,9488,1046753,22.7490,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,16,,1200,,,190.241,3239,308045,51.3560,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,16,,2400,,,89.430,0,0,1.3597,clean,yes,cliff_postfix.csv
-nvl64_pkt_s1,16,,4800,,,89.411,0,0,1.3597,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,16,,9600,,,89.411,0,0,1.3597,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,16,,19200,,,89.411,0,0,1.3597,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,32,,600,,,103.579,54709,5797460,12.7609,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,32,,1200,,,96.348,40884,4698612,12.5222,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,32,,2400,,,162.810,14654,1426043,30.0330,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,32,,4800,,,69.989,0,0,1.3597,clean,yes,cliff_postfix.csv
-nvl64_pkt_s1,32,,9600,,,69.989,0,0,1.3597,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,32,,19200,,,69.989,0,0,1.3597,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,64,,600,,,60.197,291332,25260410,6.0207,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,64,,1200,,,47.202,219258,23900483,10.9935,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,64,,2400,,,58.532,164150,19955228,15.4362,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,64,,4800,,,70.616,62129,6240338,18.5718,clean,no,cliff_postfix.csv
-nvl64_pkt_s1,64,,9600,,,29.904,0,0,0.9752,clean,yes,cliff_postfix.csv
-nvl64_pkt_s1,64,,19200,,,29.904,0,0,0.9803,clean,no,cliff_postfix.csv
+system,ep,model_name,q,q_over_bdp,q_over_bdp_source,makespan_ms,rtos,drops,max_fct_ms,fct_status,quotable,source,quotable_why,link_rate_fixed,quoted_by
+glassfb,16,llamaMoE,133,0.50,0.50,132.714,2042,,21.3705,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,133,0.50,0.50,135.127,2156,,27.4203,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,133,0.50,0.50,115.035,2085,,9.7980,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,133,0.50,0.50,121.058,2010,,13.8788,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,266,1.00,1.00,93.696,33,,7.7380,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,266,1.00,1.00,102.731,56,,14.7203,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,266,1.00,1.00,86.642,27,,1.6560,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,266,1.00,1.00,88.198,22,,3.1223,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,532,2.00,2.00,91.471,0,,6.1287,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,532,2.00,2.00,102.703,0,,14.8226,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,532,2.00,2.00,85.625,0,,1.5588,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,532,2.00,2.00,87.613,0,,3.1337,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,1064,3.99,3.99,91.464,0,0,6.1432,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,1064,3.99,3.99,102.763,0,0,15.0997,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,1064,3.99,3.99,85.622,0,0,1.5602,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,1064,3.99,3.99,87.599,0,0,3.1620,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,2128,7.98,7.98,91.464,0,,6.1432,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,2128,7.98,7.98,102.763,0,,15.0997,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,2128,7.98,7.98,85.622,0,,1.5602,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,2128,7.98,7.98,87.599,0,,3.1620,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,4256,15.96,15.96,91.464,0,,6.1432,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,4256,15.96,15.96,102.763,0,,15.0997,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,4256,15.96,15.96,85.622,0,,1.5602,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,16,llamaMoE,4256,15.96,15.96,87.599,0,,3.1620,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,266,1.00,1.00,97.087,8688,,10.5343,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,533,2.00,2.00,113.593,3022,,24.4999,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,1000,3.75,3.75,88.089,1764,,,shared_logdir,no,qfine_ep32.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,1032,3.87,3.87,92.088,1639,,14.6336,clean,no,qfine_ep32.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,1064,3.99,3.99,91.367,1364,,10.5971,clean,no,qfine_ep32.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,1066,4.00,4.00,81.360,360,,5.9830,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,1067,4.00,2.0,85.365,1499,,13.3118,clean,no,cliff_ep32_gt_ksweep.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,1096,4.11,4.11,88.421,1431,,7.6519,clean,no,qfine_ep32.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,1128,4.23,4.23,83.381,1096,,5.3778,clean,no,qfine_ep32.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,2100,7.88,7.88,75.520,0,,,shared_logdir,no,qplateau_ep32.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,2133,8.00,4.0,75.542,0,208,7.5426,clean,no,cliff_ep32_gt_ksweep.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,2133,8.00,8.00,77.918,0,208,5.9920,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,2166,8.12,8.12,75.522,0,,,shared_logdir,no,qplateau_ep32.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,4267,16.00,8.0,75.540,0,,4.9890,clean,no,cliff_ep32_gt_ksweep.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,4267,16.00,16.00,77.957,0,,5.9888,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,32,llamaMoE,8533,32.00,32.00,77.957,0,,5.9888,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,533,2.00,2.00,54.182,128415,,8.2083,clean,no,cliff_ep64_gt.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,533,2.00,2.00,50.169,69106,,3.9053,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,1064,3.99,3.99,52.004,102601,,,shared_logdir,no,cliff_ep64_gt.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,1064,3.99,3.99,52.103,37144,,7.1875,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,2133,8.00,8.00,60.998,64804,,14.9117,clean,no,cliff_ep64_gt.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,2133,8.00,8.00,55.990,12840,,7.8575,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,4267,16.00,16.0,59.485,13812,,,shared_logdir,no,cliff_ep64_gt_ext.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,4267,16.00,16.00,46.997,2373,,6.2757,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,8533,32.00,32.0,39.410,564,,2.5217,clean,no,cliff_ep64_tail.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,8533,32.00,32.00,43.157,42,,3.1277,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,17067,64.00,64.0,39.395,0,0,2.5338,clean,no,cliff_ep64_tail.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+glassfb,64,qwenMoE,17067,64.00,64.00,43.088,0,0,3.0835,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8,32,llamaMoE,270,4.05,4.05,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured",,
+hgx8,32,llamaMoE,540,8.10,8.10,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured",,
+hgx8,32,llamaMoE,1080,16.20,16.20,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured",,
+hgx8,32,llamaMoE,2160,32.40,32.40,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured",,
+hgx8,64,qwenMoE,270,4.05,4.05,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured",,
+hgx8,64,qwenMoE,540,8.10,8.10,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured",,
+hgx8,64,qwenMoE,1080,16.20,16.20,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured",,
+hgx8,64,qwenMoE,2160,32.40,32.40,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured",,
+hgx8_pkt,16,llamaMoE,306,4.08,4.08,149.041,79,41405,22.8042,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,16,llamaMoE,612,8.16,8.16,145.497,0,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,16,llamaMoE,1224,16.32,16.32,145.497,0,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,16,llamaMoE,2448,32.64,32.64,145.497,0,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,16,llamaMoE,4896,65.28,65.28,145.497,0,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,16,llamaMoE,9792,130.56,130.56,145.497,0,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,32,llamaMoE,306,4.08,4.08,541.653,224,80924,251.9810,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,32,llamaMoE,612,8.16,8.16,164.522,105,313,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,32,llamaMoE,1224,16.32,16.32,164.522,105,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,32,llamaMoE,2448,32.64,32.64,164.522,105,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,32,llamaMoE,4896,65.28,65.28,164.522,105,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,32,llamaMoE,9792,130.56,130.56,164.522,105,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,64,qwenMoE,306,4.08,4.08,185.613,9098,175118,36.3059,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,64,qwenMoE,612,8.16,8.16,144.519,2192,163,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,64,qwenMoE,1224,16.32,16.32,144.519,2192,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,64,qwenMoE,2448,32.64,32.64,144.519,2192,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,64,qwenMoE,4896,65.28,65.28,144.519,2192,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+hgx8_pkt,64,qwenMoE,9792,130.56,130.56,144.519,2192,0,,shared_logdir,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64,32,llamaMoE,540,4.05,4.05,64.139,0,,1.0416,clean,yes,island_vanishing_timeout.csv,relay-clean and zero timeouts,,
+nvl64,64,qwenMoE,540,4.05,4.05,24.365,0,,1.0416,clean,yes,island_vanishing_timeout.csv,relay-clean and zero timeouts,,
+nvl64_pkt,16,llamaMoE,68,2.04,1.95296,151.895,6423,,12.5839,clean,no,nvl64_ksweep.csv,"timeouts present: 6423, loss not measured",,
+nvl64_pkt,16,llamaMoE,136,4.08,4.08,147.051,1227,463301,12.7167,clean,no,nvl64_ep16_clean.csv,"timeouts present: 1227, loss not measured",,
+nvl64_pkt,16,llamaMoE,272,8.16,8.16,281.100,166,56356,100.4170,clean,no,nvl64_ep16_clean.csv,"timeouts present: 166, loss not measured",,
+nvl64_pkt,16,llamaMoE,544,16.32,16.32,130.797,0,375,6.7361,clean,yes,nvl64_ep16_clean.csv,relay-clean and zero timeouts,,
+nvl64_pkt,16,llamaMoE,1088,32.64,31.2474,130.295,0,,6.4933,clean,yes,nvl64_ksweep_hi.csv,relay-clean and zero timeouts,,
+nvl64_pkt,32,llamaMoE,544,16.32,15.6237,159.948,73,,17.1386,clean,no,pkt_vanishing_timeout.csv,"timeouts present: 73, loss not measured",,
+nvl64_pkt,32,llamaMoE,1088,32.64,31.2474,119.397,0,0,,shared_logdir,yes,pkt_vanishing_timeout.csv,relay-clean and zero timeouts,,
+nvl64_pkt,64,qwenMoE,544,16.32,15.6237,86.163,7237,,17.1386,clean,no,pkt_vanishing_timeout.csv,"timeouts present: 7237, loss not measured",,
+nvl64_pkt,64,qwenMoE,1088,32.64,31.2474,81.272,13,,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 13, loss not measured",,
+nvl64_pkt,64,qwenMoE,2176,65.28,62.4947,82.502,0,0,,shared_logdir,yes,pkt_vanishing_timeout.csv,relay-clean and zero timeouts,,
+nvl64_pkt_s1,16,llamaMoE,600,,1.00,148.020,9488,1046753,22.7490,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,600,,1.00,123.083,9502,1058296,9.9450,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,600,,1.00,148.007,9489,1054613,19.7024,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,1200,,2.00,190.241,3239,308045,51.3560,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,1200,,2.00,166.169,3331,308543,39.8914,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,1200,,2.00,211.051,3264,307886,51.3595,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,2400,,4.00,89.430,0,0,1.3597,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,2400,,4.00,95.115,0,0,2.7018,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,2400,,4.00,86.435,0,0,0.6886,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,4800,,8.00,89.411,0,0,1.3597,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,4800,,8.00,95.062,0,0,2.7018,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,4800,,8.00,86.413,0,0,0.6886,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,9600,,16.00,89.411,0,0,1.3597,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,9600,,16.00,95.062,0,0,2.7018,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,9600,,16.00,86.413,0,0,0.6886,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,19200,,32.00,89.411,0,0,1.3597,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,19200,,32.00,95.062,0,0,2.7018,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,16,llamaMoE,19200,,32.00,86.413,0,0,0.6886,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,32,llamaMoE,600,,1.00,103.579,54709,5797460,12.7609,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,32,llamaMoE,1200,,2.00,96.348,40884,4698612,12.5222,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,32,llamaMoE,2400,,4.00,162.810,14654,1426043,30.0330,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,32,llamaMoE,4800,,8.00,69.989,0,0,1.3597,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,32,llamaMoE,9600,,16.00,69.989,0,0,1.3597,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,32,llamaMoE,19200,,32.00,69.989,0,0,1.3597,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,64,qwenMoE,600,,1.00,60.197,291332,25260410,6.0207,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,64,qwenMoE,1200,,2.00,47.202,219258,23900483,10.9935,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,64,qwenMoE,2400,,4.00,58.532,164150,19955228,15.4362,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,64,qwenMoE,4800,,8.00,70.616,62129,6240338,18.5718,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,64,qwenMoE,9600,,16.00,29.904,0,0,0.9752,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+nvl64_pkt_s1,64,qwenMoE,19200,,32.00,29.904,0,0,0.9803,clean,no,cliff_postfix.csv,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,

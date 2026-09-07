@@ -58,8 +58,20 @@ LADDERS = {
 }
 
 
+# Configurations deliberately run at a single buffer rather than swept. Without
+# these the gap check waits forever for rungs that were never submitted.
+VARIANT_LADDERS = {
+    "hier32": [2133],
+    "x2_port_dim1": [1064], "x2_port_dim0": [1064],
+    "x2_mesh_dim1": [1064], "x2_mesh_dim0": [1064],
+}
+
+
 def submitted_q(key):
-    sysname, ep, mb, _cab = key
+    sysname, ep, mb, _var = key
+    special = VARIANT_LADDERS.get(_var)
+    if special:
+        return {float(q) for q in special}
     known = LADDERS.get((sysname, str(ep)))
     if known:
         return {float(q) for q in known}
@@ -81,6 +93,64 @@ def submitted_q(key):
     print("  note: %s ep=%s has no declared ladder; completeness inferred from disk"
           % (sysname, ep), file=sys.stderr)
     return out
+
+
+# Workload per EP for this sweep, and the port bandwidth per fabric in GB/s.
+WORKLOAD = {"16": "llamaMoE", "32": "llamaMoE", "64": "qwenMoE", "128": "arctic"}
+FAMILY = {"glassfb": "glass", "hgx8_pkt": "pkt", "nvl64_pkt_s1": "pkt"}
+PORT_GBPS = {"glassfb": 400.0, "hgx8_pkt": 112.5, "nvl64_pkt_s1": 900.0}
+RTT_S = 4 * 250e-9          # four 250 ns hops, the same for every fabric here
+MTU = 1500
+
+
+
+_TAG_Q_SUFFIX = re.compile(r"_q\d+$")
+
+
+def variant(src):
+    """The configuration a rung belongs to, from its tag.
+
+    Everything before the _q<buffer> suffix. A drop cell (gd...) is the same
+    configuration as its plain rung (g...) measured on the counter build, so its
+    prefix is normalised to pair with it; every other prefix is kept, because a
+    different weight matrix, dim-route or cabling is a different experiment and
+    must not share a ladder.
+    """
+    base = _TAG_Q_SUFFIX.sub("", os.path.splitext(src)[0])
+    if base.startswith("gd"):
+        base = "g" + base[2:]
+    return base
+
+_TAG_MB = re.compile(r"m(\d+)_q\d+$")
+
+
+def mb_from_tag(src):
+    """Microbatch from a rung filename like s1m16_q2400.csv, or ''."""
+    m = _TAG_MB.search(os.path.splitext(src)[0])
+    return m.group(1) if m else ""
+
+
+def label(r):
+    """Fill model_name, family and q_over_bdp from what the row already states."""
+    sysname = (r.get("system") or "").strip()
+    ep = str(r.get("ep") or "").strip()
+    # pkt rows carry no mb column; recover it from the tag so the microbatch
+    # variants do not collapse into the base walk. Only when blank -- a row that
+    # states its own mb is authoritative over anything derived from a filename.
+    if not (r.get("mb") or "").strip():
+        got = mb_from_tag(r.get("_src", ""))
+        if got:
+            r["mb"] = got
+    if not (r.get("model_name") or "").strip():
+        r["model_name"] = WORKLOAD.get(ep, "")
+    if not (r.get("family") or "").strip():
+        r["family"] = FAMILY.get(sysname, "")
+    if not (r.get("q_over_bdp") or "").strip():
+        gbps = PORT_GBPS.get(sysname)
+        q = num(r.get("q") or r.get("q_nvs"))
+        if gbps and q:
+            r["q_over_bdp"] = "%.2f" % ((q * MTU) / (gbps * 1e9 * RTT_S))
+    return r
 
 rows, pending, unfixed, contaminated = [], 0, 0, []
 for p in sorted(glob.glob(os.path.join(RUNGS, "*.csv"))):
@@ -117,7 +187,7 @@ for p in sorted(glob.glob(os.path.join(RUNGS, "*.csv"))):
             unfixed += 1
             continue
         r["_src"] = os.path.basename(p)
-        rows.append(r)
+        rows.append(label(r))
 
 print("%d completed rung(s); %d still pending or without a makespan; %d without the fix flag"
       % (len(rows), pending, unfixed))
@@ -128,11 +198,49 @@ if unfixed:
     print("  WARNING: %d row(s) came from a binary that does not assert the link-rate fix "
           "-- excluded" % unfixed, file=sys.stderr)
 
+# A drop cell is the same rung measured again on the counter build. Merge its
+# count onto the plain row and remove it from the ladder, or the walk shows two
+# rungs at one buffer and the quoted row reports no loss it never measured.
+_by_cell = {}
+for r in rows:
+    key = (r.get("system", ""), r.get("ep", ""), (r.get("mb") or "").strip(),
+           variant(r.get("_src", "")), (r.get("q") or r.get("q_nvs") or "").strip())
+    _by_cell.setdefault(key, []).append(r)
+
+_merged, _refused = 0, 0
+_drop_twins = []
+for key, g in _by_cell.items():
+    if len(g) < 2:
+        continue
+    withd = [x for x in g if str(x.get("drops", "")).strip().isdigit()]
+    without = [x for x in g if not str(x.get("drops", "")).strip().isdigit()]
+    if not withd or not without:
+        continue
+    src = withd[0]
+    for dst in without:
+        if (dst.get("makespan_ms") or "") != (src.get("makespan_ms") or ""):
+            print("  REFUSED drop twin for %s q=%s: %s ms vs %s ms"
+                  % (key[0], key[3], dst.get("makespan_ms"), src.get("makespan_ms")),
+                  file=sys.stderr)
+            _refused += 1
+            continue
+        dst["drops"] = src.get("drops")
+        dst["note"] = ((dst.get("note") or "") +
+                       " | drops measured on the counter build at the same makespan").strip(" |")
+        _merged += 1
+    _drop_twins.extend(withd)
+
+if _merged or _refused:
+    print("merged %d drop cell(s) onto their plain rung; %d refused on makespan"
+          % (_merged, _refused))
+_twin_ids = {id(x) for x in _drop_twins}
+rows = [r for r in rows if id(r) not in _twin_ids]
+
 # group into walks: one walk per (system, ep, mb, cabling)
 walks = collections.defaultdict(list)
 for r in rows:
     key = (r.get("system", ""), r.get("ep", ""), (r.get("mb") or "").strip(),
-           (r.get("cabling") or "").strip())
+           variant(r.get("_src", "")))
     walks[key].append(r)
 
 quoted = 0
@@ -176,22 +284,22 @@ for key, g in sorted(walks.items()):
             first["quotable_why"] = branch
             quoted += 1
             _d = str(first.get("drops", "")).strip()
-            print("  QUOTED  %-12s ep=%-4s mb=%-3s q=%-7s %10s ms  rtos=%-7s drops=%-9s "
+            print("  QUOTED  %-12s ep=%-4s mb=%-3s %-15s q=%-7s %10s ms  rtos=%-7s drops=%-9s "
                   "(%d rungs in) [%s]"
-                  % (key[0], key[1], key[2] or "-", first.get("q") or first.get("q_nvs"),
+                  % (key[0], key[1], key[2] or "-", key[3], first.get("q") or first.get("q_nvs"),
                      first.get("makespan_ms"), first.get("rtos"),
                      _d if _d else "not measured", len(g),
                      "timeout-free" if num(first.get("rtos"), 0) == 0 else "zero measured loss"))
         else:
-            print("  gap     %-12s ep=%-4s mb=%-3s zero-timeout at q=%s but %d rung(s) "
+            print("  gap     %-12s ep=%-4s mb=%-3s %-15s zero-timeout at q=%s but %d rung(s) "
                   "below have not reported (%s) -- not quoted yet"
-                  % (key[0], key[1], key[2] or "-", fq, len(missing),
+                  % (key[0], key[1], key[2] or "-", key[3], fq, len(missing),
                      ", ".join("%g" % m for m in missing)))
     else:
         nodrops = sum(1 for r in g if not str(r.get("drops", "")).strip().isdigit())
-        print("  no zero %-12s ep=%-4s mb=%-3s %d rung(s); none timeout-free and none "
+        print("  no zero %-12s ep=%-4s mb=%-3s %-15s %d rung(s); none timeout-free and none "
               "with a measured zero-drop count (%d rung(s) have no drop count at all)"
-              % (key[0], key[1], key[2] or "-", len(g), nodrops))
+              % (key[0], key[1], key[2] or "-", key[3], len(g), nodrops))
 
 if rows:
     fields = []

@@ -1,0 +1,2 @@
+paper_ref,system,variant,ep,nodes,domain,switches,link_gbps,msg_bytes,q_nvs,q_over_bdp,makespan_ms,T_us,egress_GBps,efficiency,rtos,drops,flows_total,flows_payload,wall_s,status,note,link_rate_fixed,binary_sha
+calib,calib_nvswitch,b,8,8,8,1,450,32768,1200,4.00,0.047596,47.596,4.82,0.0107,0,0,56,56,0,sweep,synthetic 8-GPU a2a; M per ordered pair; combine omitted; 450 GB/s per GPU per dir in both variants,yes,1b1cc47

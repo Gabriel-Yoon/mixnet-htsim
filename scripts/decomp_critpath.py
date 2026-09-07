@@ -194,6 +194,22 @@ if __name__ == "__main__":
         for g in sorted(_g.glob(f)):
             run("nvl64_pkt_s1 EP=%d q=%d" % (ep, q), g)
 
+    # Post-fix quoted rows, driven by the collector's own verdict rather than a
+    # hardcoded list: whatever collect_rungs quoted is what R2 should decompose.
+    # Each row's stdout log is found from its rung tag; a quoted row with no log is
+    # reported by run() rather than skipped, because "absent because missing" and
+    # "absent because fine" look identical in a summary table.
+    import csv as _csv
+    _post = os.path.join(DC, "../../../experiments/results/paper/cliff_postfix.csv")
+    if os.path.exists(_post):
+        for _r in _csv.DictReader(open(_post, newline="")):
+            if _r.get("quotable") != "yes":
+                continue
+            _tag = (_r.get("source") or "").replace(".csv", "")
+            for _f in sorted(_g.glob(os.path.join(DC, "rung_logs", _tag + "_*.log"))):
+                run("%s EP=%s mb=%s %s" % (_r.get("system"), _r.get("ep"),
+                                           _r.get("mb") or "-", _tag), _f)
+
     hgx = os.path.join(DC, "pktvt_logs")
     import glob as _g
     for f in sorted(_g.glob(os.path.join(hgx, "hgx8_pkt_ep32_q*.log"))):

@@ -1,0 +1,2 @@
+paper_ref,system,cabling,ep,nodes,mb,q,relayed_pairs,completed,makespan_ms,rtos,drops,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note,link_rate_fixed,binary_sha
+cliff,glassfb,ep32_gt.txt,32,256,8,2133,0,COMPLETE,74.814,0,4,304640,229632,0.0633,0.0008,0.5649,6.6815,1051,sweep,post-fix rung (glass); dim_a2a=1; portmap=ep32_gt.txt; hier=0,yes,1b1cc47

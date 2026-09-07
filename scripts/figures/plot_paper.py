@@ -169,37 +169,65 @@ def mb():
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_mb.png")); print("wrote fig_mb.png")
 
 def ladder():
-    rows = load("ladder")
-    order = ["glass_A", "glass_B", "glass_C", "copperfb", "flat900_capped"]
-    rows = sorted([r for r in rows if r["system"] in order], key=lambda r: order.index(r["system"]))
+    """R3: the cabling x dim-order 2x2 at EP=32 (dse_cabling_2x2.csv), plus the quoted port-map row
+    at its zero-timeout buffer, with the queued NVL-64 and the bound as reference lines."""
+    rows = load("dse_cabling_2x2")
+    cells = {(r["cabling"], str(r["dim_a2a"])): r for r in rows}
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    base = next((r["makespan_ms"] for r in rows if r["system"] == "glass_C"), None)
-    for i, r in enumerate(rows):
-        ax.bar(i, r["makespan_ms"], color=SYS_COLOR.get(r["system"], "#1f6f8b"), width=0.7)
-        ax.text(i, r["makespan_ms"] * 1.02, f"{r['makespan_ms']:.0f}" + (f"\n{r['makespan_ms']/base:.2f}x" if base else ""), ha="center", fontsize=5)
-    ax.set_xticks(range(len(rows))); ax.set_xticklabels([SYS_LABEL.get(r["system"], r["system"]) for r in rows], rotation=45, ha="right", fontsize=5.5)
-    ax.set_ylabel("EP=16 iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)
+    order = [("mesh", "0", "mesh\nrelay off"), ("mesh", "1", "mesh\nrelay on"), ("portmap", "0", "port map\nrelay off"), ("portmap", "1", "port map\nrelay on")]
+    xs, labs = [], []
+    for x, (cab, dim, lab) in enumerate(order):
+        r = cells.get((cab, dim))
+        if not r: continue
+        col = SYS_COLOR["glassfb_mesh"] if cab == "mesh" else SYS_COLOR["glassfb"]
+        ax.bar(x, r["makespan_ms"], color=col, width=0.7)
+        ax.text(x, r["makespan_ms"] * 1.02, f"{r['makespan_ms']:.0f}\n{int(float(r['rtos'])):,} RTO", ha="center", fontsize=5.2, linespacing=0.9)
+        xs.append(x); labs.append(lab)
+    # quoted row (port map, relay on, zero-timeout buffer) from cliff_all
+    try:
+        q = [c for c in csv.DictReader(open(os.path.join(RES, "cliff_all.csv")))
+             if c["system"] == "glassfb" and c["ep"] == "32" and (c.get("quotable") or "").lower() == "yes"]
+        if q:
+            v = min(float(c["makespan_ms"]) for c in q)
+            ax.bar(len(order), v, color=SYS_COLOR["glassfb"], width=0.7, hatch="..")
+            ax.text(len(order), v * 1.02, f"{v:.0f}\n0 RTO", ha="center", fontsize=5.2, linespacing=0.9)
+            xs.append(len(order)); labs.append("port map\nquoted q")
+        n = [c for c in csv.DictReader(open(os.path.join(RES, "cliff_all.csv")))
+             if c["system"] == "nvl64_pkt" and c["ep"] == "32" and (c.get("quotable") or "").lower() == "yes"]
+        if n:
+            v = min(float(c["makespan_ms"]) for c in n)
+            ax.axhline(v, color=SYS_COLOR["nvl64_pkt"], lw=0.9); ax.text(len(order) + 0.45, v * 1.02, f"NVL-64 queued {v:.0f}", color=SYS_COLOR["nvl64_pkt"], fontsize=5.5, ha="right")
+        b = [c for c in csv.DictReader(open(os.path.join(RES, "cliff_all.csv"))) if c["system"] == "nvl64" and c["ep"] == "32"]
+        if b:
+            v = min(float(c["makespan_ms"]) for c in b)
+            ax.axhline(v, color=SYS_COLOR["nvl64"], lw=0.9, ls="--"); ax.text(len(order) + 0.45, v * 1.02, f"bound {v:.0f}", color=SYS_COLOR["nvl64"], fontsize=5.5, ha="right")
+    except Exception as e:
+        print("[ladder] reference lines skipped:", e)
+    ax.set_xticks(xs); ax.set_xticklabels(labs, fontsize=5.5)
+    ax.set_ylabel("EP=32 iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_ladder.png")); print("wrote fig_ladder.png")
 
 def energy():
-    rows = load("power")
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(3.4, 2.4), dpi=200)
-    systems = ["glassfb", "hgx8", "nvl64"]
-    for i, s in enumerate(systems):
-        sub = [r for r in rows if r["system"] == s]
-        if not sub: continue
-        e = sorted(float(r["energy_J"]) for r in sub if r.get("energy_J"))
-        if e:
-            a2.bar(i, e[-1], color=SYS_COLOR[s], alpha=0.35, width=0.6); a2.bar(i, e[0], color=SYS_COLOR[s], width=0.6)
-            a2.text(i, e[-1] * 1.02, f"{e[0]:.2g}–{e[-1]:.2g}", ha="center", fontsize=5)
-        bw = [float(r["gbps_per_w"]) for r in sub if r.get("gbps_per_w")]
-        if bw:
-            a1.bar(i, max(bw), color=SYS_COLOR[s], alpha=0.35, width=0.6); a1.bar(i, min(bw), color=SYS_COLOR[s], width=0.6)
-            a1.text(i, max(bw) * 1.02, f"{min(bw):.0f}–{max(bw):.0f}", ha="center", fontsize=5)
-    for a, yl in ((a1, "cross-domain GB/s per W"), (a2, "interconnect J / iteration (bytes moved)")):
-        a.set_xticks(range(len(systems))); a.set_xticklabels([SYS_LABEL[s] for s in systems], fontsize=5.5, rotation=30, ha="right")
-        a.set_ylabel(yl, fontsize=6); a.tick_params(labelsize=6)
-    fig.suptitle("dark = favourable pJ/bit end, light = conservative end", fontsize=6)
+    """R5: per-iteration interconnect energy, link (bytes moved) vs static, both pJ/bit ends, per EP."""
+    g = load("power_tiers"); n = load("power_tiers_pkt")
+    eps = sorted({int(r["ep"]) for r in g} | {int(r["ep"]) for r in n})
+    systems = ["glassfb", "nvl64_pkt", "hgx8_pkt"]
+    fig, axes = plt.subplots(1, len(eps), figsize=(3.4, 2.4), dpi=200, sharey=True)
+    axes = list(axes) if len(eps) > 1 else [axes]
+    for ax, ep in zip(axes, eps):
+        for x, sysname in enumerate(systems):
+            r = next((r for r in (g + n) if r["system"] == sysname and int(r["ep"]) == ep), None)
+            if not r: continue
+            lo, hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
+            slo = float(r.get("static_J_iter_lo") or r.get("static_J_iter") or 0); shi = float(r.get("static_J_iter_hi") or r.get("static_J_iter") or slo)
+            c = SYS_COLOR.get(sysname, "#999")
+            ax.bar(x, hi, color=c, alpha=0.35, width=0.6); ax.bar(x, lo, color=c, width=0.6)               # link: dark = favourable end
+            ax.bar(x, shi, bottom=hi, color="none", edgecolor=c, hatch="////", width=0.6, lw=0.6)          # static (assumed), hatched
+            ax.bar(x, slo, bottom=hi, color="none", edgecolor=c, width=0.6, lw=0.6)
+            ax.text(x, hi + shi + 3, f"{lo:.0f}–{hi:.0f}\n+{slo:.0f}–{shi:.0f}", ha="center", fontsize=4.8, linespacing=0.9)
+        ax.set_xticks(range(len(systems))); ax.set_xticklabels([SYS_LABEL[s].split(" (")[0] for s in systems], fontsize=5.5, rotation=20)
+        ax.set_title(f"EP={ep}", fontsize=7); ax.tick_params(labelsize=6)
+    axes[0].set_ylabel("J per iteration (solid: link, bytes moved;\nhatched: static, assumed)", fontsize=6)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
 if __name__ == "__main__":

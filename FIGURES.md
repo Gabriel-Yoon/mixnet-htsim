@@ -94,7 +94,7 @@ point is a row with `quotable=yes` (zero timeouts at its own buffer) unless draw
 | `fig_copperfb.png` (Fig 7c, R3) | `ladder` | `dse_cabling_2x2.csv` + `cliff_all.csv` | four cells at q=1064 + quoted port-map row; NVL-64 queued / bound lines |
 | `fig_energy.png` (Fig 7b, R5) | `energy` | `power_tiers.csv`, `power_tiers_pkt.csv` | link J/iter (bytes x hops from the topology hop log) as solid brackets, static as hatched |
 | `fig_paneldse.png` (Fig 7a, R6) | `mb` | `cliff_all.csv` (family=mb) | glass vs nvl64_pkt at mb 4..32, EP=16 |
-| `fig_baselines.png` (Fig 6c) | `beyond` | pending (Arctic EP=128 rows) | still the SUPERSEDED watermark |
+| `fig_baselines.png` (Fig 6c) | `beyond` | `cliff_all.csv` (EP=128 rows: `cliff_pkt_ep128.csv` snapshot + `cliff_ep128_gt.csv` when it lands) | one bar per system, R1 rule (quotable solid / best hollow with RTO label); drawn 2026-09-07 from d53256d with nvl64_pkt 247.218 solid, hgx8_pkt 365.733 hollow, glass pending |
 | `fig_buffertail.png` (Fig. buffertail, R4) | `tail` | `buffer_sweeps.csv` (built by `build_buffer_sweeps.py`) | every quoted EP>panel (system, ep): one bar per power-of-two BDP step, quotable filled, timeout count as label; max FCT only where fct_status=clean (glass EP=64 32×/64× tails from the re-run `cliff_ep64_tail.csv`, pending) |
 
 Drawn 2026-09-07 from cliff_all d317e0e / buffer_sweeps ea0c6f2: R1 (EP=64 pair 39.395 / 82.502), R2 (EP=64 path 15.9 / 63.0 ms), R4 (five panels). R5 awaits the corrected HGX-8 static rows (860e58f) and the EP=64 tier passes.

@@ -1,2 +1,2 @@
-paper_ref,system,cabling,ep,nodes,mb,q,skew,wm_file,wm_seed,hot_share_pct,relayed_pairs,completed,makespan_ms,rtos,vs_skew16_pct,wall_s,quotable,status,note
-,,,,,,,,,,,,,,,,,,submitted,job=12898043 host=atl1-1-01-003-14-1 start=2026-09-07T00:02:54
+paper_ref,system,cabling,ep,nodes,mb,q,skew,wm_file,wm_seed,hot_share_pct,relayed_pairs,completed,makespan_ms,rtos,vs_skew16_pct,wall_s,quotable,status,note,quotable_why
+,,,,,,,,,,,,,,,,,no,submitted,job=12898043 host=atl1-1-01-003-14-1 start=2026-09-07T00:02:54,no completed iteration

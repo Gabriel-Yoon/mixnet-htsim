@@ -1,5 +1,5 @@
-paper_ref,model,model_name,workload_type,system,ep,nodes,domain,switches,link_gbps,nic_bw,q_nvs,q_over_bdp_banner,ecn_k,q_nic,rto_min_us,mtu,makespan_ms,rtos,wall_s,quoted,status,note
-,,,,,,,,,,,,,,,,,,,,,submitted,job=12896824 host=atl1-1-01-003-9-2 start=2026-09-06T23:04:17
-cliff,pkt,llamaMoE,training,nvl64_pkt,32,256,64,18,50,100,544,15.6237,272,540,100,1500,159.948,73,676,no,sweep,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer
-cliff,pkt,llamaMoE,training,nvl64_pkt,32,256,64,18,50,100,1088,31.2474,544,540,100,1500,119.397,0,759,yes,sweep,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer
-cliff,pkt,qwenMoE,training,nvl64_pkt,64,512,64,18,50,100,544,15.6237,272,540,100,1500,86.163,7237,1547,no,sweep,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer
+paper_ref,model,model_name,workload_type,system,ep,nodes,domain,switches,link_gbps,nic_bw,q_nvs,q_over_bdp_banner,ecn_k,q_nic,rto_min_us,mtu,makespan_ms,rtos,wall_s,quoted,status,note,quotable,quotable_why
+,,,,,,,,,,,,,,,,,,,,,submitted,job=12896824 host=atl1-1-01-003-9-2 start=2026-09-06T23:04:17,no,no completed iteration
+cliff,pkt,llamaMoE,training,nvl64_pkt,32,256,64,18,50,100,544,15.6237,272,540,100,1500,159.948,73,676,no,sweep,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer,no,timeouts present: 73 (vanishing-timeout rule)
+cliff,pkt,llamaMoE,training,nvl64_pkt,32,256,64,18,50,100,1088,31.2474,544,540,100,1500,119.397,0,759,yes,sweep,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer,yes,relay-clean and zero timeouts
+cliff,pkt,qwenMoE,training,nvl64_pkt,64,512,64,18,50,100,544,15.6237,272,540,100,1500,86.163,7237,1547,no,sweep,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer,no,timeouts present: 7237 (vanishing-timeout rule)

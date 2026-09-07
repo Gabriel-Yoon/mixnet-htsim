@@ -150,6 +150,31 @@ not currently executing; `island_cliff.sh` is deliberately excluded because it a
 across invocations and `csv_open` truncates, which is a lifecycle decision rather than a mechanical
 edit.
 
+G has a second form: a `status` field **asserted rather than derived**. Two rows carried
+`status=final` and `status=sensitivity` while describing runs that had not happened as described.
+
+The `dragonfly16` EP=32 row said `status=final` for a run whose own log reads
+`GLASS_GW_PARALLEL=16 too large for panel_degree=15 and panel size=16; clamping to 1` — one gateway
+on a 6400 GB/s link rather than sixteen at 400. The script *had* read that clamp into a variable, to
+report `G`; it simply never gated on it, because the status field was a literal inside the row's
+`echo`. The row even published `ports_lit=1` and `per_gpu_xpanel_gbs=25.0`, so the contradiction was
+in the artifact all along, one column away from the word `final`.
+
+Two `nvl64_ksweep` rows likewise carried `status=sensitivity` at `makespan 0.000` — meaning the run
+never emitted `finished one iter`, having produced no iteration at all — and sat indistinguishable
+from the three real cells beside them.
+
+> **A status field must be computed from the run's own banner, never written as a literal.** Derive
+> it from what the log says happened: clamp lines, relayed-pair counts, ports lit, whether an
+> iteration completed, the timeout's exit code. A literal records the author's intention at the
+> moment of writing the script, which is exactly the claim under test.
+
+Applied: `dragonfly16.sh` records `blocked` when the topology clamps `GW_PARALLEL` below the
+request and notes any disagreement between the caller's panel count and the one built;
+`nvs_ksweep.sh` and `nvs_ksweep_hi.sh` derive `no_iteration` and `truncated`. The affected rows are
+marked in place rather than deleted, and `plot_paper.py` filters on `status=final`, so a gated row
+drops out of the figures instead of being drawn.
+
 The helper's own first deployment failed this way in miniature: a wrong relative `source` path meant
 `csv_open` was never defined, and the script carried on appending rows to a file with no header. It
 was caught by checking the job's stderr rather than the CSV, which is the same rule as sub-class C —

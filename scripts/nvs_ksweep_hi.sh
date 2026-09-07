@@ -20,14 +20,19 @@ for k in 32 64; do
     -nvs_domain 64 -nvs_switches 18 -nvs_link 50 -nvs_lat 250 -nvs_q $q -nvs_ecn_k $ek \
     -speed 800000 -rtt 2000 -q 540 -port-cap-pkts 270 -mtu 1500 \
     -weightmatrix "$T/wm_ep16.txt" > "$log" 2>&1
-  t1=$(date +%s)
+  rc=$?; t1=$(date +%s)
   ps=$(grep "finished one iter" "$log" | tail -1 | grep -oE "now [0-9]+" | awk '{print $2}')
   [ -z "$ps" ] && ps=0
   ms=$(awk -v p="$ps" 'BEGIN{printf "%.3f", p/1e9}')
+  # A row's status must be derived, not asserted: makespan 0.000 means the
+  # run never emitted "finished one iter", so it produced no iteration at all.
+  st=sensitivity
+  if [ "$rc" = "124" ]; then st=truncated
+  elif [ "$ps" = "0" ]; then st=no_iteration; fi
   rtos=$(grep -c '^At ' "$log")
   ld=$(grep -m1 "Log directory is" "$log" | awk '{print $4}')
   f=$(awk '/^FCT/{n++; v=$5+0; s+=v; a[n]=v; if(v>mx)mx=v} END{if(n==0){print ",,"; exit} asort(a); printf "%.4f,%.4f,%.4f", s/n, a[int(n*0.99)], mx}' "$ld/fct_util_out.txt" 2>/dev/null || echo ",,")
-  echo "cliff,nvl64_pkt,16,$k,$q,$ek,$ms,$rtos,$f,$((t1-t0)),sensitivity" >> "$CSV"
+  echo "cliff,nvl64_pkt,16,$k,$q,$ek,$ms,$rtos,$f,$((t1-t0)),$st" >> "$CSV"
   printf "  k=%-3s q=%-5s -> %10s ms  rtos=%-7s fct(mean,p99,max)=%s\n" "$k" "$q" "$ms" "$rtos" "$f"
 done
 csv_close

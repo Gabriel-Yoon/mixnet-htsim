@@ -18,6 +18,11 @@ are MARKED, not deleted: their makespan and RTO count are still good.
 """
 import collections, csv, glob, os, re
 
+def _being_written(path):
+    """True if a running job is appending to this CSV (see paper_csv.sh)."""
+    return os.path.exists(path + ".writing")
+
+
 ROOT = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly"
 DC = os.path.join(ROOT, "src/clos/datacenter")
 PAPER = os.path.join(ROOT, "experiments/results/paper")
@@ -50,6 +55,10 @@ shared = {d for d, v in claims.items() if len(v) > 1}
 print("output directories: %d total, %d claimed by more than one run" % (len(claims), len(shared)))
 
 for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
+
+    if _being_written(p):
+
+        print('skip %s (a job is writing it)' % os.path.basename(p)); continue
     with open(p, newline="") as fh:
         rows = list(csv.DictReader(fh))
     if not rows or "makespan_ms" not in rows[0]:

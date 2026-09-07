@@ -71,6 +71,12 @@ csv_warn_truncate() {
     return 0
 }
 
+# A ".writing" sibling marks a CSV a running job is appending to. The rewriters
+# (gate_quotable, fct_recompute, the table builders) skip marked files: they
+# read-modify-write, and doing that under an appending job silently drops rows.
+_csv_mark()   { [ -n "${1:-}" ] && : > "$1.writing" 2>/dev/null || true; }
+_csv_unmark() { [ -n "${1:-}" ] && rm -f "$1.writing" 2>/dev/null || true; }
+
 csv_open() {  # csv_open <file> <header>
     _CSV_FILE=$1
     _CSV_DONE=0
@@ -78,6 +84,7 @@ csv_open() {  # csv_open <file> <header>
     printf '%s\n' "$2" > "$_CSV_FILE"
     _csv_emit_row submitted \
         "job=${SLURM_JOB_ID:-none} host=$(hostname -s) start=$(date +%FT%T)" >> "$_CSV_FILE"
+    _csv_mark "$_CSV_FILE"
     trap '_csv_exit $?' EXIT
 }
 
@@ -122,6 +129,7 @@ csv_row() {
 csv_close() {
     _CSV_DONE=1
     [ -n "$_CSV_FILE" ] && _csv_drop_sentinel
+    _csv_unmark "$_CSV_FILE"
 }
 
 _csv_exit() {
@@ -129,6 +137,7 @@ _csv_exit() {
     [ -z "$_CSV_FILE" ] && return 0
     [ "$_CSV_DONE" = 1 ] && return 0
     _csv_drop_sentinel
+    _csv_unmark "$_CSV_FILE"
     _csv_emit_row ABORTED \
         "job=${SLURM_JOB_ID:-none} exit=$rc died=$(date +%FT%T) -- script did not reach csv_close" \
         >> "$_CSV_FILE"

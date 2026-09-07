@@ -21,6 +21,11 @@ and calling them unquotable would misdescribe them.
 """
 import csv, glob, os
 
+def _being_written(path):
+    """True if a running job is appending to this CSV (see paper_csv.sh)."""
+    return os.path.exists(path + ".writing")
+
+
 
 def load_drops():
     """Measured loss per (system, ep, q), from quoted_row_drops.csv.
@@ -58,6 +63,10 @@ if DROPS:
     print("measured loss counts available for %d quoted row(s)" % len(DROPS))
 
 for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
+
+    if _being_written(p):
+
+        print('skip %s (a job is writing it)' % os.path.basename(p)); continue
     name = os.path.basename(p)
     if name == "quoted_row_drops.csv":
         continue

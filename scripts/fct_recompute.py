@@ -50,6 +50,11 @@ unmatched row keeps its original values and is marked UNMATCHED.
 """
 import csv, math, os, re, sys, glob
 
+def _being_written(path):
+    """True if a running job is appending to this CSV (see paper_csv.sh)."""
+    return os.path.exists(path + ".writing")
+
+
 ROOT = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly"
 DC = os.path.join(ROOT, "src/clos/datacenter")
 PAPER = os.path.join(ROOT, "experiments/results/paper")
@@ -140,6 +145,10 @@ def main():
            "status_fct"]
 
     for csvpath in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
+
+        if _being_written(csvpath):
+
+            print('skip %s (a job is writing it)' % os.path.basename(csvpath)); continue
         with open(csvpath, newline="") as fh:
             rows = list(csv.DictReader(fh))
         if not rows or "makespan_ms" not in rows[0]:

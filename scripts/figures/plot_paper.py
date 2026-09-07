@@ -238,9 +238,49 @@ def energy():
     axes[0].set_ylabel("J per iteration (solid: link, bytes moved;\nhatched: static, assumed)", fontsize=6)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
+def tail():
+    """R4: buffer vs tail. For each (system, ep) sweep in buffer_sweeps.csv: makespan (bars) and payload
+    max FCT (line, right axis) against q_over_bdp; RTO count as labels; quotable point filled."""
+    rows = load("buffer_sweeps")
+    groups = {}
+    for r in rows:
+        try:
+            q = float(r["q_over_bdp"]); mk = float(r["makespan_ms"])
+        except (TypeError, ValueError):
+            continue
+        mx = r.get("max_fct_ms")
+        try:
+            mx = float(mx) if mx not in (None, "") else None
+            if mx is not None and mx > mk: mx = None      # a collided / non-time value
+        except ValueError:
+            mx = None
+        groups.setdefault((r["system"], int(r["ep"])), []).append((q, mk, int(float(r.get("rtos") or 0)), mx, (r.get("quotable") or "").lower() == "yes"))
+    want = [("nvl64_pkt", 16), ("glassfb", 32), ("nvl64_pkt", 32), ("glassfb", 64), ("nvl64_pkt", 64)]
+    panels = [(k, sorted(groups[k])) for k in want if k in groups and len(groups[k]) >= 2]
+    if not panels: sys.exit("buffer_sweeps: no multi-point sweeps")
+    fig, axes = plt.subplots(1, len(panels), figsize=(DBL_W_ if False else 7.16, 2.2), dpi=200)
+    axes = list(axes) if len(panels) > 1 else [axes]
+    for ax, ((sysname, ep), pts) in zip(axes, panels):
+        xs = list(range(len(pts))); c = SYS_COLOR.get(sysname, "#333")
+        ax.bar(xs, [p[1] for p in pts], color=[c if p[4] else "white" for p in pts], edgecolor=c, width=0.65)
+        for x, (q, mk, rto, mx, quo) in zip(xs, pts):
+            ax.text(x, mk * 1.02, f"{rto:,}" if rto else "0", ha="center", fontsize=4.8)
+        ax.set_xticks(xs); ax.set_xticklabels([f"{p[0]:.0f}×" if p[0] >= 3 else f"{p[0]:.1f}×" for p in pts], fontsize=5.5)
+        ax.set_title(f"{SYS_LABEL.get(sysname, sysname).split(' (')[0]}, EP={ep}", fontsize=6.5)
+        ax.tick_params(labelsize=5.5); ax.set_ylim(0, max(p[1] for p in pts) * 1.25)
+        ax2 = ax.twinx()
+        mxs = [(x, p[3]) for x, p in zip(xs, pts) if p[3] is not None]
+        if mxs:
+            ax2.plot([m[0] for m in mxs], [m[1] for m in mxs], color="#b22222", marker="D", ms=3, lw=1)
+        ax2.tick_params(axis="y", colors="#b22222", labelsize=5.5); ax2.grid(False); ax2.spines["right"].set_visible(True)
+        if ax is axes[-1]: ax2.set_ylabel("max FCT (ms)", color="#b22222", fontsize=6)
+    axes[0].set_ylabel("iteration (ms); label = timeouts", fontsize=6)
+    fig.text(0.5, 0.005, "queue depth (× port round-trip BDP); filled = quoted row", ha="center", fontsize=6)
+    fig.tight_layout(pad=0.3, rect=(0, 0.03, 1, 1)); fig.savefig(f("fig_tail.png")); print("wrote fig_tail.png")
+
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]
-    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy}
+    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail}
     for w in (fns if "all" in which else which):
         try: fns[w]()
         except SystemExit as e: print("skip:", e)

@@ -27,6 +27,11 @@ CSV=$PAPER/cliff_dragonfly16.csv
 csv_open "$CSV" "paper_ref,model,cabling,workload_type,model_name,topk,ep,mb,nodes,panels,system,inter_mode,inter_bw_pair,G,sublink_gbs,ports_lit,per_gpu_xpanel_gbs,opt_bw,elec_bw,q,q_over_bdp,rto_min_us,mtu,makespan_ms,rtos,flows,mean_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note"
 run () { # tag model topk ep nodes fbuf wm panels interbw G q
   local tag=$1 mdl=$2 topk=$3 ep=$4 nodes=$5 fb=$6 wm=$7 P=$8 ibw=$9 G=${10} q=${11}
+  # PANELS_DERIVED: the topology builds nodes/16 panels regardless of what the
+  # caller passes. Passing the EP group span here made ports_lit and
+  # per_gpu_xpanel_gbs wrong for every row.
+  local P_arg=$P
+  P=$((nodes / 16))
   local log=./df16_logs/${tag}.log t0 t1 wall
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_INTER=dragonfly GLASS_PANEL=16 GLASS_ELEC_BW=1800 \
@@ -47,11 +52,24 @@ run () { # tag model topk ep nodes fbuf wm panels interbw G q
   # did the topology clamp G?
   gact=$(grep -m1 "clamping to" "$log" | grep -oE "clamping to [0-9]+" | awk '{print $3}')
   [ -z "$gact" ] && gact=$G
+  # The topology clamps GW_PARALLEL when the panel degree cannot carry it. A
+  # clamped run is a different experiment from the one requested, so it is
+  # recorded blocked rather than final.
+  local st=final note="all-pairs cabling; ports lit"
+  if [ "$gact" != "$G" ]; then
+    st=blocked; note="GW_PARALLEL clamped $G->$gact by panel degree; not the requested cabling"
+  fi
+  if [ "$P_arg" != "$P" ]; then
+    note="$note; caller passed panels=$P_arg, topology built $P"
+  fi
   sub=$(awk -v i="$ibw" -v g="$gact" 'BEGIN{printf "%.1f", i/g}')
   ports=$(awk -v p="$P" -v g="$gact" 'BEGIN{printf "%d", (p-1)*g}')
   pergpu=$(awk -v po="$ports" 'BEGIN{printf "%.1f", po*400/16}')
-  qob=$(awk -v q="$q" -v s="$sub" 'BEGIN{printf "%.1f", (q*1500)/(s*1e9*5e-7)}')
-  echo "cliff,pkt_glass,dragonfly16,training,$mdl,$topk,$ep,8,$nodes,$P,glassfb,dragonfly,$ibw,$gact,$sub,$ports,$pergpu,384,1800,$q,$qob,100,1500,$ms,$rtos,$flows,$f,$wall,final,all-pairs cabling; ports lit $ports/16" >> "$CSV"
+  # canonical BDP = link_bw * 4 * one-way latency. The glass banner reports
+  # lat 100/300/500 ns, so the inter-panel tier is 500 ns and 4*lat = 2 us.
+  # This was 5e-7, i.e. ONE one-way latency, which reported q as 4x too many BDP.
+  qob=$(awk -v q="$q" -v s="$sub" 'BEGIN{printf "%.1f", (q*1500)/(s*1e9*2e-6)}')
+  echo "cliff,pkt_glass,dragonfly16,training,$mdl,$topk,$ep,8,$nodes,$P,glassfb,dragonfly,$ibw,$gact,$sub,$ports,$pergpu,384,1800,$q,$qob,100,1500,$ms,$rtos,$flows,$f,$wall,$st,$note $ports/16" >> "$CSV"
   printf "  %-22s P=%-2s G=%-3s sub=%-7s ports=%-3s/16  perGPU=%-6s -> %10s ms rtos=%-7s wall=%ss\n" \
     "$tag" "$P" "$gact" "$sub" "$ports" "$pergpu" "$ms" "$rtos" "$wall"
 }

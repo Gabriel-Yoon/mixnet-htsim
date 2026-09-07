@@ -1,0 +1,6 @@
+paper_ref,system,ep,k,q_pkts,ecn_k,makespan_ms,rtos,flows_total,flows_one_mss,flows_payload,p50_fct_ms,mean_fct_ms_all,p50_fct_ms_all,p99_fct_ms_all,max_fct_ms_all,status_fct,mean_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status
+cliff,nvl64_pkt,16,4,68,34,151.895,6423,78592,21120,57472,0.0012,0.2110,0.0012,3.6966,12.5839,payload_gt_1mss,0.2824,4.9708,12.5839,226,sensitivity
+cliff,nvl64_pkt,16,8,136,68,147.051,1227,78592,21120,57472,0.0014,0.1251,0.0012,2.8164,12.7167,payload_gt_1mss,0.1693,2.9296,12.7167,228,sensitivity
+cliff,nvl64_pkt,16,16,272,136,281.100,166,78592,21120,57472,0.0012,0.1247,0.0012,2.7990,100.4170,payload_gt_1mss,0.1695,2.9201,100.4170,231,sensitivity
+cliff,nvl64_pkt,16,32,544,272,0.000,0,,,,,,,,,UNMATCHED,,,,0,sensitivity
+cliff,nvl64_pkt,16,64,1088,544,0.000,0,,,,,,,,,UNMATCHED,,,,0,sensitivity

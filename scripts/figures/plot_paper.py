@@ -255,6 +255,17 @@ def tail():
         except ValueError:
             mx = None
         groups.setdefault((r["system"], int(r["ep"])), []).append((q, mk, int(float(r.get("rtos") or 0)), mx, (r.get("quotable") or "").lower() == "yes"))
+    # collapse each sweep to power-of-two buffer steps (the fine sweeps sit within one step):
+    # per step keep the quotable point if any, else the lowest makespan
+    import math
+    for k, pts in groups.items():
+        step = {}
+        for q, mk, rto, mx, quo in pts:
+            b = int(round(math.log2(q)))
+            cur = step.get(b)
+            if cur is None or (quo and not cur[4]) or (quo == cur[4] and mk < cur[1]):
+                step[b] = (2 ** b, mk, rto, mx, quo)
+        groups[k] = list(step.values())
     want = [("nvl64_pkt", 16), ("glassfb", 32), ("nvl64_pkt", 32), ("glassfb", 64), ("nvl64_pkt", 64)]
     panels = [(k, sorted(groups[k])) for k in want if k in groups and len(groups[k]) >= 2]
     if not panels: sys.exit("buffer_sweeps: no multi-point sweeps")
@@ -265,7 +276,7 @@ def tail():
         ax.bar(xs, [p[1] for p in pts], color=[c if p[4] else "white" for p in pts], edgecolor=c, width=0.65)
         for x, (q, mk, rto, mx, quo) in zip(xs, pts):
             ax.text(x, mk * 1.02, f"{rto:,}" if rto else "0", ha="center", fontsize=4.8)
-        ax.set_xticks(xs); ax.set_xticklabels([f"{p[0]:.0f}×" if p[0] >= 3 else f"{p[0]:.1f}×" for p in pts], fontsize=5.5)
+        ax.set_xticks(xs); ax.set_xticklabels([f"{p[0]:g}×" for p in pts], fontsize=5.5)
         ax.set_title(f"{SYS_LABEL.get(sysname, sysname).split(' (')[0]}, EP={ep}", fontsize=6.5)
         ax.tick_params(labelsize=5.5); ax.set_ylim(0, max(p[1] for p in pts) * 1.25)
         ax2 = ax.twinx()

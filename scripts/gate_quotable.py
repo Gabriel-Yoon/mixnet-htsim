@@ -19,11 +19,9 @@ Rows in a controlled comparison at a common buffer (the cabling 2x2) are marked
 `grid` rather than `no`: they are not headline rows and were never meant to be,
 and calling them unquotable would misdescribe them.
 """
-import csv, glob, os
-
-def _being_written(path):
-    """True if a running job is appending to this CSV (see paper_csv.sh)."""
-    return os.path.exists(path + ".writing")
+import csv, glob, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import csv_guard
 
 
 
@@ -64,10 +62,11 @@ if DROPS:
 
 for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
 
-    if _being_written(p):
-
-        print('skip %s (a job is writing it)' % os.path.basename(p)); continue
     name = os.path.basename(p)
+    why = csv_guard.skip_reason(p)
+    if why:
+        print("skip %s (%s)" % (name, why)); continue
+    before = csv_guard.stamp(p)
     if name == "quoted_row_drops.csv":
         continue
     with open(p, newline="") as fh:
@@ -103,6 +102,9 @@ for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
         else:
             r["quotable"], r["quotable_why"] = "yes", "relay-clean and zero timeouts"
         counts[r["quotable"]] = counts.get(r["quotable"], 0) + 1
+    why = csv_guard.skip_reason(p, before)
+    if why:
+        print("skip %s (%s) -- not written" % (name, why)); continue
     with open(p, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
         w.writeheader(); w.writerows(rows)

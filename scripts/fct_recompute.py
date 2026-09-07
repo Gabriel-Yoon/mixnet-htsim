@@ -49,10 +49,9 @@ Rows join to runs on makespan_ms, a measured quantity, not on file position. An
 unmatched row keeps its original values and is marked UNMATCHED.
 """
 import csv, math, os, re, sys, glob
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import csv_guard
 
-def _being_written(path):
-    """True if a running job is appending to this CSV (see paper_csv.sh)."""
-    return os.path.exists(path + ".writing")
 
 
 ROOT = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly"
@@ -146,9 +145,10 @@ def main():
 
     for csvpath in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
 
-        if _being_written(csvpath):
-
-            print('skip %s (a job is writing it)' % os.path.basename(csvpath)); continue
+        why = csv_guard.skip_reason(csvpath)
+        if why:
+            print("skip %s (%s)" % (os.path.basename(csvpath), why)); continue
+        before = csv_guard.stamp(csvpath)
         with open(csvpath, newline="") as fh:
             rows = list(csv.DictReader(fh))
         if not rows or "makespan_ms" not in rows[0]:
@@ -194,6 +194,9 @@ def main():
                      om or "-", r["mean_fct_ms"] or "-", op or "-", r["p99_fct_ms"] or "-",
                      r["p50_fct_ms_all"], r["p50_fct_ms"]))
 
+        why = csv_guard.skip_reason(csvpath, before)
+        if why:
+            print("skip %s (%s) -- not written" % (os.path.basename(csvpath), why)); continue
         with open(csvpath, "w", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
             w.writeheader()

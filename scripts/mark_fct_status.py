@@ -16,11 +16,9 @@ mode from fct_recompute.py and must not be overwritten) to:
 Rows are matched to runs on makespan_ms, a measured quantity. Contaminated rows
 are MARKED, not deleted: their makespan and RTO count are still good.
 """
-import collections, csv, glob, os, re
-
-def _being_written(path):
-    """True if a running job is appending to this CSV (see paper_csv.sh)."""
-    return os.path.exists(path + ".writing")
+import collections, csv, glob, os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import csv_guard
 
 
 ROOT = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly"
@@ -56,9 +54,10 @@ print("output directories: %d total, %d claimed by more than one run" % (len(cla
 
 for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
 
-    if _being_written(p):
-
-        print('skip %s (a job is writing it)' % os.path.basename(p)); continue
+    why = csv_guard.skip_reason(p)
+    if why:
+        print("skip %s (%s)" % (os.path.basename(p), why)); continue
+    before = csv_guard.stamp(p)
     with open(p, newline="") as fh:
         rows = list(csv.DictReader(fh))
     if not rows or "makespan_ms" not in rows[0]:
@@ -77,6 +76,9 @@ for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
             r["fct_logdir"] = "shared_logdir"; n_bad += 1
         else:
             r["fct_logdir"] = "clean"; n_clean += 1
+    why = csv_guard.skip_reason(p, before)
+    if why:
+        print("skip %s (%s) -- not written" % (os.path.basename(p), why)); continue
     with open(p, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
         w.writeheader(); w.writerows(rows)

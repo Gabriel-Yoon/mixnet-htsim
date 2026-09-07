@@ -72,10 +72,33 @@ binary reproduced 46 028 299 484 ps and 6 448 818 088 ps exactly, now with
 `RTO floor: 10000 us (default)` present. The rule cost one re-run and converted
 an assumption into a record.
 
-### Nine sub-classes discovered after the original six
+### A check is not trusted until it has been seen to fail
+
+> **A check must be shown to go red on a known-bad input before its green is believed.** An
+> unexercised check and a passing check are indistinguishable from their output, and the failure mode
+> is the worse of the two: it reports success over exactly the condition it was built to catch.
+
+Three instances here, each caught only because the check was deliberately provoked:
+
+- **The drop counter.** `dropcount: 0` was reported by an instrument that had been added to one of
+  six queue classes, so the zero meant *not counting*, not *no loss*. It became trustworthy only once
+  the same binary returned **2 317 980** drops on a mesh control and **0** on the island. Every row in
+  `quoted_row_drops.csv` now carries that validation in its note, so a zero there reads as measured.
+- **The residue grep.** Two successive checks that the frozen-scripts snapshot contained no reference
+  back to the working tree both printed a clean empty result, and both were incapable of printing
+  anything else: the first filtered on `jobsnaps/`, which every match line contained in its filename
+  prefix; the second compared a relative path against absolute matches. The real residue — three dead
+  `$ROOT/scripts/` lines — appeared only on the third attempt.
+- **The `model_name` patch.** A fix that matched a line-start form the call site never uses. It
+  changed nothing and reported no error, and looked identical to a fix that worked.
+
+The cost of the rule is one deliberately broken input per check. The cost of skipping it is a green
+light over the defect itself, which is how sub-class F and the two vacuous greps above all began.
+
+### Ten sub-classes discovered after the original six
 
 The six instances above are all one failure: a setting that was configured but never read.
-Nine further failures have since been found that the banner rule provably **cannot** catch,
+Ten further failures have since been found that the banner rule provably **cannot** catch,
 because in each the run used exactly what it was handed and reported it accurately.
 
 | # | Sub-class | Instance | Why banners miss it |
@@ -336,6 +359,45 @@ while only the four glass targets link `glassfb_topology.o`. Twelve targets — 
 because their binaries predated the change. **The binaries on disk had ceased to be reproducible from
 the committed source**, which is D's exact definition arrived at from the opposite direction: not
 uncommitted code that keeps working, but committed code that cannot be rebuilt.
+
+**Sub-class K is the only one where the code changed while it was being executed.** Every other
+failure here is a fixed program producing a wrong or misread number. Here the program itself was
+edited mid-run: `scripts/portmap_cliff.sh` was rewritten at 22:14 while job 12893533 was inside its
+`pm_ep64_q57` cell, and the job then re-ran four of its five cells.
+
+```
+pm_ep16        once    206 s
+pm_ep32_1221   twice   735 s, then 812 s     <- second pass resumes here
+pm_ep32_842    twice   649 s, then 684 s
+pm_ep64_qme    twice  1804 s, then 2096 s
+pm_ep64_q57    twice  6814 s, then 6582 s    <- the edit landed inside this cell
+```
+
+`sacct` shows one job, started 20:50:28, running 5:43 continuously and never requeued, so this is not
+SLURM restarting anything — it is one bash process reading a file that moved underneath it. **bash
+reads a running script incrementally, by byte offset**, and a rewrite is truncate-then-write, so the
+interpreter resumed at an offset that no longer meant what it had when the offset was recorded. That
+the second pass restarts at the *second* cell rather than the first is the signature: a restart would
+begin at `pm_ep16`.
+
+The edit preserved the file length, and I had explicitly reasoned that this made it safe. It does
+not. Length is irrelevant when the file is briefly zero bytes and the reader holds an offset into it.
+
+> **A job must not read the working tree after it starts.** `submit_paper_job.sh` now copies the
+> whole `scripts/` directory into `jobsnaps/<timestamp>_<sbatch>_<pid>/` at submit time, repoints the
+> copies at the snapshot, and submits a rewritten sbatch that runs the copy. Editing a script during a
+> run is then safe by construction rather than by remembering, and the snapshot is a record of exactly
+> the code that ran, kept beside the commit it came from.
+
+The whole directory is copied rather than the runner and its sourced helpers, because `paper_csv.sh`
+is sourced by about forty runners and itself invokes `scripts/*.py`, and thirteen runners call Python
+mid-run. At 696 K it is cheaper to copy everything than to trace which files a run might reach.
+
+**No number moved.** The four duplicated cells agree to the digit across the two passes — 92.323 ms /
+2047 RTOs, 125.666 / 8777, 51.478 / 103067, 155.509 / 101205 — with only wall time differing, which is
+node contention. The plotters key one point per `(system, ep, q)`, so the duplicate rows draw once. The
+accident is therefore an unplanned determinism check, and an unusually good one: the second pass ran a
+*different build of the script* and reproduced the first exactly.
 
 ### Scope limit
 

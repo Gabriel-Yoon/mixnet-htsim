@@ -1,21 +1,41 @@
 #!/bin/bash
-# Submit a paper_ref job only if every target still links.
+# Submit a paper_ref job: link gate, then run a FROZEN COPY of the scripts tree.
 #
 #   scripts/submit_paper_job.sh mb.sbatch
 #
-# WHY. Two link-rule defects reached the tree in one session, and both were found
-# by a build happening to fail rather than by anything checking:
-#   - the hierarchical A2A's dynamic_cast put a typeinfo dependency into ffapp.o,
-#     leaving twelve targets unbuildable while their binaries kept working;
-#   - the fix for that paired glassfb_topology.o with flat_topology.o and hit a
-#     latent duplicate definition of check_non_null present in eleven files.
-# Each time, the binaries on disk had quietly stopped being reproducible from the
-# committed source -- provenance sub-class D. This is its guard.
+# TWO GUARDS, each for a failure that has already happened here.
 #
-# WHY NOT `make all`. That relinks the binaries running jobs are executing, which
-# is how a mid-sweep make clean destroyed a binary and invalidated two cells
-# earlier in this project. The gate links into a scratch OUTDIR instead, so it
-# proves the rules work and touches nothing.
+# 1. LINK GATE. Twice the tree reached a state where targets were unbuildable
+#    while their binaries kept producing results (a dynamic_cast typeinfo
+#    dependency in ffapp.o; then a duplicate check_non_null across eleven
+#    translation units), and once a rebuild reported COMPLETED in 14 seconds and
+#    changed nothing because $(OBJS) was linked but never declared. linkcheck
+#    links every target into a scratch OUTDIR -- never over a binary a running
+#    job is executing, which is how an earlier mid-sweep rebuild invalidated two
+#    cells. Link errors are fatal; staleness warns (STRICT_STALE=1 to harden).
+#
+# 2. FROZEN SCRIPTS. Editing portmap_cliff.sh while a job was executing it made
+#    that job re-run four cells: ~2.8 hours of duplicated compute and four
+#    duplicate CSV rows. The edit preserved the file length, which I had reasoned
+#    made it safe. It does not: the rewrite is truncate-then-write, and bash
+#    reads a running script incrementally by byte offset, so it can resume at an
+#    offset that no longer means what it did when it was recorded. Nothing errors.
+#
+#    So the job stops reading the working tree once it starts. The whole scripts
+#    directory is copied into a per-job snapshot, absolute references inside the
+#    copies are repointed at the snapshot, and the job runs the snapshot. Editing
+#    a script is then safe by construction rather than by remembering -- and the
+#    snapshot IS the code that ran, kept beside the commit it came from.
+#
+#    One gap, stated rather than papered over. Three lines are not repointed,
+#    all of the form $ROOT/scripts/gen_weightmatrix.py, in ep128_domain_test.sh,
+#    htsim_mixnet_baselines.sh and htsim_nvl72_crossover.sh. $ROOT is not
+#    expanded at copy time, and in those three it does not name this repo at all
+#    -- it is a stale mixnet-sim path, two of them macOS paths that do not exist
+#    on this cluster. So the calls are already dead here (each is guarded by
+#    [ -s \"$WM\" ] ||, so they fire only if the weightmatrix is missing) and none
+#    is on a paper-row path. Repointing them at the snapshot would make them
+#    start working, which is a behaviour change and not this script's business.
 set -uo pipefail
 REPO=/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly
 cd "$REPO"
@@ -24,16 +44,51 @@ cd "$REPO"
 JOB=$1; shift
 [ -f "$JOB" ] || { echo "no such sbatch file: $JOB" >&2; exit 2; }
 
+# ---- 1. link gate -----------------------------------------------------------
 if [ "${SKIP_LINK_GATE:-0}" = "1" ]; then
-  echo "link gate: SKIPPED (SKIP_LINK_GATE=1) -- submitting unguarded"
+  echo "link gate: SKIPPED (SKIP_LINK_GATE=1) -- say so in the row's note"
 else
   echo "link gate: linking every target into a scratch dir (production untouched)..."
   if ! sbatch --wait "$REPO/linkcheck.sbatch" > /dev/null 2>&1; then
     echo "link gate: FAIL -- not submitting $JOB" >&2
-    tail -25 "$REPO"/slurm_linkcheck_*.err 2>/dev/null | grep -iE "error:|undefined reference|multiple definition" | head -12 >&2
+    tail -25 "$REPO"/slurm_linkcheck_*.err 2>/dev/null \
+      | grep -iE "error:|undefined reference|multiple definition" | head -12 >&2
     echo "  fix the build, or set SKIP_LINK_GATE=1 to submit anyway (and say so in the row's note)" >&2
     exit 1
   fi
   echo "link gate: PASS"
 fi
-exec sbatch "$JOB" "$@"
+
+# ---- 2. freeze the scripts tree ---------------------------------------------
+SNAP="$REPO/jobsnaps/$(date +%Y%m%d_%H%M%S)_$(basename "$JOB" .sbatch)_$$"
+mkdir -p "$SNAP" || { echo "cannot create snapshot dir $SNAP" >&2; exit 1; }
+cp -R "$REPO/scripts" "$SNAP/scripts" || { echo "snapshot copy failed" >&2; exit 1; }
+cp "$JOB" "$SNAP/job.sbatch"
+
+# Repoint references inside the copies at the snapshot:
+#   absolute  $REPO/scripts/x      -> $SNAP/scripts/x   (source lines, py calls)
+#   bare word  scripts/x           -> $SNAP/scripts/x   (relative, cwd-resolved)
+# A bare-word rewrite that hits a string rather than a path is harmless: the
+# snapshot is byte-identical to the tree at this instant, so it names the same
+# content either way.
+for f in "$SNAP/job.sbatch" "$SNAP"/scripts/*.sh; do
+  [ -f "$f" ] || continue
+  sed -i -e "s#$REPO/scripts/#$SNAP/scripts/#g" \
+         -e "s#\(^\|[[:space:]]\)scripts/#\1$SNAP/scripts/#g" "$f"
+done
+chmod +x "$SNAP"/scripts/*.sh 2>/dev/null
+
+RUNNER=$(grep -oE "$SNAP/scripts/[A-Za-z0-9_]+\.sh" "$SNAP/job.sbatch" | head -1)
+
+{
+  echo "snapshot   $(date -Is)"
+  echo "sbatch     $JOB"
+  echo "runner     ${RUNNER:-<inline bash -c, no runner file>}"
+  echo "commit     $(git rev-parse HEAD 2>/dev/null || echo unknown)"
+  echo "tree       $(git diff --quiet 2>/dev/null && echo clean || echo DIRTY-uncommitted-changes-present)"
+  echo "files      $(ls -1 "$SNAP/scripts" | wc -l) copied from $REPO/scripts"
+} > "$SNAP/PROVENANCE.txt"
+
+echo "frozen scripts: $SNAP"
+grep -E "^(commit|tree|runner) " "$SNAP/PROVENANCE.txt" | sed "s/^/  /"
+exec sbatch "$SNAP/job.sbatch" "$@"

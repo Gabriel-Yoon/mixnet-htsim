@@ -57,6 +57,16 @@ def f(name):
 def cliff():
     rows = load("cliff_all")   # single source built by build_cliff_table.py (carries quotable + source)
     rows = [r for r in rows if (r.get("mb") or "8") == "8"]
+    # one drawn point per (system, ep): the quotable row with the lowest makespan; otherwise the
+    # lowest non-quotable (drawn hollow). Repeated sensitivity rows (same makespan at several q)
+    # collapse to one.
+    best = {}
+    for r in rows:
+        k = (r["system"], r["ep"])
+        cur = best.get(k)
+        if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and r["makespan_ms"] < cur["makespan_ms"]):
+            best[k] = r
+    rows = list(best.values())
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
     for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "glassfb_mesh", "glassfb", "glassfb_hier"):
         pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and r["_quotable"]])

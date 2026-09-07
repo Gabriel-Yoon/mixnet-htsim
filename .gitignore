@@ -63,3 +63,7 @@ src/clos/gen_decode_block
 
 # per-job frozen copies of scripts/ made by submit_paper_job.sh
 jobsnaps/
+
+# transient: a running job's CSV lock, and hand backups
+*.writing
+*.bak_*

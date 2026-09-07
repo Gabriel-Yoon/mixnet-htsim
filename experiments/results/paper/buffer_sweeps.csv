@@ -24,7 +24,7 @@ hgx8,64,qwenMoE,270,4.05,4.05,144.519,2192,,,shared_logdir,no,island_vanishing_t
 hgx8,64,qwenMoE,540,8.10,8.10,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
 hgx8,64,qwenMoE,1080,16.20,16.20,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
 hgx8,64,qwenMoE,2160,32.40,32.40,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
-hgx8_pkt,32,llamaMoE,1224,16.32,15.6237,164.522,105,0,,shared_logdir,yes,pkt_vanishing_timeout.csv,"105 spurious timeouts, 0 drops (validated counter), buffer-invariant"
+hgx8_pkt,32,llamaMoE,1224,16.32,15.6237,164.522,105,0,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
 hgx8_pkt,32,llamaMoE,2448,32.64,31.2474,164.522,105,,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
 hgx8_pkt,32,llamaMoE,4896,65.28,62.4947,164.522,105,,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
 hgx8_pkt,64,qwenMoE,1224,16.32,15.6237,144.519,2192,,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"

@@ -22,7 +22,7 @@ convention used everywhere else here: the zero-byte all-to-all flows are floored
 to one packet and would otherwise crowd the distribution with records that moved
 nothing. Both counts are reported so the split is visible.
 """
-import os, re, sys
+import glob, os, re, sys
 
 MSS = 1436
 RE_LOGDIR = re.compile(r"Log directory is:\s*(\S+)")
@@ -77,15 +77,33 @@ def tail(fct_path):
 
 
 def main(logs):
+    logs = [os.path.abspath(x) for x in logs]
     scanned = {}
     for lg in logs:
         if not os.path.exists(lg):
             print("%-44s MISSING" % os.path.basename(lg)); continue
         scanned[lg] = scan(lg)
 
-    # who else claims each directory
+    # Who else claims each directory. This scans every sibling log, not only the
+    # ones passed in: a caller asking about ONE cell would otherwise see no
+    # collision and be handed the tail of whichever run wrote last.
+    #
+    # That is not hypothetical. Asked for nvl64_pkt EP=128 q=2176 alone, this
+    # returned mean 0.8295 / p99 5.1362 / max 7.0635 from a directory that the
+    # hgx8_pkt q=2448 cell had already started overwriting -- a different system,
+    # mid-run. The makespan and timeout count were right, because those come from
+    # the log; only the tail was foreign. One log in, no collision to detect.
     claims = {}
-    for lg, (ld, _, _) in scanned.items():
+    for lg in set(logs) | {q for d in {os.path.dirname(os.path.abspath(x)) for x in logs}
+                           for q in glob.glob(os.path.join(d, "*.log"))}:
+        if lg not in scanned:
+            if not os.path.exists(lg):
+                continue
+            try:
+                scanned[lg] = scan(lg)
+            except OSError:
+                continue
+        ld = scanned[lg][0]
         if ld:
             claims.setdefault(ld, []).append(lg)
 
@@ -107,8 +125,24 @@ def main(logs):
             note = " (shared dir; this cell wrote last)"
         else:
             note = ""
+        if ms is None:
+            print("%-44s REFUSED: no completed iteration (still running, or died)" % base)
+            continue
         d = ld if os.path.isabs(ld) else os.path.join(DC, ld.lstrip("./"))
-        t = tail(os.path.join(d, "fct_util_out.txt"))
+        fct = os.path.join(d, "fct_util_out.txt")
+        # A run writes its FCT file as it finishes. If that file is newer than the
+        # run's own stdout, something else has written it since -- the next cell
+        # sharing the directory -- and the contents are not this run's.
+        try:
+            if os.path.getmtime(fct) > os.path.getmtime(lg) + 60:
+                print("%-44s REFUSED: %s was written %.0f s after this run's log "
+                      "stopped -- another cell owns it now"
+                      % (base, os.path.basename(ld),
+                         os.path.getmtime(fct) - os.path.getmtime(lg)))
+                continue
+        except OSError:
+            pass
+        t = tail(fct)
         if t is None:
             print("%-44s REFUSED: no fct_util_out.txt in %s" % (base, os.path.basename(ld)))
             continue

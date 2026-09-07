@@ -49,9 +49,32 @@ _csv_drop_sentinel() {
         && mv "$_CSV_FILE.tmp" "$_CSV_FILE"
 }
 
+# Announce what a fresh sweep is about to erase. `echo "$HDR" > "$CSV"` discards
+# any column another tool added (fct_recompute.py's flows_*/._all/status_fct,
+# schema_model.py's model_name) along with every earlier row. Those columns are
+# regenerable, so truncating is correct -- but silent loss is not. Warns; never
+# blocks.
+csv_warn_truncate() {
+    local file=$1 hdr=$2
+    [ -f "$file" ] || return 0
+    local old; old=$(head -1 "$file")
+    [ "$old" = "$hdr" ] && return 0
+    local rows; rows=$(( $(wc -l < "$file") - 1 ))
+    echo "csv: $file is being rewritten with a different header" >&2
+    echo "csv:   discarding $rows existing row(s)" >&2
+    local c
+    local IFS=,
+    for c in $old; do
+        case ",$hdr," in *",$c,"*) ;; *) echo "csv:   column dropped: $c" >&2 ;; esac
+    done
+    echo "csv:   re-run scripts/fct_recompute.py and scripts/schema_model.py afterwards" >&2
+    return 0
+}
+
 csv_open() {  # csv_open <file> <header>
     _CSV_FILE=$1
     _CSV_DONE=0
+    csv_warn_truncate "$1" "$2"
     printf '%s\n' "$2" > "$_CSV_FILE"
     _csv_emit_row submitted \
         "job=${SLURM_JOB_ID:-none} host=$(hostname -s) start=$(date +%FT%T)" >> "$_CSV_FILE"

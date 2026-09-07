@@ -24,10 +24,12 @@
 #     Only if this passes do we plumb queuesize/ECN_K (commit 2) and re-run at
 #     the derived corner for the number that goes in the paper.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./e37_logs
 CSV=$RES/e37_lossless_probe.csv
+csv_warn_truncate "$CSV" "arm,queuetype,q,rto_min_us,inter_bw,qdisc_banner,shortcut_banner,makespan_ps,makespan_ms,rtos,pause_events,lossless_violations,verdict"
 echo "arm,queuetype,q,rto_min_us,inter_bw,qdisc_banner,shortcut_banner,makespan_ps,makespan_ms,rtos,pause_events,lossless_violations,verdict" > "$CSV"
 
 EXPECT=11690301651

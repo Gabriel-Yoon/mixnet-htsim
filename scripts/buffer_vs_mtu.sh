@@ -21,10 +21,12 @@
 #
 # BUFFER LADDER at fixed mtu 1500, to locate where the cliff actually dies.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./bufmtu_logs
 CSV=$RES/buffer_vs_mtu.csv
+csv_warn_truncate "$CSV" "arm,mtu,q,queue_bytes,inter_bw,shortcut,makespan_ps,makespan_ms,rtos"
 echo "arm,mtu,q,queue_bytes,inter_bw,shortcut,makespan_ps,makespan_ms,rtos" > "$CSV"
 
 run() {  # arm mtu q inter

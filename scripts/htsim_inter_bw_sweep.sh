@@ -6,6 +6,7 @@
 #   bash scripts/htsim_inter_bw_sweep.sh                  # mixtral8x22B mb16,mb64
 #   MBS="64" INTRA=512 bash scripts/htsim_inter_bw_sweep.sh
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 ROOT=/Users/seongwonyoon/Documents/vscode_workspace/github-repos/mixnet-sim
 BINDIR=$ROOT/mixnet-htsim/src/clos/datacenter
 BIN=$BINDIR/htsim_tcp_glassfb
@@ -13,6 +14,7 @@ TG=$ROOT/taskgraph
 OUT=/Users/seongwonyoon/Documents/vscode_workspace/github-repos/LLMServingSim/outputs/fabric_plots
 mkdir -p "$OUT"; cd "$BINDIR"
 CSV=$OUT/mixtral_inter_bw_sweep.csv
+csv_warn_truncate "$CSV" "model,mb,intra_bw,inter_bw,panel,nodes,makespan_ps,makespan_ms"
 echo "model,mb,intra_bw,inter_bw,panel,nodes,makespan_ps,makespan_ms" > "$CSV"
 
 NODES=128; PANEL=16

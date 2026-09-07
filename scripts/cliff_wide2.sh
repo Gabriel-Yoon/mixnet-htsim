@@ -4,10 +4,12 @@
 # in domain_cliff.csv are kept as a secondary series so the provisioning
 # progression 200 -> 1600 -> 3200 stays tellable.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./cliff_logs
 CSV=$RES/domain_cliff_glassfb_384_3200.csv
+csv_warn_truncate "$CSV" "workload,ep,nodes,config,domain,intra_bw,inter_bw,G,makespan_ps,makespan_ms,rtos"
 echo "workload,ep,nodes,config,domain,intra_bw,inter_bw,G,makespan_ps,makespan_ms,rtos" > "$CSV"
 for wl in decode coding_prefill chat_prefill agentic_prefill; do
   for ep in 8 16 32 64; do

@@ -15,11 +15,13 @@
 # latency cannot be its source), nothing should flip -- and if something does,
 # that is a finding.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./nvllat_logs
 CSV=$RES/nvl_latency_model.csv
+csv_warn_truncate "$CSV" "workload_type,model,ep,nodes,system,lat_model,elec_lat_ns,opt_lat_ns,inter_lat_ns,makespan_ps,makespan_ms,rtos,wall_s"
 echo "workload_type,model,ep,nodes,system,lat_model,elec_lat_ns,opt_lat_ns,inter_lat_ns,makespan_ps,makespan_ms,rtos,wall_s" > "$CSV"
 
 run() { # model ep nodes fbuf wm system panel elec inter latmodel el ol il

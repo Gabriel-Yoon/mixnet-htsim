@@ -7,12 +7,14 @@
 # inter-panel fiber budget. Runs SEQUENTIALLY (no overlap -> avoids local oversubscription) with
 # verbose output filtered (makespan only).
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 ROOT=/Users/seongwonyoon/Documents/vscode_workspace/github-repos/mixnet-sim
 BINDIR=$ROOT/mixnet-htsim/src/clos/datacenter
 TG=$ROOT/taskgraph
 OUT=/Users/seongwonyoon/Documents/vscode_workspace/github-repos/LLMServingSim/outputs/fabric_plots
 mkdir -p "$OUT"; cd "$BINDIR"
 CSV=$OUT/interpanel_dse.csv
+csv_warn_truncate "$CSV" "model,nodes,intra_bw,inter_bw,panel,makespan_ps,makespan_ms"
 echo "model,nodes,intra_bw,inter_bw,panel,makespan_ps,makespan_ms" > "$CSV"
 
 INTRA=512; PANEL=16

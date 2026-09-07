@@ -8,10 +8,12 @@
 #     Suspect the 100ns CPO vs 500ns NVSwitch hop. Match them and see if the
 #     win survives (bandwidth/topology) or evaporates (switch-hop removal).
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./knee_logs
 CSV=$RES/knee_and_latency.csv
+csv_warn_truncate "$CSV" "experiment,workload,ep,config,intra_bw,inter_bw,lat_ns,makespan_ps,makespan_ms,rtos"
 echo "experiment,workload,ep,config,intra_bw,inter_bw,lat_ns,makespan_ps,makespan_ms,rtos" > "$CSV"
 
 emit() { # exp wl ep cfg intra inter lat log

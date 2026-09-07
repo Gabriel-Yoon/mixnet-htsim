@@ -19,11 +19,13 @@
 #     ~ 1800 pkts, so q=5000 is ~2.8x BDP and matches the glass rows' q.
 #     Port feeder: BDP at ~1 us ~ 600 pkts, so 2400 pkts is ~4x BDP.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./portcap_logs
 CSV=$RES/flat_portcap.csv
+csv_warn_truncate "$CSV" "arm,workload,ep,nodes,port_cap,speed_gbs,q,feeder_pkts,cap_banner,makespan_ps,makespan_ms,rtos,wall_s"
 echo "arm,workload,ep,nodes,port_cap,speed_gbs,q,feeder_pkts,cap_banner,makespan_ps,makespan_ms,rtos,wall_s" > "$CSV"
 
 EXPECT=410025604

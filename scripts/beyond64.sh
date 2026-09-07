@@ -23,11 +23,13 @@
 #     makes dom8 usable -- but that caveat must be stated wherever these rows are
 #     reported. flat cannot serve this regime at all: it has no domain boundary.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./beyond64_logs
 CSV=$RES/beyond64.csv
+csv_warn_truncate "$CSV" "arm,workload_type,ep_source,workload,ep,nodes,system,panel,elec_bw,opt_bw,inter_bw,G,shortcut,makespan_ps,makespan_ms,rtos,wall_s"
 echo "arm,workload_type,ep_source,workload,ep,nodes,system,panel,elec_bw,opt_bw,inter_bw,G,shortcut,makespan_ps,makespan_ms,rtos,wall_s" > "$CSV"
 
 cell() { # arm wtype src wl ep nodes flowfile wm system panel elec opt inter G scflag tag

@@ -11,12 +11,14 @@
 #     "inter x8 does nothing" result must NOT be carried over to EP=64, where
 #     inter carries the A2A itself.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb
 T=../../../test
 RES=../../../experiments/results
 mkdir -p "$RES" ./ep64_logs
 CSV=$RES/ep64_designpoint.csv
+csv_warn_truncate "$CSV" "experiment,workload,ep,opt_bw,inter_bw,G,makespan_ps,makespan_ms,rtos"
 echo "experiment,workload,ep,opt_bw,inter_bw,G,makespan_ps,makespan_ms,rtos" > "$CSV"
 
 run() {  # exp wl ep opt inter g

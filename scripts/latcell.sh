@@ -10,11 +10,13 @@
 # ~3x, the win is bandwidth and the mechanism is confirmed. If it collapses, the
 # claim narrows to "we remove the switch hop" and must be stated with these numbers.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./latmatch_logs
 CSV=$RES/training_ep32_latmatch.csv
+csv_warn_truncate "$CSV" "workload_type,model,ep,nodes,system,elec_lat_ns,opt_lat_ns,inter_lat_ns,makespan_ps,makespan_ms,rtos,wall_s"
 echo "workload_type,model,ep,nodes,system,elec_lat_ns,opt_lat_ns,inter_lat_ns,makespan_ps,makespan_ms,rtos,wall_s" > "$CSV"
 FB=$R/llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
 

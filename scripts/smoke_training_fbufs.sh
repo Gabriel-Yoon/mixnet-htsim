@@ -10,11 +10,13 @@
 # timeout AFTER flows have been created counts as a PASS. What fails is a
 # segfault, a zero-flow load, or a missing weight matrix.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./smoke_train_logs
 CSV=$RES/training_fbuf_smoke.csv
+csv_warn_truncate "$CSV" "model,ep,topk,dp,tp,pp,nodes,fbuf_mb,wm,rc,flows,banner,verdict"
 echo "model,ep,topk,dp,tp,pp,nodes,fbuf_mb,wm,rc,flows,banner,verdict" > "$CSV"
 
 smoke() {  # model ep topk dp tp pp fbuf

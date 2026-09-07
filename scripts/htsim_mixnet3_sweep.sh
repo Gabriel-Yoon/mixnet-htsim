@@ -3,6 +3,7 @@
 # microbatch sweep, on {glass, gb200, h100} fabrics. Each model has its own node count + panels.
 #   glass  = optical FB 512/512 ;  gb200 = NVLink5 domain 900 / IB 50 ;  h100 = NVLink4 450 / IB 50
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 ROOT=/Users/seongwonyoon/Documents/vscode_workspace/github-repos/mixnet-sim
 BINDIR=$ROOT/mixnet-htsim/src/clos/datacenter
 BIN=$BINDIR/htsim_tcp_glassfb
@@ -10,6 +11,7 @@ TG=$ROOT/taskgraph
 OUT=/Users/seongwonyoon/Documents/vscode_workspace/github-repos/LLMServingSim/outputs/fabric_plots
 mkdir -p "$OUT"; cd "$BINDIR"
 CSV=$OUT/mixnet3_fabric_sweep.csv
+csv_warn_truncate "$CSV" "model,mb,fabric,nodes,intra_bw,inter_bw,panel,makespan_ps,makespan_ms"
 echo "model,mb,fabric,nodes,intra_bw,inter_bw,panel,makespan_ps,makespan_ms" > "$CSV"
 
 # model -> "prefix nodes glass_panel gb200_panel h100_panel"

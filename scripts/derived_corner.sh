@@ -32,10 +32,12 @@
 # be q-sensitive in a way that splits the tiers, the fix is a per-tier queue knob
 # rather than a better choice of single q.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./corner_logs
 CSV=$RES/derived_corner.csv
+csv_warn_truncate "$CSV" "q,queue_bytes,bdp_ratio_intra,bdp_ratio_inter,rto_min_us,inter_bw,shortcut,makespan_ps,makespan_ms,rtos,rto_waves"
 echo "q,queue_bytes,bdp_ratio_intra,bdp_ratio_inter,rto_min_us,inter_bw,shortcut,makespan_ps,makespan_ms,rtos,rto_waves" > "$CSV"
 
 run() {  # q rto_us inter

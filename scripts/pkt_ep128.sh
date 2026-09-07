@@ -30,7 +30,11 @@ run () { # sys D S L nic q_nvs q_nic
   local tag=${sys}_ep128
   local log=./pkt128_logs/${tag}.log t0 t1
   t0=$(date +%s)
-  GLASS_RTO_MIN_US=100 timeout 43200 ./htsim_tcp_nvswitch -nodes 1024 -flowfile "$R/$ARC" \
+  # /usr/bin/time -v records peak RSS. This cluster's accounting does not keep
+  # MaxRSS, so the 360 GB first request was a guess that queued on (Priority)
+  # for want of a whole large node. Measure it here so the EP=128 glass cells
+  # can be sized from data instead of another guess.
+  GLASS_RTO_MIN_US=100 /usr/bin/time -v timeout 43200 ./htsim_tcp_nvswitch -nodes 1024 -flowfile "$R/$ARC" \
     -nvs_domain "$D" -nvs_switches "$S" -nvs_link "$L" -nvs_lat 250 \
     -nvs_q "$qn" -nvs_ecn_k $((qn / 2)) \
     -speed $((nic * 8000)) -rtt 2000 -q "$qc" -port-cap-pkts $((qc / 2)) -mtu 1500 \
@@ -53,6 +57,8 @@ run () { # sys D S L nic q_nvs q_nic
   if [ "$rc" = "124" ]; then st=truncated
   elif [ "$ps" = "0" ]; then st=no_iteration; fi
   echo "cliff,pkt,training,flexflow_arctic,arctic,2,128,8,1024,$sys,$D,$S,$L,250,$nic,2000,$qn,$qob,$qc,100,1500,$ms,$rtos,$stats,$((t1-t0)),$st,packet-level NVSwitch; stripe=ecmp; island OFF" >> "$CSV"
+  local peak; peak=$(grep -m1 "Maximum resident set size" "$log" | grep -oE "[0-9]+$")
+  [ -n "$peak" ] && printf "     peak RSS: %.1f GB\n" "$(awk -v k="$peak" 'BEGIN{print k/1048576}')"
   printf "  %-16s D=%-3s S=%-3s L=%-6s q=%-5s (%sx BDP) -> %10s ms rtos=%-8s wall=%ss [%s]\n" \
     "$tag" "$D" "$S" "$L" "$qn" "$qob" "$ms" "$rtos" "$((t1-t0))" "$st"
 }

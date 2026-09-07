@@ -4,11 +4,13 @@
 # per doubling -> roughly 20-25 min at 512. Affordable; the glass EP=64 cell took 2 h.
 # Same derived transport as every other training row (q=5000, 100 us floor, mtu 1500).
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./flat64_logs
 CSV=$RES/flat900_ep64.csv
+csv_warn_truncate "$CSV" "paper_ref,workload_type,ep_source,model,ep,nodes,system,port_cap,speed_gbs,q,rto_min_us,mtu,cap_banner,makespan_ps,makespan_ms,rtos,wall_s"
 echo "paper_ref,workload_type,ep_source,model,ep,nodes,system,port_cap,speed_gbs,q,rto_min_us,mtu,cap_banner,makespan_ps,makespan_ms,rtos,wall_s" > "$CSV"
 FB=$R/qwen2_57b_paper_dp2tp1pp4_ep64top8_L4_seq1024_mb8_H100.fbuf
 run() { # tag flag caplabel

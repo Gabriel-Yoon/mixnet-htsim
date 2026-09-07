@@ -12,12 +12,14 @@
 # mb=16 runs FIRST: it is the row most likely to change sign, and results are
 # appended as they finish so it can be read before the rest completes.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test
 RES=../../../experiments/results
 mkdir -p "$RES" ./armA_ns_logs
 CSV=$RES/crossover_wg_width_noshortcut.csv
+csv_warn_truncate "$CSV" "arm,mb,shortcut,inter_mode,opt_bw,inter_bw,gw_parallel,banner,makespan_ps,makespan_ms,rtos"
 echo "arm,mb,shortcut,inter_mode,opt_bw,inter_bw,gw_parallel,banner,makespan_ps,makespan_ms,rtos" > "$CSV"
 
 run() {  # mb opt flag shortcut_label

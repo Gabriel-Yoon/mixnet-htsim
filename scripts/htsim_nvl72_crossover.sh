@@ -12,12 +12,14 @@
 #   bash scripts/htsim_nvl72_crossover.sh                 # all proxies, all fabrics
 #   JOBS=8 bash scripts/htsim_nvl72_crossover.sh          # cap concurrency (default = nproc/4)
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 ROOT=/storage/home/hcoda1/8/syoon351/scratch/repos/mixnet-sim
 BIN=$ROOT/mixnet-htsim/src/clos/datacenter
 R=$ROOT/mixnet-flexflow/results
 OUT=$ROOT/outputs/nvl72_crossover; mkdir -p "$OUT"
 # per-run CSV (set TAG so a small login-node run and a big compute-node run don't clobber; plot globs all)
 CSV=$OUT/nvl72_crossover${TAG:+_$TAG}.csv
+csv_warn_truncate "$CSV" "model,nodes,fabric,intra_bw,inter_bw,panel,makespan_ps,makespan_ms"
 echo "model,nodes,fabric,intra_bw,inter_bw,panel,makespan_ps,makespan_ms" > "$CSV"
 JOBS="${JOBS:-$(( $(nproc 2>/dev/null || echo 8) / 4 ))}"; [ "$JOBS" -lt 1 ] && JOBS=1
 cd "$BIN"

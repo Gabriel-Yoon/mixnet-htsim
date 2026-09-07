@@ -17,12 +17,14 @@
 #   nohup bash scripts/ep128_domain_test.sh > outputs/ep128_test.log 2>&1 &
 #   tail -f outputs/ep128_test.log
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 ROOT=/storage/home/hcoda1/8/syoon351/scratch/repos/mixnet-sim
 BIN=$ROOT/mixnet-htsim/src/clos/datacenter
 FB=$ROOT/taskgraph_extra/qwen3_235B_dp1tp1pp1_ep128_mb128_1L_seq1024_H200.fbuf
 WM=$ROOT/mixnet-htsim/test/wm_ep128.txt
 OUT=$ROOT/outputs; mkdir -p "$OUT"
 CSV=$OUT/ep128_domain.csv
+csv_warn_truncate "$CSV" "fabric,detail,makespan_ps,makespan_ms"
 echo "fabric,detail,makespan_ps,makespan_ms" > "$CSV"
 cd "$BIN"
 [ -s "$WM" ] || python3 $ROOT/scripts/gen_weightmatrix.py 128 > "$WM"

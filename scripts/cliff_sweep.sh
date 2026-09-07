@@ -11,12 +11,14 @@
 # EP=16 fits us and dom64 but not dom8 -> dom8 falls off the cliff.
 # EP=32/64 fit only dom64 -> we expect to LOSE to dom64 on raw A2A.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb
 T=../../../test
 RES=../../../experiments/results
 mkdir -p "$RES" ./cliff_logs
 CSV=$RES/domain_cliff.csv
+csv_warn_truncate "$CSV" "workload,ep,nodes,config,domain,intra_bw,scaleout_bw,makespan_ps,makespan_ms,rtos"
 echo "workload,ep,nodes,config,domain,intra_bw,scaleout_bw,makespan_ps,makespan_ms,rtos" > "$CSV"
 
 run() {  # label domain pcols intra scaleout wl ep  [extra env pairs...]

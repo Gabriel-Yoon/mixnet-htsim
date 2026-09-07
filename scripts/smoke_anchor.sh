@@ -10,11 +10,13 @@
 # Same load-gate semantics as scripts/smoke_training_fbufs.sh: a timeout AFTER
 # flows exist is a PASS; a segfault or a zero-flow load is a FAIL.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./smoke_train_logs
 CSV=$RES/training_fbuf_smoke_anchor.csv
+csv_warn_truncate "$CSV" "model,ep,topk,nodes,fbuf_mb,rc,flows,banner,verdict"
 echo "model,ep,topk,nodes,fbuf_mb,rc,flows,banner,verdict" > "$CSV"
 
 smoke() {  # model ep topk dp tp pp fbuf

@@ -14,10 +14,12 @@
 # NOTE: RTO_min itself is NOT sweepable -- hardcoded timeFromMs(10)/timeFromMs(1)
 # in ffapp.cpp with no env knob. Would need a source patch.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./transport_logs
 CSV=$RES/transport_sensitivity.csv
+csv_warn_truncate "$CSV" "knob,value,inter_bw,makespan_ps,makespan_ms,rtos,rto_waves"
 echo "knob,value,inter_bw,makespan_ps,makespan_ms,rtos,rto_waves" > "$CSV"
 
 run() {  # knob value inter q ecn mtu

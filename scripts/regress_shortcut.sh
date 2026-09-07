@@ -8,10 +8,12 @@
 # Then, as a preview only, the same two configs with the shortcut DISABLED --
 # not a gate, just the first look at how much the bypass was worth.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./shortcut_logs
 CSV=$RES/shortcut_regression.csv
+csv_warn_truncate "$CSV" "mode,flag,inter_bw,banner,makespan_ps,makespan_ms,rtos,intra_node_flows,total_flows"
 echo "mode,flag,inter_bw,banner,makespan_ps,makespan_ms,rtos,intra_node_flows,total_flows" > "$CSV"
 
 EXPECT_2000=46028299484

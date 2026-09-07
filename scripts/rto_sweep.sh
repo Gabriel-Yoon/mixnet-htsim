@@ -5,10 +5,12 @@
 # (1) Is the 2000->2400 cliff a hardware requirement or a WAN-era timer artifact?
 #     RTT here is ~1us (100ns hops); the stock floor is 10ms, ~4 orders above it.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 PB=../../../experiments/pb_workloads/pb; T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./rto_logs
 CSV=$RES/rto_min_sweep.csv
+csv_warn_truncate "$CSV" "rto_min_us,inter_bw,makespan_ps,makespan_ms,rtos,rto_waves"
 echo "rto_min_us,inter_bw,makespan_ps,makespan_ms,rtos,rto_waves" > "$CSV"
 
 run() {  # rto_us inter  ("" rto_us = unset, i.e. default)

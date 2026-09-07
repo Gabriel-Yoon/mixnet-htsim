@@ -19,11 +19,13 @@
 # it DISABLED: a panel has no NVLink island. This asymmetry is deliberate and is
 # stated in the paper; the banner column records which each row actually used.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./train32_logs
 CSV=$RES/training_cliff_ep32.csv
+csv_warn_truncate "$CSV" "workload_type,ep_source,model,ep,nodes,system,panel,elec_bw,opt_bw,inter_bw,G,q,rto_min_us,shortcut_banner,qdisc,makespan_ps,makespan_ms,rtos,flows,wall_s"
 echo "workload_type,ep_source,model,ep,nodes,system,panel,elec_bw,opt_bw,inter_bw,G,q,rto_min_us,shortcut_banner,qdisc,makespan_ps,makespan_ms,rtos,flows,wall_s" > "$CSV"
 
 FB=$R/llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf

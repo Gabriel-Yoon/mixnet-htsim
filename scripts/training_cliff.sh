@@ -16,11 +16,13 @@
 # inference corner showed 1600 == 2000 and 2400 == 3200 bit-for-bit, so the two
 # ends of the range are sufficient to answer it -- no need for four points.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; RES=../../../experiments/results
 mkdir -p "$RES" ./traincliff_logs
 CSV=$RES/training_cliff.csv
+csv_warn_truncate "$CSV" "workload_type,ep_source,model,ep,nodes,system,panel,elec_bw,opt_bw,inter_bw,G,q,rto_min_us,shortcut_banner,qdisc,makespan_ps,makespan_ms,rtos,flows,wall_s"
 echo "workload_type,ep_source,model,ep,nodes,system,panel,elec_bw,opt_bw,inter_bw,G,q,rto_min_us,shortcut_banner,qdisc,makespan_ps,makespan_ms,rtos,flows,wall_s" > "$CSV"
 
 cell() {  # model ep nodes fbuf wm system panel elec opt inter G scflag tag

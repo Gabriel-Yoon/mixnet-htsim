@@ -18,6 +18,7 @@
 #        node B:  TAG=llamaMoE    ... bash htsim_mixnet_baselines.sh llamaMoE
 # Optional MBS env filters microbatches (e.g. MBS="4 8") so a slow large-mb run can go on its own node.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 ROOT="${ROOT:-/Users/seongwonyoon/Documents/vscode_workspace/github-repos/mixnet-sim}"
 BIN=$ROOT/mixnet-htsim/src/clos/datacenter
 WM=$ROOT/mixnet-htsim/test/num_global_tokens_per_expert.txt
@@ -27,6 +28,7 @@ mkdir -p "$OUT"; cd "$BIN"
 # per-invocation CSV so parallel jobs on different nodes don't clobber a shared file
 TAG="${TAG:-$(echo ${*:-all} | tr ' ' '-')}"
 CSV=$OUT/mixnet_baselines_${TAG}.csv
+csv_warn_truncate "$CSV" "model,nodes,ep,microbatch,topology,link_gbps,makespan_ps,makespan_ms"
 echo "model,nodes,ep,microbatch,topology,link_gbps,makespan_ps,makespan_ms" > "$CSV"
 read -r -a BWS <<< "${BWS:-100 200 400 600 800}"     # Gbps (MixNet paper range)
 read -r -a MBS <<< "${MBS:-}"                          # optional microbatch filter, e.g. "4 8 16 32"

@@ -4,6 +4,7 @@
 # extracts the makespan (last "finished one iter ... now <picosec>"), and writes a tidy CSV.
 #   compute (ideal makespan) + exposed-comm (real - ideal) = the mixnet-style breakdown.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 ROOT=/Users/seongwonyoon/Documents/vscode_workspace/github-repos/mixnet-sim
 BINDIR=$ROOT/mixnet-htsim/src/clos/datacenter
 BIN=$BINDIR/htsim_tcp_glassfb
@@ -12,6 +13,7 @@ cd "$BINDIR"   # binary uses relative paths (logs/); must run from here
 OUT=/Users/seongwonyoon/Documents/vscode_workspace/github-repos/LLMServingSim/outputs/fabric_plots
 mkdir -p "$OUT"
 CSV=$OUT/mixtral_fabric_sweep.csv
+csv_warn_truncate "$CSV" "model,mb,fabric,nodes,intra_bw,inter_bw,panel,makespan_ps,makespan_ms"
 echo "model,mb,fabric,nodes,intra_bw,inter_bw,panel,makespan_ps,makespan_ms" > "$CSV"
 
 NODES=128

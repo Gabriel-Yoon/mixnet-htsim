@@ -13,12 +13,14 @@
 # Runs the untouched htsim_tcp_glassfb_pm, the same binary pm-cliff is running;
 # executing a binary concurrently is safe, only relinking it would not be.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; PM=../../../experiments/portmaps; PAPER=../../../experiments/results/paper
 BIN=./htsim_tcp_glassfb_pm
 mkdir -p "$PAPER" ./attr_logs
 CSV=$PAPER/attrib_ep32.csv
+csv_warn_truncate "$CSV" "paper_ref,model,cabling,ep,nodes,panels,dim_a2a,placement,q,rto_min_us,mtu,relayed_pairs,completed,makespan_ms,rtos,wall_s,status,note"
 echo "paper_ref,model,cabling,ep,nodes,panels,dim_a2a,placement,q,rto_min_us,mtu,relayed_pairs,completed,makespan_ms,rtos,wall_s,status,note" > "$CSV"
 L32=llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
 

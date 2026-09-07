@@ -348,7 +348,7 @@ def energy():
     g = load("power_tiers"); n = load("power_tiers_pkt")
     eps = sorted({int(r["ep"]) for r in g} | {int(r["ep"]) for r in n})
     systems = ["glassfb", "nvl64_pkt", "hgx8_pkt"]
-    fig, axes = plt.subplots(1, len(eps), figsize=(3.4, 2.4), dpi=200, sharey=True)
+    fig, axes = plt.subplots(1, len(eps), figsize=(3.4 if len(eps) <= 3 else 4.2, 2.4), dpi=200, sharey=False)   # per-panel scale: EP=128 is 4x the EP=64 column
     axes = list(axes) if len(eps) > 1 else [axes]
     for ax, ep in zip(axes, eps):
         for x, sysname in enumerate(systems):
@@ -362,7 +362,8 @@ def energy():
             ax.bar(x, slo, bottom=hi, color="none", edgecolor=c, width=0.6, lw=0.6)
             ax.text(x, hi + shi + 3, f"{lo:.0f}–{hi:.0f}\n+{slo:.0f}–{shi:.0f}", ha="center", fontsize=4.8, linespacing=0.9)
         ax.set_xticks(range(len(systems))); ax.set_xticklabels([SYS_LABEL[s].split(" (")[0] for s in systems], fontsize=5.5, rotation=20)
-        ax.set_title(f"EP={ep}", fontsize=7); ax.tick_params(labelsize=6)
+        ax.set_title(f"EP={ep}", fontsize=7); ax.tick_params(labelsize=5.5)
+        ax.set_ylim(0, ax.get_ylim()[1] * 1.12)
     axes[0].set_ylabel("J per iteration (solid: link, bytes moved;\nhatched: static, assumed)", fontsize=6)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 

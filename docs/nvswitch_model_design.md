@@ -220,3 +220,14 @@ Why: the 4-edge mesh rows stranded 3/4 (EP=32) and 2/4 (EP=64) of a panel's egre
 relayed DP/PP traffic through other panels' EP edges; all-pairs cabling is infeasible at
 16–64 panels (deg 15–63 > 16 ports). The port map is the physical design: cabling follows
 the parallelism layout, one hop to every logical neighbour.
+
+### 11a. Layout ground truth (2026-09-06, two complete EP=16 runs + EP=32 loader)
+Rank order is **pp_major** (hi = stage·dp + dp_idx): the dp_major map relayed one pair and
+cost 9.2% (94.758 vs 86.750 ms); the pp_major map relayed nothing over a full run. The DP
+all-reduce is a **ring over the stage's rank-contiguous (dp×ep×tp) block**, not same-expert
+replica pairs: at EP=32 its cross-panel hops are the replica boundary (13,14) and the wrap
+(12,15). `gen_port_map.py` now defaults to `--hi-order pp_major --dp-mode ring`; the maps in
+`experiments/portmaps/` are regenerated accordingly (ep16 unchanged in effect; ep32/64/128
+gain the ring pairs). EP=16 on the port map = 86.750 ms = the mesh row to the µs: at EP=16
+the A2A is intra-panel and inter-panel cabling touches only DP/PP, which are off the critical
+path — EP=16 is a correctness gate for the cabling, not a performance result.

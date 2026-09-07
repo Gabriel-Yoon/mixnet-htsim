@@ -25,7 +25,12 @@ ap.add_argument("--psize", type=int, default=16)
 ap.add_argument("--ep-ports", type=int, default=12, help="ports per panel for ALL its EP partners together")
 ap.add_argument("--dp-ports", type=int, default=2, help="ports per panel for ALL its DP ring neighbours together")
 ap.add_argument("--pp-ports", type=int, default=1, help="ports per PP neighbour (prev and next each)")
-ap.add_argument("--hi-order", choices=["dp_major", "pp_major"], default="dp_major")
+ap.add_argument("--hi-order", choices=["dp_major", "pp_major"], default="pp_major",
+                help="verified pp_major on the LLaMA-MoE EP=16/32 graphs (2026-09-06)")
+ap.add_argument("--dp-mode", choices=["ring", "pair"], default="ring",
+                help="ring: the DP all-reduce is a ring over the stage's rank-contiguous (dp x ep x tp) block, "
+                     "so its cross-panel hops are consecutive panels of the block plus the wrap (EP=32 ground truth); "
+                     "pair: same-expert replica pairs only (old rule)")
 ap.add_argument("--no-ep-place", action="store_true", help="naive placement (phys = logical)")
 ap.add_argument("-o", "--out", default="-")
 a = ap.parse_args()
@@ -53,14 +58,27 @@ for d in range(dp):
                 for e2 in range(ep):                       # EP partners (same d,s,t)
                     q = panel(logical(d, s, e2, t))
                     if q != p: nb[p]["ep"].add(q)
-                for d2 in ((d + 1) % dp, (d - 1) % dp):    # DP ring neighbours
-                    if d2 != d:
-                        q = panel(logical(d2, s, e, t))
-                        if q != p: nb[p]["dp"].add(q)
+                if a.dp_mode == "pair":
+                    for d2 in ((d + 1) % dp, (d - 1) % dp):    # same-expert replica pairs
+                        if d2 != d:
+                            q = panel(logical(d2, s, e, t))
+                            if q != p: nb[p]["dp"].add(q)
                 for s2 in (s - 1, s + 1):                  # PP prev / next
                     if 0 <= s2 < pp:
                         q = panel(logical(d, s2, e, t))
                         if q != p: nb[p]["pp"].add(q)
+
+if a.dp_mode == "ring":
+    # ring over the rank-contiguous block of one pipeline stage: every consecutive
+    # panel pair in the block, plus the wrap (last <-> first), that is not an EP pair
+    for s_ in range(pp):
+        ranks = sorted({logical(d, s_, e, t) for d in range(dp) for e in range(ep) for t in range(tp)})
+        blk = sorted({panel(r) for r in ranks})
+        if len(blk) < 2: continue
+        for i in range(len(blk)):
+            p_, q_ = blk[i], blk[(i + 1) % len(blk)]
+            if p_ == q_ or q_ in nb[p_]["ep"]: continue
+            nb[p_]["dp"].add(q_); nb[q_]["dp"].add(p_)
 
 pm = collections.defaultdict(int)
 def give(p, q, n):
@@ -86,7 +104,7 @@ for p in range(P):
 used = collections.Counter()
 for (p, q), n in pm.items(): used[p] += n; used[q] += n
 worst = max(used.values()) if used else 0
-lines = [f"# gen_port_map.py dp={dp} tp={tp} pp={pp} ep={ep} psize={ps} hi_order={a.hi_order} "
+lines = [f"# gen_port_map.py dp={dp} tp={tp} pp={pp} ep={ep} psize={ps} hi_order={a.hi_order} dp_mode={a.dp_mode} "
          f"ep_ports={a.ep_ports} dp_ports={a.dp_ports} pp_ports={a.pp_ports}",
          f"# panels={P} ports used per panel: min {min(used.values()) if used else 0} max {worst} of {ps}"]
 for p in range(P):

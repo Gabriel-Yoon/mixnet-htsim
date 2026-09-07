@@ -270,7 +270,8 @@ def beyond():
     for s_ in ("nvl64", "hgx8"):   # vendor-claim bounds
         if s_ in best:
             ax.axhline(best[s_]["makespan_ms"], color=SYS_COLOR[s_], ls="--", lw=1.0, alpha=0.8, label=SYS_LABEL[s_] + " bound")
-    ax.set_xticks(range(len(order))); ax.set_xticklabels([SYS_LABEL[s_].replace(" (packet-level)", "\n(packet-level)") for s_ in order], fontsize=6)
+    BSHORT = {"glassfb": "Glass-FB", "nvl64_pkt": "NVL-64\npinned", "nvl64_pkt_s1": "NVL-64\nstriped", "hgx8_pkt": "HGX-8"}
+    ax.set_xticks(range(len(order))); ax.set_xticklabels([BSHORT.get(s_, s_) for s_ in order], fontsize=6)
     ax.set_ylabel("iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)
     m = next((r for r in rows if r["system"] == "glassfb"), rows[0])
     ax.set_title(f"EP=128, {mname(m)}" + (f" top-{m['topk']}" if m.get("topk") else "") + ", 1024 GPUs, 64 panels", fontsize=6.5)

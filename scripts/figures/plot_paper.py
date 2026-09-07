@@ -7,7 +7,7 @@ status. Only rows with status == final are drawn. Every figure prints the rows i
 
   python3 plot_paper.py cliff   -> fig_cliff.png       (Fig 6a: iteration vs EP, per system)
   python3 plot_paper.py decomp  -> fig_decomp.png      (Fig 6b: EP=32 gap decomposition)
-  python3 plot_paper.py beyond  -> fig_beyond.png      (Fig 6c: EP=128 training + serving check)
+  python3 plot_paper.py beyond  -> fig_beyond.png      (Fig 6c: EP=128 training, every fabric past the NVL boundary)
   python3 plot_paper.py mb      -> fig_mb.png          (Fig 7a-ish: iteration vs mb, glass vs nvl64)
   python3 plot_paper.py ladder  -> fig_ladder.png      (Fig 7c: Glass-A..D + copper-FB)
   python3 plot_paper.py energy  -> fig_energy.png      (Fig 7b: GB/s/W + energy/iter, both pJ/bit ends)
@@ -142,21 +142,41 @@ def decomp():
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
 
 def beyond():
-    rows = load("beyond")
+    """R-beyond (Fig 6c): every fabric past the NVL boundary, EP=128 (Arctic top-2) from cliff_all.
+    One bar per system: the quotable row (solid) or, until it exists, the best non-quotable row
+    (hollow, timeout count labelled) -- the same rule as R1. Bound rows (island) drawn as a dashed
+    line, not a bar."""
+    rows = [r for r in load("cliff_all") if r["ep"] == 128 and str(r.get("mb") or 8) == "8"]
+    if not rows: sys.exit("beyond: no EP=128 rows in cliff_all")
+    best = {}
+    for r in rows:
+        cur = best.get(r["system"])
+        if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and r["makespan_ms"] < cur["makespan_ms"]):
+            best[r["system"]] = r
+    order = [s_ for s_ in ("glassfb", "nvl64_pkt", "hgx8_pkt") if s_ in best]
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    groups = sorted({(r["workload_type"], r["ep"], mname(r)) for r in rows})
-    x = 0; ticks = []; labels = []
-    for wt, ep, model in groups:
-        sub = [r for r in rows if (r["workload_type"], r["ep"], mname(r)) == (wt, ep, model)]
-        g = next((r["makespan_ms"] for r in sub if r["system"] == "glassfb"), None)
-        for r in sorted(sub, key=lambda r: list(SYS_LABEL).index(r["system"]) if r["system"] in SYS_LABEL else 99):
-            ax.bar(x, r["makespan_ms"] / g if g else r["makespan_ms"], color=SYS_COLOR.get(r["system"], "#999"), width=0.8)
-            ax.text(x, (r["makespan_ms"] / g if g else r["makespan_ms"]) * 1.02, f"{r['makespan_ms']:.0f}", ha="center", fontsize=5)
-            ticks.append(x); labels.append(SYS_LABEL.get(r["system"], r["system"]).split(":")[0]); x += 1
-        x += 0.8
-    ax.set_xticks(ticks); ax.set_xticklabels(labels, rotation=60, fontsize=5.5, ha="right")
-    ax.set_ylabel("normalized to Glass-FB (ms labelled)", fontsize=7); ax.tick_params(labelsize=6)
-    ax.set_title(" | ".join(f"{wt} EP{ep} {m}" for wt, ep, m in groups), fontsize=6)
+    g = best.get("glassfb")
+    for x, s_ in enumerate(order):
+        r = best[s_]; y = r["makespan_ms"]
+        if r["_quotable"]:
+            ax.bar(x, y, color=SYS_COLOR[s_], width=0.7)
+        else:
+            ax.bar(x, y, facecolor="white", edgecolor=SYS_COLOR[s_], lw=1.4, width=0.7)
+        lab = f"{y:.0f}" + ("" if r["_quotable"] else f"\n{r['rtos']:,} RTO")
+        ax.text(x, y * 1.02, lab, ha="center", va="bottom", fontsize=5.5)
+        if g is not None and s_ != "glassfb" and g["_quotable"] and r["_quotable"]:
+            ax.text(x, y * 0.5, f"{y / g['makespan_ms']:.2f}x", ha="center", color="white", fontsize=6, fontweight="bold")
+    for s_ in ("nvl64", "hgx8"):   # vendor-claim bounds
+        if s_ in best:
+            ax.axhline(best[s_]["makespan_ms"], color=SYS_COLOR[s_], ls="--", lw=1.0, alpha=0.8, label=SYS_LABEL[s_] + " bound")
+    ax.set_xticks(range(len(order))); ax.set_xticklabels([SYS_LABEL[s_].replace(" (packet-level)", "\n(packet-level)") for s_ in order], fontsize=6)
+    ax.set_ylabel("iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)
+    m = next((r for r in rows if r["system"] == "glassfb"), rows[0])
+    ax.set_title(f"EP=128, {mname(m)}" + (f" top-{m['topk']}" if m.get("topk") else "") + ", 1024 GPUs, 64 panels", fontsize=6.5)
+    ax.set_ylim(0, max(best[s_]["makespan_ms"] for s_ in order) * 1.25)
+    if any(s_ in best for s_ in ("nvl64", "hgx8")): ax.legend(fontsize=5.5, frameon=False)
+    ax.grid(alpha=0.3, axis="y")
+    print("[beyond] drawn:", ", ".join(f"{s_}={best[s_]['makespan_ms']} ({'quotable' if best[s_]['_quotable'] else 'hollow'})" for s_ in order))
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_beyond.png")); print("wrote fig_beyond.png")
 
 def mb():

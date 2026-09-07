@@ -25,11 +25,11 @@ except Exception:
 
 RES = os.environ.get("PAPER_RES", os.path.join(os.path.dirname(__file__), "..", "..", "experiments", "results", "paper"))
 OUT = os.environ.get("OUT", ".")
-SYS_LABEL = {"glassfb": "Glass-FB", "hgx8": "HGX-8", "nvl64": "NVL-64", "flat900_capped": "900 GB/s no-boundary bound",
+SYS_LABEL = {"glassfb": "Glass-FB", "hgx8": "HGX-8", "nvl64": "NVL72", "flat900_capped": "900 GB/s no-boundary bound",
              "flat900_uncapped": "900 GB/s uncapped", "copperfb": "Copper-FB @100",
              "glass_A": "A: as submitted", "glass_B": "B: +placement", "glass_C": "C: +16-port cabling",
-             "glassfb_mesh": "Glass-FB (4-edge mesh)", "glassfb_hier": "Glass-FB (hier. A2A)", "nvl64_pkt": "NVL-64 (packet-level)", "hgx8_pkt": "HGX-8 (packet-level)",
-             "nvl64_pkt_s1": "NVL-64 (packet-level, striped: 1x900)", "glassfb_800": "Glass-FB, 200G/lane ports (800 GB/s)"}
+             "glassfb_mesh": "Glass-FB (4-edge mesh)", "glassfb_hier": "Glass-FB (hier. A2A)", "nvl64_pkt": "NVL72 (packet-level)", "hgx8_pkt": "HGX-8 (packet-level)",
+             "nvl64_pkt_s1": "NVL72 (packet-level, striped: 1x900)", "glassfb_800": "Glass-FB, 200G/lane ports (800 GB/s)"}
 SYS_COLOR = {"glassfb": "#1f6f8b", "glassfb_mesh": "#7fb3c8", "glassfb_hier": "#0b3d4f", "hgx8": "#d95f0e", "hgx8_pkt": "#d95f0e", "nvl64": "#7a0177", "nvl64_pkt": "#7a0177", "nvl64_pkt_s1": "#b06fc0", "glassfb_800": "#2a9d8f", "flat900_capped": "#7a0177",
              "flat900_uncapped": "#b8a0c8", "copperfb": "#8c6d31"}
 
@@ -270,7 +270,7 @@ def beyond():
     for s_ in ("nvl64", "hgx8"):   # vendor-claim bounds
         if s_ in best:
             ax.axhline(best[s_]["makespan_ms"], color=SYS_COLOR[s_], ls="--", lw=1.0, alpha=0.8, label=SYS_LABEL[s_] + " bound")
-    BSHORT = {"glassfb": "Glass-FB", "glassfb_800": "Glass-FB\n200G/lane", "nvl64_pkt": "NVL-64\npinned", "nvl64_pkt_s1": "NVL-64\nstriped", "hgx8_pkt": "HGX-8"}
+    BSHORT = {"glassfb": "Glass-FB", "glassfb_800": "Glass-FB\n200G/lane", "nvl64_pkt": "NVL72\npinned", "nvl64_pkt_s1": "NVL72\nstriped", "hgx8_pkt": "HGX-8"}
     ax.set_xticks(range(len(order))); ax.set_xticklabels([BSHORT.get(s_, s_) for s_ in order], fontsize=6)
     ax.set_ylabel("iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)
     m = next((r for r in rows if r["system"] == "glassfb"), rows[0])
@@ -282,7 +282,7 @@ def beyond():
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_beyond.png")); print("wrote fig_beyond.png")
 
 def mb():
-    """R6: iteration vs microbatch at EP=16, glass vs the queued NVL-64 domain (quotable rows of cliff_all)."""
+    """R6: iteration vs microbatch at EP=16, glass vs the queued NVL72 domain (quotable rows of cliff_all)."""
     rows = [r for r in load("cliff_all") if r["_quotable"] and str(r.get("ep")) == "16" and r.get("mb")]
     fig, ax = plt.subplots(figsize=(3.4, 2.4), dpi=200)
     for sysname in ("nvl64_pkt", "nvl64_pkt_s1", "glassfb"):
@@ -306,7 +306,7 @@ def mb():
 
 def ladder():
     """R3: the cabling x dim-order 2x2 at EP=32 (dse_cabling_2x2.csv), plus the quoted port-map row
-    at its zero-timeout buffer, with the queued NVL-64 and the bound as reference lines."""
+    at its zero-timeout buffer, with the queued NVL72 and the bound as reference lines."""
     rows = load("dse_cabling_2x2")
     cells = {(r["cabling"], str(r["dim_a2a"])): r for r in rows}
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
@@ -332,7 +332,7 @@ def ladder():
              if c["system"] == "nvl64_pkt" and c["ep"] == "32" and (c.get("quotable") or "").lower() == "yes"]
         if n:
             v = min(float(c["makespan_ms"]) for c in n)
-            ax.axhline(v, color=SYS_COLOR["nvl64_pkt"], lw=0.9); ax.text(len(order) + 0.45, v * 1.02, f"NVL-64 queued {v:.0f}", color=SYS_COLOR["nvl64_pkt"], fontsize=5.5, ha="right")
+            ax.axhline(v, color=SYS_COLOR["nvl64_pkt"], lw=0.9); ax.text(len(order) + 0.45, v * 1.02, f"NVL72 queued {v:.0f}", color=SYS_COLOR["nvl64_pkt"], fontsize=5.5, ha="right")
         b = [c for c in csv.DictReader(open(os.path.join(RES, "cliff_all.csv"))) if c["system"] == "nvl64" and c["ep"] == "32"]
         if b:
             v = min(float(c["makespan_ms"]) for c in b)

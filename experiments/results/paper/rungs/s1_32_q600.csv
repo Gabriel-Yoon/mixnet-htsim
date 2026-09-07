@@ -1,0 +1,2 @@
+paper_ref,system,ep,nodes,domain,switches,link_gbps,nic_bw,q_nvs,q_nic,makespan_ms,rtos,drops,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note,link_rate_fixed,binary_sha
+cliff,nvl64_pkt_s1,32,256,64,1,900,100,600,540,103.579,54709,5797460,304640,229632,0.4116,0.0010,4.5672,12.7609,523,sweep,post-fix rung; one job per rung,yes,9ac4f76

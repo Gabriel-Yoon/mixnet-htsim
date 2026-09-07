@@ -1,0 +1,2 @@
+paper_ref,system,cabling,ep,nodes,mb,q,relayed_pairs,completed,makespan_ms,rtos,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note,link_rate_fixed,binary_sha
+cliff,glassfb,ep16_0_8_4.txt,16,128,8,2128,0,COMPLETE,87.599,0,78592,57472,0.0378,0.0008,0.4403,3.1620,246,sweep,post-fix rung; one job per rung,yes,9ac4f76

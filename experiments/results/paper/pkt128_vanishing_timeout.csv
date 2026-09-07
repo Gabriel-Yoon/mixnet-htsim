@@ -1,2 +1,6 @@
-paper_ref,model,system,model_name,topk,ep,nodes,domain,switches,link_gbps,nic_bw,q_nvs,q_over_bdp_banner,ecn_k,q_nic,makespan_ms,rtos,peak_rss_GB,wall_s,quoted,status,note
-,,,,,,,,,,,,,,,,,,,,submitted,job=12898877 host=atl1-1-02-005-22-2 start=2026-09-07T00:32:11
+paper_ref,model,system,model_name,topk,ep,nodes,domain,switches,link_gbps,nic_bw,q_nvs,q_over_bdp_banner,ecn_k,q_nic,makespan_ms,rtos,peak_rss_GB,wall_s,quoted,status,note,quotable,quotable_why,link_rate_fixed,quoted_by
+,,,,,,,,,,,,,,,,,,,,submitted,job=12898877 host=atl1-1-02-005-22-2 start=2026-09-07T00:32:11,no,no completed iteration,,
+cliff,pkt,nvl64_pkt,arctic,2,128,1024,64,18,50,100,1088,31.2474,544,540,248.820,25,17.5,7844,no,sweep,EP=128 incumbent vanishing-timeout walk; q=544 measured 331.611 ms with 17152 timeouts,no,"timeouts present: 25, loss not measured",,
+cliff,pkt,nvl64_pkt,arctic,2,128,1024,64,18,50,100,2176,62.4947,1088,540,247.218,0,17.5,8995,yes,sweep,EP=128 incumbent vanishing-timeout walk; q=544 measured 331.611 ms with 17152 timeouts,yes,relay-clean and zero timeouts,,
+cliff,pkt,hgx8_pkt,arctic,2,128,1024,8,4,112.5,50,2448,31.2474,1224,270,365.733,138883,8.5,7700,no,sweep,EP=128 incumbent vanishing-timeout walk; q=544 measured 331.611 ms with 17152 timeouts,no,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,
+cliff,pkt,hgx8_pkt,arctic,2,128,1024,8,4,112.5,50,4896,62.4947,2448,270,365.733,138883,8.5,7596,no,sweep,EP=128 incumbent vanishing-timeout walk; q=544 measured 331.611 ms with 17152 timeouts,no,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),,

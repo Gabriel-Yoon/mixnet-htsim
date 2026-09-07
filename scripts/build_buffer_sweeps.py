@@ -80,6 +80,7 @@ SOURCES = {
     "cliff_ep64_gt.csv":         ("glassfb",   "qwenMoE",  64),
     "cliff_ep64_gt_ext.csv":     ("glassfb",   "qwenMoE",  64),
     "cliff_ep64_tail.csv":       ("glassfb",   "qwenMoE",  64),
+    "cliff_postfix.csv":         (None,        None,       None),
     "pkt_vanishing_timeout.csv": (None,        None,       None),
     "island_vanishing_timeout.csv": (None,     None,       None),
     # Re-runs with -logdir, so their FCT is this run's alone. They SUPERSEDE the

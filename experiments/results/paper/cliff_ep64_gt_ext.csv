@@ -1,4 +1,4 @@
-paper_ref,system,cabling,ep,nodes,mb,k,q,q_over_bdp,relayed_pairs,completed,makespan_ms,rtos,wall_s,quotable,status,note,quotable_why,fct_logdir
-cliff,glassfb,ep64_gt,64,512,8,16,4267,16.0,0,COMPLETE,59.485,13812,2196,no,sweep,EP=64 vanishing-timeout walk continued; 2x/4x/8x all had 6e4-1e5 timeouts,"timeouts present: 13812, loss not measured",shared_logdir
-cliff,glassfb,ep64_gt,64,512,8,32,8533,32.0,0,COMPLETE,39.410,564,2323,no,sweep,EP=64 vanishing-timeout walk continued; 2x/4x/8x all had 6e4-1e5 timeouts,"timeouts present: 564, loss not measured",clean
-cliff,glassfb,ep64_gt,64,512,8,64,17067,64.0,0,COMPLETE,39.395,0,2279,yes,sweep,EP=64 vanishing-timeout walk continued; 2x/4x/8x all had 6e4-1e5 timeouts,relay-clean and zero timeouts,clean
+paper_ref,system,cabling,ep,nodes,mb,k,q,q_over_bdp,relayed_pairs,completed,makespan_ms,rtos,wall_s,quotable,status,note,quotable_why,fct_logdir,link_rate_fixed,quoted_by
+cliff,glassfb,ep64_gt,64,512,8,16,4267,16.0,0,COMPLETE,59.485,13812,2196,no,sweep,EP=64 vanishing-timeout walk continued; 2x/4x/8x all had 6e4-1e5 timeouts,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),shared_logdir,,
+cliff,glassfb,ep64_gt,64,512,8,32,8533,32.0,0,COMPLETE,39.410,564,2323,no,sweep,EP=64 vanishing-timeout walk continued; 2x/4x/8x all had 6e4-1e5 timeouts,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),clean,,
+cliff,glassfb,ep64_gt,64,512,8,64,17067,64.0,0,COMPLETE,39.395,0,2279,no,sweep,EP=64 vanishing-timeout walk continued; 2x/4x/8x all had 6e4-1e5 timeouts,link-rate truncation: pre-fix binary (no link_rate_fixed=yes on this row),clean,,

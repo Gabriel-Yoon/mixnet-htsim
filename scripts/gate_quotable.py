@@ -74,11 +74,21 @@ for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
     if not rows or "rtos" not in rows[0]:
         continue
     fields = list(rows[0].keys())
-    for c in ("quotable", "quotable_why", "link_rate_fixed"):
+    for c in ("quotable", "quotable_why", "link_rate_fixed", "quoted_by"):
         if c not in fields:
             fields.append(c)
     counts = {"yes": 0, "no": 0, "grid": 0, "?": 0}
     for r in rows:
+        # --- the collector's walk-level verdict is authoritative ---------------
+        # collect_rungs.py reconstructs a whole walk from its per-rung jobs and
+        # marks the FIRST timeout-free rung. This gate sees one row at a time and
+        # cannot know which rung came first, so its per-row rule would mark every
+        # clean rung quotable and let a walk be quoted far above its vanishing
+        # point. Where the collector has ruled, keep its ruling.
+        if (r.get("quoted_by") or "").strip() == "collector":
+            counts[r.get("quotable", "no")] = counts.get(r.get("quotable", "no"), 0) + 1
+            continue
+
         # --- link-rate truncation (see docs/methods_provenance.md) -------------
         # A row from an affected fabric must prove it came from a fixed binary.
         # Absence of the proof disqualifies: there is no binary id on the older

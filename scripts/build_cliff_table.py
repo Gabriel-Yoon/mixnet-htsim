@@ -38,7 +38,8 @@ OUT = os.path.join(PAPER, "cliff_all.csv")
 
 FIELDS = ["paper_ref", "family", "system", "model_name", "topk", "ep", "mb", "nodes",
           "q", "q_over_bdp", "rto_min_us", "mtu", "makespan_ms", "rtos",
-          "quotable", "quotable_why", "fct_logdir", "source", "note"]
+          "quotable", "quotable_why", "fct_logdir", "source", "note",
+          "link_rate_fixed", "quoted_by"]
 
 # file -> (system when the file has no `system` column, workload when it has no
 # usable `model_name`). Family labels are NOT workload names: several glass files
@@ -47,7 +48,11 @@ SOURCES = {
     "cliff.csv":                (None,      None),
     "cliff_pkt.csv":            (None,      None),
     "cliff_pkt_ep128.csv":      (None,      None),
-    "cliff_pkt_stripe.csv":     (None,      None),   # NVSwitch striping control: S=1, L=900 (system nvl64_pkt_s1)
+    "cliff_pkt_stripe.csv":     (None,      None),
+    # post-fix rungs, one job per rung, quoted by collect_rungs.py which is the
+    # only component that sees a whole walk. system and model come from the rows.
+    "cliff_postfix.csv":        (None,      None),   # post-fix rungs; quoted by collect_rungs.py,
+                                                 # which is the only component that sees a whole walk
     "cliff_ep32_gt.csv":        ("glassfb", "llamaMoE"),
     "cliff_ep32_gt_ksweep.csv": ("glassfb", "llamaMoE"),
     "cliff_ep64_gt.csv":        ("glassfb", "qwenMoE"),
@@ -137,6 +142,11 @@ for name, (default_system, default_model) in SOURCES.items():
                 "fct_logdir": pick(r, "fct_logdir"),
                 "source": name,
                 "note": pick(r, "note"),
+                # Carried, not recomputed. gate_quotable runs again over this table
+                # (build_buffer_sweeps invokes it), and without these it cannot tell
+                # a post-fix row from a pre-fix one and demotes every one of them.
+                "link_rate_fixed": pick(r, "link_rate_fixed"),
+                "quoted_by": pick(r, "quoted_by"),
             })
 
 def _n(v):

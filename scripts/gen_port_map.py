@@ -32,6 +32,10 @@ ap.add_argument("--dp-mode", choices=["ring", "pair"], default="ring",
                      "so its cross-panel hops are consecutive panels of the block plus the wrap (EP=32 ground truth); "
                      "pair: same-expert replica pairs only (old rule)")
 ap.add_argument("--no-ep-place", action="store_true", help="naive placement (phys = logical)")
+ap.add_argument("--used-pairs", default=None,
+                help="ground truth: file of 'p q bytes' cross-panel pairs touched by the workload (from the task graph or a "
+                     "run's relay dump). EP pairs keep --ep-ports; every OTHER used pair gets ports from the panel's remaining "
+                     "budget, proportional to bytes, at least 1 if it fits. Overrides --dp-mode/--pp-ports for non-EP pairs.")
 ap.add_argument("-o", "--out", default="-")
 a = ap.parse_args()
 
@@ -80,6 +84,15 @@ if a.dp_mode == "ring":
             if p_ == q_ or q_ in nb[p_]["ep"]: continue
             nb[p_]["dp"].add(q_); nb[q_]["dp"].add(p_)
 
+used_pairs = None
+if a.used_pairs:
+    used_pairs = collections.defaultdict(int)
+    for line in open(a.used_pairs):
+        line = line.split("#")[0].split()
+        if len(line) < 2: continue
+        p_, q_ = int(line[0]), int(line[1]); b = float(line[2]) if len(line) > 2 else 1.0
+        if p_ != q_: used_pairs[(min(p_, q_), max(p_, q_))] += b
+
 pm = collections.defaultdict(int)
 def give(p, q, n):
     if n <= 0: return
@@ -96,15 +109,37 @@ for p in range(P):
         for q in eps:
             j = group.index(q)
             give(p, q, base + (1 if ((i + j) % (k - 1)) < extra else 0))
+    if used_pairs is not None:
+        continue   # non-EP pairs are allocated below from the ground-truth set
     if dps:
         base, extra = divmod(a.dp_ports, len(dps))
         for i, q in enumerate(dps): give(p, q, base + (1 if i < extra else 0))
     for q in pps: give(p, q, a.pp_ports)
 
+if used_pairs is not None:
+    # remaining budget per panel after EP ports, spread over the used non-EP pairs by bytes
+    ep_used = collections.Counter()
+    for (p_, q_), n in pm.items(): ep_used[p_] += n; ep_used[q_] += n
+    rest = {p_: ps - ep_used[p_] for p_ in range(P)}
+    others = sorted(((b, pq) for pq, b in used_pairs.items() if pq not in pm), reverse=True)
+    if not others: print("used-pairs: every used pair is an EP pair", file=sys.stderr)
+    # pass 1: one port to every used pair that fits; pass 2: extra ports by bytes while budget remains
+    alloc = collections.defaultdict(int)
+    for b, (p_, q_) in others:
+        if rest[p_] >= 1 and rest[q_] >= 1: alloc[(p_, q_)] = 1; rest[p_] -= 1; rest[q_] -= 1
+        else: print(f"WARNING: used pair ({p_},{q_}) {b:.3g} B gets no port (budget {rest[p_]},{rest[q_]}); it will be relayed", file=sys.stderr)
+    progress = True
+    while progress:
+        progress = False
+        for b, (p_, q_) in others:
+            if (p_, q_) in alloc and rest[p_] >= 1 and rest[q_] >= 1 and alloc[(p_, q_)] < max(1, int(round(b / max(used_pairs.values()) * a.dp_ports))) + 0:
+                alloc[(p_, q_)] += 1; rest[p_] -= 1; rest[q_] -= 1; progress = True
+    for (p_, q_), n in alloc.items(): pm[(p_, q_)] = n
+
 used = collections.Counter()
 for (p, q), n in pm.items(): used[p] += n; used[q] += n
 worst = max(used.values()) if used else 0
-lines = [f"# gen_port_map.py dp={dp} tp={tp} pp={pp} ep={ep} psize={ps} hi_order={a.hi_order} dp_mode={a.dp_mode} "
+lines = [f"# gen_port_map.py dp={dp} tp={tp} pp={pp} ep={ep} psize={ps} hi_order={a.hi_order} dp_mode={a.dp_mode} used_pairs={a.used_pairs} "
          f"ep_ports={a.ep_ports} dp_ports={a.dp_ports} pp_ports={a.pp_ports}",
          f"# panels={P} ports used per panel: min {min(used.values()) if used else 0} max {worst} of {ps}"]
 for p in range(P):

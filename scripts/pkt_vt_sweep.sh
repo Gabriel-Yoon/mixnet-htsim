@@ -33,7 +33,7 @@ QME=qwenMoE_paper_dp2tp1pp4_ep64top4_L4_seq1024_mb8_H100.fbuf
 
 cell () { # sys mdl ep nodes fb wm D S L nic qn qc
   local sys=$1 mdl=$2 ep=$3 nodes=$4 fb=$5 wm=$6 D=$7 S=$8 L=$9 nic=${10} qn=${11} qc=${12}
-  local log=./pktvt_logs/${sys}_ep${ep}_q${qn}.log t0
+  local log=./pktvt_logs/${SLURM_JOB_ID:-local}_${sys}_ep${ep}_q${qn}.log t0
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 timeout 30000 ./htsim_tcp_nvswitch -logdir "$(_logdir)" \
       -nodes "$nodes" -flowfile "$R/$fb" \

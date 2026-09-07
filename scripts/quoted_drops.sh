@@ -43,7 +43,7 @@ emit () { # system ep nodes q log wall
 
 glass () { # ep nodes fbuf wm map q
   local ep=$1 nodes=$2 fb=$3 wm=$4 map=$5 q=$6 t0=$(date +%s)
-  local log=./qd_logs/glass_ep${ep}_q${q}.log
+  local log=./qd_logs/${SLURM_JOB_ID:-local}_glass_ep${ep}_q${q}.log
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_EP_PLACE=1 GLASS_DIM_A2A=1 GLASS_PORT_MAP="$PM/$map" \
     timeout 30000 $G -logdir "$(_logdir)" -nodes "$nodes" -flowfile "$R/$fb" \
@@ -53,7 +53,7 @@ glass () { # ep nodes fbuf wm map q
 
 pkt () { # sys ep nodes fbuf wm D S L nic qn qc
   local sys=$1 ep=$2 nodes=$3 fb=$4 wm=$5 D=$6 S=$7 L=$8 nic=$9 qn=${10} qc=${11} t0=$(date +%s)
-  local log=./qd_logs/${sys}_ep${ep}_q${qn}.log
+  local log=./qd_logs/${SLURM_JOB_ID:-local}_${sys}_ep${ep}_q${qn}.log
   GLASS_RTO_MIN_US=100 timeout 30000 $N -logdir "$(_logdir)" -nodes "$nodes" \
     -flowfile "$R/$fb" -nvs_domain "$D" -nvs_switches "$S" -nvs_link "$L" -nvs_lat 250 \
     -nvs_q "$qn" -nvs_ecn_k $((qn/2)) -speed $((nic*8000)) -rtt 2000 -q "$qc" \

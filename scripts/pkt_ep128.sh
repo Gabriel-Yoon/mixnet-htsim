@@ -28,7 +28,7 @@ ARC=arctic_paper_dp2tp1pp4_ep128top2_L4_seq1024_mb8_H100.fbuf
 run () { # sys D S L nic q_nvs q_nic
   local sys=$1 D=$2 S=$3 L=$4 nic=$5 qn=$6 qc=$7
   local tag=${sys}_ep128
-  local log=./pkt128_logs/${tag}.log t0 t1
+  local log=./pkt128_logs/${SLURM_JOB_ID:-local}_${tag}.log t0 t1
   t0=$(date +%s)
   # /usr/bin/time -v records peak RSS. This cluster's accounting does not keep
   # MaxRSS, so the 360 GB first request was a guess that queued on (Priority)

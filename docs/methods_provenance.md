@@ -72,10 +72,10 @@ binary reproduced 46 028 299 484 ps and 6 448 818 088 ps exactly, now with
 `RTO floor: 10000 us (default)` present. The rule cost one re-run and converted
 an assumption into a record.
 
-### Four sub-classes discovered after the original six
+### Five sub-classes discovered after the original six
 
 The six instances above are all one failure: a setting that was configured but never read.
-Four further failures have since been found that the banner rule provably **cannot** catch,
+Five further failures have since been found that the banner rule provably **cannot** catch,
 because in each the run used exactly what it was handed and reported it accurately.
 
 | # | Sub-class | Instance | Why banners miss it |
@@ -84,6 +84,8 @@ because in each the run used exactly what it was handed and reported it accurate
 | B | **Figure without a producer** | `fig_baselines`, `fig_phases`, `fig_isopower` are committed PNGs whose source CSVs and plotting scripts were not in any repo; `fig_thermal` was drawn from a third run at h=100 000 while its caption says 70 000 | The chain from result to figure was never recorded at all |
 | C | **Post-processing failed silently after a successful solve** | MAPDL wrote to files literally named `%CSVTILE%.csv` because the parameter never substituted; all four expected panel CSVs were absent, and a stale output from a *different configuration* sat in their place looking current | The solve succeeded and its `.rth` is correct; only the extraction failed, and it failed without an error |
 | D | **Uncommitted code that keeps reapplying** | The flat port-cap implementation was written, built and run from a working tree and never committed; a commit referencing its `extern`s would not link from a clean checkout | `git -c rebase.autoStash=true pull --rebase` stashed and reapplied the files cleanly across many commits, so they stayed live in the tree while appearing in none of them |
+
+| F | **Partial instrumentation read as a census** | The used-pair set for regenerating the inter-panel port maps was extracted from ffapp's `flow_size:` print, which exists at **one** site — inside the all-to-all — while `set_flowsize()` is called from **nine**. The extract came out as 8 pairs, all `(2k, 2k+1)` with identical bytes: the EP pairs, with every DP and PP flow absent | Every line the log emitted was correct. Nothing was misconfigured, so no banner could report anything wrong; the log was silent about what it did not cover, and a set of 8 clean symmetric pairs looks exactly like a correct answer |
 
 | E | **Runner script disagrees with the solve** | `run_panel_hq.sh` declares `HCP=70000` and cites Coenen for it; the solve it produced used **100000**, recovered from `panhq_glass.db` `*STATUS`. The solve has **no `.out` log** at all | Nothing at run time is inconsistent — the deck used what it was given; only the *script* claims otherwise, and scripts are read as documentation |
 
@@ -112,6 +114,24 @@ until a rebuild from `1d10a42` reproduces them and the 410 025 604 ps gate bit-e
 Sub-class C's rule is the mirror image: **an output file existing is not evidence that the run
 that was supposed to write it did.** Check the timestamp against the solve, not just the name.
 The panel CSVs predated their own `.rth` files by three hours, which is what exposed them.
+
+**Sub-class F is the one that produces the most convincing artifact.** The 8-pair set was
+internally consistent, symmetric, and had the byte counts of a real measurement, because it *was*
+a real measurement — of a subset nobody had established the size of. It was caught only because the
+same run's relay dump named panel pair `(13,15)`, which the pair set did not contain. Without that
+contradiction the maps would have been regenerated from it, cabling the 8 EP pairs, leaving every DP
+and PP pair to relay, and reporting a clean generation.
+
+> **An instrument must be shown to cover the population before its output is read as one.** Count the
+> call sites, not the records. A log that never claims completeness will not warn you when it is
+> partial, and a partial extract of a symmetric workload is symmetric.
+
+Applied: the per-flow record now comes from `TcpSrc::set_flowsize` (`GLASS_LOG_FLOWS`), the single
+choke point every collective passes through, rather than from any per-collective print. The
+`decompose_flows.py` byte split read the same one-site source, so the EP=32 "inter = 48.7% of bytes"
+decomposition is **withdrawn** pending regeneration; it described the all-to-all alone, not the
+workload. Sub-class F also has a second instance in this repo: `used_pairs.py` reported its 8 pairs
+without ever stating what fraction of flows its input covered.
 
 ### Scope limit
 

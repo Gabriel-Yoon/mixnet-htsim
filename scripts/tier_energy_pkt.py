@@ -35,9 +35,31 @@ HOPS_IN_DOMAIN = 2             # GPU -> switch -> GPU
 HOPS_CROSS = 1                 # one NIC link
 
 
+def load_hops(tag):
+    """Topology-emitted hop counts, when the run produced them.
+
+    nvhoplog: <src> <dst> <nvlink_hops> <nic_hops>, from inside
+    NVSwitchTopology::get_paths. Preferred over domain arithmetic: the point of
+    the instrumentation is that the split comes from the routing rather than
+    from my reading of it, even where the two agree.
+    """
+    p = os.path.join(DC, tag + ".nvhoplog")
+    hops = {}
+    if not os.path.exists(p):
+        return hops
+    with open(p) as fh:
+        for line in fh:
+            f = line.split()
+            if len(f) == 5:
+                hops[(int(f[1]), int(f[2]))] = (int(f[3]), int(f[4]))
+    return hops
+
+
 def split(tag, domain):
+    hops = load_hops(tag)
+    mode = "topology_hoplog" if hops else "domain_arithmetic"
     ind = cross = 0
-    flows = 0
+    flows = unmatched = 0
     with open(os.path.join(DC, tag + ".flowlog")) as fh:
         for line in fh:
             f = line.split()
@@ -47,25 +69,35 @@ def split(tag, domain):
             if b == 0:
                 continue
             flows += 1
-            if s // domain == d // domain:
-                ind += b * HOPS_IN_DOMAIN
-            else:
-                cross += b * HOPS_CROSS
-    return ind, cross, flows
+            h = hops.get((s, d)) if hops else None
+            if h is None and hops:
+                unmatched += 1
+                continue
+            if h is None:
+                h = (HOPS_IN_DOMAIN, 0) if s // domain == d // domain else (0, HOPS_CROSS)
+            ind += b * h[0]
+            cross += b * h[1]
+    if unmatched:
+        print("    NOTE: %d flow(s) had no routed pair in the hop log -- reported, not dropped"
+              % unmatched)
+    return ind, cross, flows, mode
 
 
 rows = []
-for tag, ep, nodes, ms in (("tier_ep16", 16, 128, 86.750), ("tier_ep32", 32, 256, 75.542)):
-    for sysname, domain in (("nvl64_pkt", 64), ("hgx8_pkt", 8)):
-        ind, cross, flows = split(tag, domain)
+for sysname, domain in (("nvl64_pkt", 64), ("hgx8_pkt", 8)):
+    for ep, nodes, ms in ((16, 128, 130.797), (32, 256, 119.397)):
+        tag = "tier_%s_ep%d" % (sysname.replace("_pkt", ""), ep)
+        if not os.path.exists(os.path.join(DC, tag + ".flowlog")):
+            print("skip %s (not run yet)" % tag); continue
+        ind, cross, flows, mode = split(tag, domain)
         it_s = ms / 1000.0
         e_lo = ind * 8 * NVLINK[0] * 1e-12 + cross * 8 * NIC_PJ_BIT * 1e-12
         e_hi = ind * 8 * NVLINK[1] * 1e-12 + cross * 8 * NIC_PJ_BIT * 1e-12
         st_lo = NVS_STATIC_W_PER_GPU[0] * nodes * it_s
         st_hi = NVS_STATIC_W_PER_GPU[1] * nodes * it_s
         tot = ind + cross
-        print("%-10s ep=%-4s domain=%-3s flows=%-8s  in-domain %7.3f TB (%4.1f%%)  NIC %7.3f TB (%4.1f%%)"
-              % (sysname, ep, domain, flows, ind / 1e12, 100.0 * ind / tot,
+        print("%-10s ep=%-4s domain=%-3s flows=%-8s [%s]  in-domain %7.3f TB (%4.1f%%)  NIC %7.3f TB (%4.1f%%)"
+              % (sysname, ep, domain, flows, mode, ind / 1e12, 100.0 * ind / tot,
                  cross / 1e12, 100.0 * cross / tot))
         print("            link %.2f - %.2f J/iter   NVSwitch static %.2f - %.2f J/iter"
               % (e_lo, e_hi, st_lo, st_hi))
@@ -79,7 +111,9 @@ for tag, ep, nodes, ms in (("tier_ep16", 16, 128, 86.750), ("tier_ep32", 32, 256
             nvs_static_W_per_gpu_lo=NVS_STATIC_W_PER_GPU[0],
             nvs_static_W_per_gpu_hi=NVS_STATIC_W_PER_GPU[1],
             static_J_iter_lo="%.4f" % st_lo, static_J_iter_hi="%.4f" % st_hi,
-            note=("in-domain vs NIC from the flow log by domain arithmetic; "
+            hop_source=mode,
+            note=("in-domain vs NIC from the topology's own hop log where present, else "
+                  "domain arithmetic (hop_source says which); "
                   "NVSwitchTopology::get_paths routes cross-domain flows straight onto the NIC "
                   "(nic_feeder->nic_q->nic_p), so they cross NO NVLink hop, while in-domain flows "
                   "cross two (GPU->switch->GPU); flow set is workload-determined and verified "

@@ -251,6 +251,7 @@ def tail():
         mx = r.get("max_fct_ms")
         try:
             mx = float(mx) if mx not in (None, "") else None
+            if (r.get("fct_status") or "clean") != "clean": mx = None   # tail drawn only from an uncollided FCT log
             if mx is not None and mx > mk: mx = None      # a collided / non-time value
         except ValueError:
             mx = None

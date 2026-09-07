@@ -167,6 +167,11 @@ htsim_tcp_glassfb_pmhop: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS
 htsim_tcp_glassfb: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_glassfb
 
+# Same as htsim_tcp_glassfb plus the drop counters, for the positive control
+# that decides whether 'dropcount: 0' means no loss or no counting.
+htsim_tcp_glassfb_drop: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_glassfb_drop
+
 main_tcp_glassfb.o: main_tcp_glassfb.cpp
 	$(CC) $(INCLUDE) $(CFLAGS) -c main_tcp_glassfb.cpp
 

@@ -4,3 +4,4 @@ hier,glassfb_flat,ep16_0_8_4.txt,16,128,8,1064,flat,0,COMPLETE,86.750,0,2.5940,0
 hier,glassfb_hier,ep16_0_8_4.txt,16,128,8,1064,hier,0,COMPLETE,86.747,0,2.5802,0.064149,-0.003,-0.00,198,yes,gate,hierarchical A2A gate; cross_panel_TB is the G1 conservation quantity and must match the flat run,relay-clean and zero timeouts
 hier,glassfb_flat,ep32_gt.txt,32,256,8,2133,flat,0,COMPLETE,75.542,0,4.9705,0.396172,,,697,yes,gate,hierarchical A2A gate; cross_panel_TB is the G1 conservation quantity and must match the flat run,
 hier,glassfb_hier,ep32_gt.txt,32,256,8,2133,hier,0,COMPLETE,176.574,0,14.3321,0.396172,+101.032,+133.74,769,yes,gate,hierarchical A2A gate; cross_panel_TB is the G1 conservation quantity and must match the flat run,
+hier,glassfb_flat,ep64_gt.txt,64,512,8,1064,flat,0,COMPLETE,52.004,102601,4.4269,0.963166,,,1880,no,gate,hierarchical A2A gate; cross_panel_TB is the G1 conservation quantity and must match the flat run,

@@ -1,3 +1,2 @@
-paper_ref,system,cabling,ep,nodes,mb,k,q,q_over_bdp,relayed_pairs,completed,makespan_ms,rtos,wall_s,quotable,status,note,quotable_why
-,,,,,,,,,,,,,,no,submitted,job=12898049 host=atl1-1-01-003-9-1 start=2026-09-07T00:03:29,no completed iteration
-cliff,glassfb,ep64_gt,64,512,8,16,4267,16.0,0,COMPLETE,59.485,13812,1755,no,sweep,EP=64 vanishing-timeout walk continued; 2x/4x/8x all had 6e4-1e5 timeouts,
+paper_ref,system,cabling,ep,nodes,mb,k,q,q_over_bdp,relayed_pairs,completed,makespan_ms,rtos,wall_s,quotable,status,note
+,,,,,,,,,,,,,,,submitted,job=12899544 host=atl1-1-01-003-4-1 start=2026-09-07T01:18:37

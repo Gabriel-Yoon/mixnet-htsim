@@ -73,7 +73,7 @@ def cliff():
                 ax.annotate(f"{r['rtos']:,} RTO", (ep, y), fontsize=5, textcoords="offset points", xytext=(3, 3))
     # model per point
     models = {}
-    for r in rows: models.setdefault(r["ep"], set()).add(f"{r['model']} top-{r.get('topk','?')}")
+    for r in rows: models.setdefault(r["ep"], set()).add(f"{r.get('model_name') or r.get('model')} top-{r.get('topk') or '?'}")
     ax.set_xscale("log", base=2); ax.set_xticks(sorted(models)); ax.set_xticklabels([f"{ep}\n{'/'.join(sorted(models[ep]))}" for ep in sorted(models)], fontsize=5.5)
     ax.set_yscale("log"); ax.set_ylabel("iteration (ms)", fontsize=7); ax.set_xlabel("EP degree (model per point)", fontsize=7)
     ax.axvline(16, color="#1f6f8b", ls=":", lw=0.8); ax.axvline(8, color="#d95f0e", ls=":", lw=0.8); ax.axvline(64, color="#7a0177", ls=":", lw=0.8)

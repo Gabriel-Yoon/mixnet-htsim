@@ -33,6 +33,19 @@ NVLINK = (1.55, 5.00)
 LASER_TUNE_W_PER_PANEL = 5.3
 
 
+# Tags whose flow log is not a tier_logs run. EP=128 has no NVSwitch-style tier
+# byte pass and needs none: the flow set is topology-independent (the EP 16/32/64
+# logs from the glass, NVL-64 and HGX-8 runs are the same multiset) and this flow
+# log is the EP=128 Arctic workload's, from the glass port-map run.
+FLOWLOG = {
+    "tier_ep128": os.path.join(os.path.dirname(DC), "fl_logs", "fl_ep128_arc.flowlog"),
+}
+
+
+def flowlog_path(tag):
+    return FLOWLOG.get(tag, os.path.join(DC, tag + ".flowlog"))
+
+
 def load(tag):
     hops = {}
     with open(os.path.join(DC, tag + ".hoplog")) as fh:
@@ -43,7 +56,7 @@ def load(tag):
     tiers = collections.Counter()
     flows = unmatched = 0
     unmatched_bytes = 0
-    with open(os.path.join(DC, tag + ".flowlog")) as fh:
+    with open(flowlog_path(tag)) as fh:
         for line in fh:
             f = line.split()
             if len(f) != 4:
@@ -65,7 +78,7 @@ def load(tag):
 
 def main(rows):
     out = []
-    for tag, ep, nodes, makespan_ms in rows:
+    for tag, ep, nodes, makespan_ms, ms_note in rows:
         try:
             tiers, flows, unm, unm_b = load(tag)
         except OSError as e:
@@ -99,7 +112,8 @@ def main(rows):
             static_J_iter="%.4f" % static_j,
             note=("bytes x hops from GLASS_LOG_FLOWS and the topology's own GLASS_LOG_HOPS "
                   "classification; electrical tier carries +1 pJ/bit RDL; brackets not "
-                  "collapsed to a midpoint; static term is laser+tuning only")))
+                  "collapsed to a midpoint; static term is laser+tuning only"
+                  + (" | " + ms_note if ms_note else ""))))
     if out:
         with open(OUT, "w", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=list(out[0].keys()))
@@ -113,6 +127,35 @@ if __name__ == "__main__":
     # EP=64 is 39.395 ms at q=17067 (64x BDP), zero timeouts and zero measured drops.
     # POST-FIX makespans (link-rate truncation fixed, 9ac4f76). Bytes x hops are
     # rate-independent, so only the static term moves.
-    main([("tier_ep16", 16, 128, 87.613),
-          ("tier_ep32", 32, 256, 77.918),
-          ("tier_ep64", 64, 512, 43.088)])
+    main([("tier_ep16", 16, 128, 87.613, ""),
+          ("tier_ep32", 32, 256, 77.918, ""),
+          ("tier_ep64", 64, 512, 43.088, ""),
+          # EP=128. The bytes are final; the makespan is not.
+          #
+          # Bytes x hops here come from a hop log the topology emitted WITHOUT
+          # simulating traffic: scripts/hopdump_validate.sh builds the same
+          # GlassFBTopology the runner builds (glassfb_hopdump) and asks it for the
+          # same routes, so the classification is still the topology's own, from the
+          # same adjacent_link predicate. It is validated red-then-green against the
+          # real runs' hop logs at EP 16, 32 and 64: every shared pair's hop triple
+          # agrees and all nine tier byte totals match exactly, while removing the
+          # port map makes 172 triples disagree. 4.8 s at EP=128 against the hours a
+          # traffic run would take, and zero flows unmatched by the hop log.
+          #
+          # Cabling is ep128_gt.txt, the map the g128 rungs run on -- NOT the
+          # ep128_12_1_1.txt the flow log was captured under. That is the point of
+          # the topology-independence check: the flow set is the workload's, the hop
+          # counts are this cabling's.
+          #
+          # The makespan is the best HOLLOW rung, q=1066: glass EP=128 has no
+          # timeout-free rung yet (four of six in, 601806 / 394052 / 238854 RTO at
+          # q=533/1066/2133 and 6883 at q=17067) and may never get one. Only the
+          # static term depends on it; link J is final either way.
+          ("tier_ep128", 128, 1024, 273.493,
+           "EP=128 hop log from glassfb_hopdump (topology's own classification, no "
+           "traffic run; validated byte-for-byte against the EP 16/32/64 run hop logs "
+           "by scripts/hopdump_validate.sh) on cabling ep128_gt.txt; flow set from "
+           "fl_ep128_arc.flowlog, topology-independent; MAKESPAN IS PROVISIONAL -- "
+           "the best hollow rung (q=1066, 394052 timeouts), not a quoted row, because "
+           "this walk has no timeout-free rung; link J does not depend on it, static "
+           "J does")])

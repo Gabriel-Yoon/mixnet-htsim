@@ -169,6 +169,16 @@ htsim_tcp_glassfb_pmlog: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS
 htsim_tcp_glassfb_pmhop: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_glassfb_pmhop
 
+# Hop classification without a simulation: builds the same GlassFBTopology the
+# runner builds and asks it for the same routes, so it emits the topology's own
+# hoplog lines. Deliberately does NOT link main_tcp_glassfb.o -- that object
+# references the protobuf task-graph reader, which pulls taskgraph.pb.o out of
+# libhtsim.a, and this machine has no C++ protobuf runtime (only libprotobuf-c).
+# That is why _pmlog and _pmhop do not currently link here and this does.
+HOPDUMP_OBJS=$(filter-out ../ffapp.o,$(OBJS))
+glassfb_hopdump: main_glassfb_hopdump.o firstfit.o glassfb_topology.o $(HOPDUMP_OBJS)
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_glassfb_hopdump.o glassfb_topology.o $(HOPDUMP_OBJS) $(LIB) -o $(OUTDIR)glassfb_hopdump
+
 htsim_tcp_glassfb: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_glassfb
 
@@ -176,6 +186,9 @@ htsim_tcp_glassfb: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
 # that decides whether 'dropcount: 0' means no loss or no counting.
 htsim_tcp_glassfb_drop: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_glassfb_drop
+
+main_glassfb_hopdump.o: main_glassfb_hopdump.cpp glassfb_topology.h
+	$(CC) $(INCLUDE) $(CFLAGS) -c main_glassfb_hopdump.cpp
 
 main_tcp_glassfb.o: main_tcp_glassfb.cpp
 	$(CC) $(INCLUDE) $(CFLAGS) -c main_tcp_glassfb.cpp

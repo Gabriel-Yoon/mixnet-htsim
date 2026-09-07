@@ -261,6 +261,41 @@ def energy():
     axes[0].set_ylabel("J per iteration (solid: link, bytes moved;\nhatched: static, assumed)", fontsize=6)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
+def calib():
+    """R-calib: NVSwitch model as an 8-GPU HGX H100 under a synthetic all-to-all (calib_nvswitch.csv:
+    variant, msg_bytes, k, q, T_us, egress_GBps, efficiency, rtos, drops, quotable). Left: efficiency
+    vs message size per variant, quoted rung solid / others hollow, with the DeepEP intra-node EP=8
+    band (71-82% of line rate) as the large-message target. Right: completion time vs message size
+    with the published small-message floor band (45-85 us)."""
+    rows = load("calib_nvswitch")
+    for r in rows:
+        r["msg_bytes"] = float(r["msg_bytes"]); r["T_us"] = float(r["T_us"]); r["efficiency"] = float(r["efficiency"])
+    variants = sorted({r["variant"] for r in rows})
+    VLAB = {"s18": "18 x 25 GB/s (per-flow ECMP, paper rows)", "s1": "1 x 450 GB/s (striped)"}
+    VCOL = {"s18": "#7a0177", "s1": "#b06fc0"}
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.6), dpi=200)
+    a1.axhspan(0.71, 0.82, color="#d95f0e", alpha=0.18, lw=0, label="DeepEP intra-node EP=8 (71-82%)")
+    a2.axhspan(45, 85, color="#d95f0e", alpha=0.18, lw=0, label="published small-message floor (45-85 us)")
+    for v in variants:
+        sub = [r for r in rows if r["variant"] == v]
+        best = {}
+        for r in sub:
+            k = r["msg_bytes"]; cur = best.get(k)
+            if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and r["T_us"] < cur["T_us"]):
+                best[k] = r
+        pts = sorted(best.values(), key=lambda r: r["msg_bytes"])
+        col = VCOL.get(v, "#999"); lab = VLAB.get(v, v)
+        a1.plot([r["msg_bytes"] for r in pts], [r["efficiency"] for r in pts], "-", color=col, lw=1.4, label=lab)
+        a2.plot([r["msg_bytes"] for r in pts], [r["T_us"] for r in pts], "-", color=col, lw=1.4, label=lab)
+        for ax, key in ((a1, "efficiency"), (a2, "T_us")):
+            for r in pts:
+                ax.plot(r["msg_bytes"], r[key], marker="o", ms=4, color=col, markerfacecolor=col if r["_quotable"] else "white")
+    for ax in (a1, a2):
+        ax.set_xscale("log", base=2); ax.set_xlabel("bytes per (src,dst) pair", fontsize=7); ax.tick_params(labelsize=6); ax.grid(alpha=0.3, which="both")
+    a1.set_ylabel("egress / 450 GB/s line rate", fontsize=7); a1.set_ylim(0, 1.0); a1.legend(fontsize=5, frameon=False, loc="lower right")
+    a2.set_yscale("log"); a2.set_ylabel("all-to-all completion (us)", fontsize=7); a2.legend(fontsize=5, frameon=False, loc="upper left")
+    fig.tight_layout(pad=0.3); fig.savefig(f("fig_calib.png")); print("wrote fig_calib.png")
+
 def tail():
     """R4: buffer vs tail. For each (system, ep) sweep in buffer_sweeps.csv: makespan (bars) and payload
     max FCT (line, right axis) against q_over_bdp; RTO count as labels; quotable point filled."""
@@ -315,7 +350,7 @@ def tail():
 
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]
-    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail}
+    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib}
     for w in (fns if "all" in which else which):
         try: fns[w]()
         except SystemExit as e: print("skip:", e)

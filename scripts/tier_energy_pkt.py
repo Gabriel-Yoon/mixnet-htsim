@@ -35,6 +35,23 @@ HOPS_IN_DOMAIN = 2             # GPU -> switch -> GPU
 HOPS_CROSS = 1                 # one NIC link
 
 
+# Tags whose byte pass is not a tier_logs run. EP=128's flow log is the glass
+# port-map run's: no NVSwitch byte pass at EP=128 was ever submitted, and none is
+# needed, because the flow set is topology-independent (verified at EP 16/32/64 --
+# the three fabrics' logs are the same multiset) and the split is domain
+# arithmetic (verified equal to the topology hop log at all six pairs that have
+# one). Named here so the row's input is readable in the code rather than hidden
+# behind a symlink.
+FLOWLOG = {
+    "tier_nvl64_ep128": os.path.join(
+        os.path.dirname(DC), "fl_logs", "fl_ep128_arc.flowlog"),
+}
+
+
+def flowlog_path(tag):
+    return FLOWLOG.get(tag, os.path.join(DC, tag + ".flowlog"))
+
+
 def load_hops(tag):
     """Topology-emitted hop counts, when the run produced them.
 
@@ -60,7 +77,7 @@ def split(tag, domain):
     mode = "topology_hoplog" if hops else "domain_arithmetic"
     ind = cross = 0
     flows = unmatched = 0
-    with open(os.path.join(DC, tag + ".flowlog")) as fh:
+    with open(flowlog_path(tag)) as fh:
         for line in fh:
             f = line.split()
             if len(f) != 4:
@@ -129,7 +146,14 @@ RUNS = {
     # old integer arithmetic and the new exact one.
     "nvl64_pkt": ((16, 128, 130.797,  544,  544),
                   (32, 256, 119.397,  544, 1088),
-                  (64, 512,  82.502, 2176, 2176)),
+                  (64, 512,  82.502, 2176, 2176),
+                  # EP=128, quoted at q=2176. The makespan comes from a pre-fix
+                  # binary and does not need re-measuring: nvl64_pkt's links are
+                  # L=50, which is exactly 20 ps/byte under the old integer
+                  # arithmetic and the new exact one. Batch 4 re-runs this cell on
+                  # a drop-reporting build; if it does not reproduce 247.218, this
+                  # row is wrong and the re-run will say so.
+                  (128, 1024, 247.218, None, 2176)),
     # The striping control (S=1, L=900) is the other end of the bracket. Bytes and
     # hops are IDENTICAL to the pinned rows -- the same transfers over the same
     # two-hop paths -- so link energy is unchanged and only the static term moves,
@@ -143,11 +167,17 @@ RUNS = {
     # changes how a GPU's bandwidth is divided and not which links a packet crosses.
     "nvl64_pkt_s1": ((16, 128, 89.430,  544, 2400),
                      (32, 256, 69.989,  544, 4800),
-                     (64, 512, 29.904, 2176, 9600)),
+                     (64, 512, 29.904, 2176, 9600),
+                     # EP=128: first timeout-free rung of the six-rung walk,
+                     # q=9600, zero timeouts and zero drops.
+                     (128, 1024, 240.730, None, 9600)),
     # hgx8_pkt is UNCHANGED post-fix: it is bounded by the NIC tier at 100 GB/s,
     # a rate that divided 1000 exactly, so the +11% on its NVLink tier never
     # reached the makespan. Verified, not assumed: the post-fix walk returned
     # 145.497 / 164.522 / 144.519, identical to these.
+    # hgx8_pkt EP=128 is deliberately absent: the only makespan for it is the
+    # pre-fix 365.733, and unlike nvl64_pkt its NVLink tier ran at 112.5 GB/s,
+    # which truncated. Batch 4 is measuring it. Added when it lands, not before.
     "hgx8_pkt":  ((16, 128, 145.497, 1224, 1224),
                   (32, 256, 164.522, 1224, 1224),
                   (64, 512, 144.519, 1224, 1224)),
@@ -161,10 +191,16 @@ BYTES_FROM = {"nvl64_pkt_s1": "nvl64"}
 for sysname, domain in (("nvl64_pkt", 64), ("nvl64_pkt_s1", 64), ("hgx8_pkt", 8)):
     for ep, nodes, ms, q_bytes, q_ms in RUNS[sysname]:
         tag = "tier_%s_ep%d" % (BYTES_FROM.get(sysname, sysname.replace("_pkt", "")), ep)
-        if not os.path.exists(os.path.join(DC, tag + ".flowlog")):
+        if not os.path.exists(flowlog_path(tag)):
             print("skip %s (not run yet)" % tag); continue
         ind, cross, flows, mode = split(tag, domain)
         bq = banner_q(tag)
+        if q_bytes is None:
+            # The EP=128 byte pass is a glass run and prints no NVSwitch queue
+            # banner, so there is no buffer to record or check. Bytes do not
+            # depend on the buffer; the column is left empty rather than filled
+            # with a number this run never used.
+            bq = None
         if bq is None:
             print("    NOTE: %s has no queue banner -- q recorded from the run table,"
                   " unverified" % tag)
@@ -185,7 +221,8 @@ for sysname, domain in (("nvl64_pkt", 64), ("nvl64_pkt_s1", 64), ("hgx8_pkt", 8)
               % (e_lo, e_hi, st_lo, st_hi))
         rows.append(dict(
             paper_ref="power", system=sysname, ep=ep, nodes=nodes, domain=domain,
-            makespan_ms="%.3f" % ms, q=q_bytes, q_makespan=q_ms,
+            makespan_ms="%.3f" % ms, q=("" if q_bytes is None else q_bytes),
+            q_makespan=q_ms,
             q_banner_pkt=(bq if bq is not None else ""),
             q_banner_ratio=("%.4f" % (bq / float(q_bytes)) if bq else ""),
             flows=flows,
@@ -202,7 +239,14 @@ for sysname, domain in (("nvl64_pkt", 64), ("nvl64_pkt_s1", 64), ("hgx8_pkt", 8)
                   "NVSwitchTopology::get_paths routes cross-domain flows straight onto the NIC "
                   "(nic_feeder->nic_q->nic_p), so they cross NO NVLink hop, while in-domain flows "
                   "cross two (GPU->switch->GPU); flow set is workload-determined and verified "
-                  "equal to the glass run (78592 flows at EP=16); brackets not collapsed")))
+                  "equal to the glass run (78592 flows at EP=16); brackets not collapsed"
+                  + (" | EP=128 bytes from the glass port-map byte pass "
+                     "fl_logs/fl_ep128_arc.flowlog: the flow set is topology-independent "
+                     "(EP 16/32/64 logs from glass, NVL-64 and HGX-8 are the same multiset) "
+                     "and the split is domain arithmetic, which equals the topology hop log "
+                     "exactly at all six pairs that have one; flowlog line count 4757504 "
+                     "matches flows_total in the EP=128 rung rows"
+                     if ep == 128 else ""))))
 
 with open(OUT, "w", newline="") as fh:
     w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))

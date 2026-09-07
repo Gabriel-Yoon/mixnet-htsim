@@ -91,8 +91,12 @@ def cliff():
                 ax.annotate(f"{r['rtos']:,} RTO", (ep, y), fontsize=5, textcoords="offset points", xytext=(3, 3))
     # model per point
     models = {}
-    for r in sorted(rows, key=lambda r: 0 if r["system"] == "glassfb" else 1):   # label each EP by the glass row's model
-        models.setdefault(r["ep"], (r.get("model_name") or "") + (f" top-{r['topk']}" if r.get("topk") else ""))
+    # label each EP by the glass row's model; a row with a blank model_name (collector rows) defers to
+    # any other row at that EP that carries one
+    for r in sorted(rows, key=lambda r: (0 if r.get("model_name") else 1, 0 if r["system"] == "glassfb" else 1)):
+        if not r.get("model_name"): models.setdefault(r["ep"], ""); continue
+        if not models.get(r["ep"]):
+            models[r["ep"]] = (r.get("model_name") or "") + (f" top-{r['topk']}" if r.get("topk") else "")
     ax.set_xscale("log", base=2); ax.set_xticks(sorted(models)); ax.set_xticklabels([f"{ep}\n{models[ep]}" for ep in sorted(models)], fontsize=5.5)
     ax.set_yscale("log"); ax.set_ylabel("iteration (ms)", fontsize=7); ax.set_xlabel("EP degree (model per point)", fontsize=7)
     ax.axvline(16, color="#1f6f8b", ls=":", lw=0.8); ax.axvline(8, color="#d95f0e", ls=":", lw=0.8); ax.axvline(64, color="#7a0177", ls=":", lw=0.8)
@@ -184,15 +188,19 @@ def mb():
     """R6: iteration vs microbatch at EP=16, glass vs the queued NVL-64 domain (quotable rows of cliff_all)."""
     rows = [r for r in load("cliff_all") if r["_quotable"] and str(r.get("ep")) == "16" and r.get("mb")]
     fig, ax = plt.subplots(figsize=(3.4, 2.4), dpi=200)
-    for sysname in ("nvl64_pkt", "glassfb"):
+    for sysname in ("nvl64_pkt", "nvl64_pkt_s1", "glassfb"):
         best = {}
         for r in rows:
             if r["system"] != sysname: continue
             m = int(r["mb"]); best[m] = min(best.get(m, 1e9), r["makespan_ms"])
         pts = sorted(best.items())
         if not pts: continue
-        st = _ps.style_line(sysname) if _ps else dict(color=SYS_COLOR[sysname], marker="o", label=SYS_LABEL[sysname])
-        ax.plot([p[0] for p in pts], [p[1] for p in pts], "-", **st)
+        if sysname == "nvl64_pkt_s1":   # striped upper end of the bracket: dash-dot, same hue family
+            st = dict(color=SYS_COLOR[sysname], marker="s", label=SYS_LABEL[sysname])
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], "-.", **st)
+        else:
+            st = _ps.style_line(sysname) if _ps else dict(color=SYS_COLOR[sysname], marker="o", label=SYS_LABEL[sysname])
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], "-", **st)
         for m, v in pts: ax.text(m, v * 1.03, f"{v:.0f}", ha="center", fontsize=5.5, color=st["color"])
     ax.set_xscale("log", base=2); ax.set_xticks([4, 8, 16, 32]); ax.set_xticklabels([4, 8, 16, 32])
     ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=7); ax.set_ylabel("iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)

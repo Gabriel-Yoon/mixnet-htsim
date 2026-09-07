@@ -33,6 +33,8 @@ def load(ref):
     if not os.path.exists(p):
         sys.exit(f"missing {p} (paper_ref={ref} rows have not landed)")
     rows = [r for r in csv.DictReader(open(p)) if r.get("status", "final") == "final"]
+    # quotable=yes -> drawn solid; quotable=no/grid -> kept only as hollow sensitivity points
+    for r in rows: r["_quotable"] = (r.get("quotable", "yes") or "yes").lower() == "yes"
     if not rows:
         sys.exit(f"{p}: no rows with status=final")
     for r in rows:
@@ -56,11 +58,16 @@ def cliff():
     rows = load("cliff")
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
     for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "glassfb_mesh", "glassfb", "glassfb_hier"):
-        pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname])
-        if not pts: continue
+        pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and r["_quotable"]])
+        sens = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and not r["_quotable"]])
+        if not pts and not sens: continue
         dashed = sysname in ("hgx8", "nvl64")  # analytic island = vendor-claim upper bound
-        ax.plot([p[0] for p in pts], [p[1] for p in pts], "--" if dashed else "o-", color=SYS_COLOR[sysname],
-                label=SYS_LABEL[sysname] + (" (vendor-claim bound)" if dashed else ""), lw=1.2 if dashed else 1.5, ms=4, alpha=0.8 if dashed else 1)
+        if pts:
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], "--" if dashed else "o-", color=SYS_COLOR[sysname],
+                    label=SYS_LABEL[sysname] + (" (vendor-claim bound)" if dashed else ""), lw=1.2 if dashed else 1.5, ms=4, alpha=0.8 if dashed else 1)
+        if sens:  # not at its zero-timeout buffer (or a grid cell): hollow, unconnected
+            ax.plot([p[0] for p in sens], [p[1] for p in sens], linestyle="none", marker="o", markerfacecolor="white",
+                    color=SYS_COLOR[sysname], ms=4, alpha=0.9)
         for ep, y, r in pts:
             if r.get("rtos") and r["rtos"] > 0:
                 ax.annotate(f"{r['rtos']:,} RTO", (ep, y), fontsize=5, textcoords="offset points", xytext=(3, 3))

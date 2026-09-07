@@ -95,10 +95,10 @@ Three instances here, each caught only because the check was deliberately provok
 The cost of the rule is one deliberately broken input per check. The cost of skipping it is a green
 light over the defect itself, which is how sub-class F and the two vacuous greps above all began.
 
-### Ten sub-classes discovered after the original six
+### Eleven sub-classes discovered after the original six
 
 The six instances above are all one failure: a setting that was configured but never read.
-Ten further failures have since been found that the banner rule provably **cannot** catch,
+Eleven further failures have since been found that the banner rule provably **cannot** catch,
 because in each the run used exactly what it was handed and reported it accurately.
 
 | # | Sub-class | Instance | Why banners miss it |
@@ -398,6 +398,67 @@ mid-run. At 696 K it is cheaper to copy everything than to trace which files a r
 node contention. The plotters key one point per `(system, ep, q)`, so the duplicate rows draw once. The
 accident is therefore an unplanned determinism check, and an unusually good one: the second pass ran a
 *different build of the script* and reproduced the first exactly.
+
+**Sub-class L is the one the paper's own numbers were built on.** Every sub-class above
+concerns whether a measurement can be attributed, trusted, or reproduced. This one is different:
+the simulator was computing the wrong answer, correctly and consistently, for every link whose
+rate did not divide 1000 GB/s.
+
+`Queue::Queue` computed the service time as an integer:
+
+```cpp
+_ps_per_byte = (simtime_picosec)((pow(10.0, 12.0) * 8) / _bitrate);
+```
+
+In GB/s that is `floor(1000 / rate)`, so:
+
+| rate GB/s | ps/byte | effective | error | where |
+|---|---|---|---|---|
+| 50 | 20 | 50 | exact | NVL-64 chip link |
+| 100 | 10 | 100 | exact | NIC tier |
+| 112.5 | 8 | 125 | +11.1% | HGX-8 |
+| 400 | 2 | 500 | +25.0% | glass inter-panel (port-map mode) |
+| 384 | 2 | 500 | +30.2% | glass optical |
+| 1800 | **0** | **unbounded** | — | glass electrical |
+
+A zero means `drainTime` returns zero for every packet: the tier carrying 39.5% of glass's bytes
+at EP=64 had **no transmission time at all**.
+
+> **A rate that cannot be represented exactly is not a rate.** Service time is now computed per
+> packet in exact integer arithmetic, `(size*8*10^12 + bitrate/2) / bitrate`, rounded to nearest,
+> so the error is at most half a picosecond per packet rather than up to one per byte — 333 ps on
+> a 1500-byte packet at 450 GB/s, which is the entire 11%.
+
+**It was found by building the calibration the paper did not have.** No internal check could have
+caught it: every run was self-consistent, every banner reported what was configured, every walk
+reproduced its own makespan to the picosecond, and the defect had been present for every row ever
+measured. It surfaced only on comparing an 8-GPU all-to-all against published hardware numbers and
+finding 498 GB/s coming out of a port stated at 450. Three rates then confirmed it —
+249.9 / 499.5 / 998.1 against stated 225 / 450 / 900 — and the glass fabric confirmed it a second
+way: `ELEC_BW` 1800 and 2000, which both truncate to zero, returned **86750404764 ps, identical to
+the picosecond**, which cannot happen if the tier costs anything at all.
+
+**The direction was the uncomfortable one.** The fabric the paper advocates had the largest
+unearned advantage: one tier unbounded, another 30% fast, a third 25% fast, while the incumbent's
+chip link at 50 GB/s was exact. Correcting it moved glass +1.0% / +3.1% / +9.4% at EP 16/32/64 and
+left the incumbents untouched, and it reversed one published claim outright — §dse's "the
+dimension-ordered route hurts without the right cabling" was an artefact of mesh cabling loading
+the tier that ran fast.
+
+> **What survives a correction is worth more than what it replaced.** Every other conclusion held:
+> the microbatch sensitivity, the energy separation, HGX-8's buffer-invariant spurious timeouts,
+> the non-monotonic buffer-vs-tail shape. They are now measured on a simulator whose links run at
+> their stated rates, and the one claim that did not survive was found before submission rather
+> than after.
+
+Two derived rules came out of the re-run, both about parallelism rather than physics. Running every
+rung of a walk simultaneously broke an assumption that had been true by construction — a sequential
+walk stopped at its first timeout-free rung, so "zero timeouts" and "first zero-timeout rung" were
+the same row, and with all rungs measured they are not. And a derived table must carry its sources'
+provenance columns: twice, a builder constructed rows with a fixed key set, dropped
+`link_rate_fixed`, and let the next gate pass mark every post-fix row as pre-fix — once making the
+consolidated table disagree with the file it was built from, and once making R4 draw the pre-fix
+39.395 ms in place of 43.088.
 
 ### Scope limit
 

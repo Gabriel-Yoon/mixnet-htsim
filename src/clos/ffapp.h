@@ -383,6 +383,23 @@ struct FFAlltoAllFlow {
     int src_idx;
     int dst_idx;
     int intra_node_routing = 0;
+    // Hierarchical A2A: which stage this flow belongs to (0 = flat/direct,
+    // 1 = intra-panel gather, 2 = cross-edge, 3 = intra-panel scatter) and the
+    // index of its (src panel, dst panel, gateway) plan entry. -1 = not planned.
+    int stage = 0;
+    int plan_idx = -1;
+};
+
+// One entry per (src panel p, dst panel q, gateway slot g). Stage 2 crosses the
+// edge as a SINGLE flow, so a panel pair presents G flows to the edge instead of
+// psize*psize -- that is the whole point: the same bytes, without the incast.
+struct FFA2APlan {
+    int p = -1, q = -1, g = -1;
+    int gw_src = -1, gw_dst = -1;
+    std::vector<std::pair<int, uint64_t>> gather;   // (src gpu, bytes) -> gw_src
+    std::vector<std::pair<int, uint64_t>> scatter;  // (dst gpu, bytes) <- gw_dst
+    uint64_t edge_bytes = 0;
+    int pending_gather = 0;   // stage 1 outstanding; at 0 -> launch stage 2
 };
 
 class FFAlltoAll : public FFTask {
@@ -401,6 +418,9 @@ public:
 
     int curr_round;
     int total_rounds;
+    // Hierarchical A2A plan; empty when the task runs flat.
+    std::vector<FFA2APlan> a2a_plan;
+    bool build_hier_plan();          // false if the topology is not glass-FB
     Matrix2D<double> all2all_traffic_matrix;
     
     // Traffic statistics: per-node volume tracking
@@ -418,7 +438,8 @@ public:
     virtual void reset() {
         FFTask::reset();
     }
-    void start_flow(int src_idx, int dst_idx);
+    // size 0 = read operator_sizes (flat A2A); >0 = explicit (hierarchical stages).
+    void start_flow(int src_idx, int dst_idx, uint64_t size = 0, int stage = 0, int plan_idx = -1);
 };
 
 void finish_alltoall(void * a2ainfo);
@@ -542,9 +563,13 @@ public:
     int pp_degree;
     int ep_degree;
     int is_mixnet;
-    bool disable_intra_node_shortcut = false;  // wafer-scale: set true to disable the NVLink/NVSwitch
-                                                // intra-node shortcut and force all traffic through
-                                                // the topology's actual routing (get_paths)
+    // wafer-scale: set true to disable the NVLink/NVSwitch intra-node shortcut
+    // and force all traffic through the topology's actual routing (get_paths)
+    bool disable_intra_node_shortcut = false;
+    // Hierarchical (gateway-aggregated) all-to-all: gather inside the panel, cross
+    // each edge as one flow per gateway, scatter inside the destination panel.
+    // Independent of the shortcut flag above.
+    bool a2a_hier = false;
     simtime_picosec thermal_tuning_delay_ps = 0;  // one-time stall added before each all-to-all
                                                    // round starts (ring-modulator wavelength re-lock
                                                    // time), NOT a per-packet link propagation delay --

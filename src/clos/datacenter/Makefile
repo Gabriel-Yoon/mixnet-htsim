@@ -126,6 +126,18 @@ mixnet.o: mixnet.cpp mixnet.h topology.h fat_tree_topology.cpp fat_tree_topology
 clean:	
 	rm -f *.o htsim_ndp* htsim_tcp* htsim_dctcp*
 
+htsim_tcp_glassfb_pm: main_tcp_glassfb.o firstfit.o glassfb_topology.o
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_glassfb_pm
+
+# Identical to htsim_tcp_glassfb_pm; separate output name so it can be built
+# while jobs are still spawning the _pm path. Carries the GLASS_LOG_FLOWS
+# instrumentation in tcp.cpp (TcpSrc::set_flowsize), which is the only
+# choke point every collective passes through -- ffapp.cpp prints flow_size
+# at ONE site, inside the all-to-all, so an ffapp-derived flow log silently
+# omits every DP and PP flow.
+htsim_tcp_glassfb_pmlog: main_tcp_glassfb.o firstfit.o glassfb_topology.o
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_glassfb_pmlog
+
 htsim_tcp_glassfb: main_tcp_glassfb.o firstfit.o glassfb_topology.o
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_glassfb
 

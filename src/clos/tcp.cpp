@@ -112,7 +112,10 @@ TcpSrc::~TcpSrc()
 #ifdef PACKET_SCATTER
 	if (_paths)
 	{
-		for (Route *r : _paths)
+		// *_paths, not _paths: it is a pointer to the vector. And the elements are
+		// const Route*, so binding them to Route* drops const. Both errors have
+		// been latent since tcp.h:41 commented the define out.
+		for (const Route *r : *_paths)
 		{
 			delete r;
 		}
@@ -140,6 +143,14 @@ void TcpSrc::set_paths(vector<const Route *> *rt)
 
 void TcpSrc::set_flowsize(uint64_t flow_size_in_bytes)
 {
+
+	// Complete per-flow record for building inter-panel port maps: every
+	// collective reaches here, unlike the single all-to-all print in ffapp.
+	// Off unless GLASS_LOG_FLOWS is set.
+	if (getenv("GLASS_LOG_FLOWS")) {
+		fprintf(stderr, "flowlog: %d %d %lu\n", get_flow_src(), get_flow_dst(),
+		        (unsigned long)flow_size_in_bytes);
+	}
 
 	_flow_size = flow_size_in_bytes; // + _mss; // not sure "+ _mss" is necessary...
 																	 // if (_flow_size == 0)
@@ -906,7 +917,10 @@ TcpSink::~TcpSink()
 #ifdef PACKET_SCATTER
 	if (_paths)
 	{
-		for (Route *r : _paths)
+		// *_paths, not _paths: it is a pointer to the vector. And the elements are
+		// const Route*, so binding them to Route* drops const. Both errors have
+		// been latent since tcp.h:41 commented the define out.
+		for (const Route *r : *_paths)
 		{
 			delete r;
 		}

@@ -9,7 +9,11 @@
 #include <set>
 #include <utility>
 
+#include <map>
 #include "ffapp.h"
+// for the hierarchical all-to-all: panel(), gw(), _gw_parallel. The include
+// path already carries datacenter/ (src/clos/Makefile INC).
+#include "glassfb_topology.h"
 #include "ndp.h"
 #include "dctcp.h"
 #include "route.h"
@@ -2091,6 +2095,10 @@ void FFReduceScatter::start_flow(int src_idx, int id) {
     flowSrc->connect(*routeout, *routein, *flowSnk, 
         curr_round > 0 ? eventlist().now() : start_time);
 
+#ifdef PACKET_SCATTER
+    flowSrc->set_paths(srcpaths);
+    flowSnk->set_paths(dstpaths);
+#endif
     delete srcpaths;
     delete dstpaths;
 }
@@ -2225,6 +2233,10 @@ void FFAllGather::start_flow(int src_idx, int id) {
     flowSrc->connect(*routeout, *routein, *flowSnk, 
         curr_round > 0 ? eventlist().now() : start_time);
 
+#ifdef PACKET_SCATTER
+    flowSrc->set_paths(srcpaths);
+    flowSnk->set_paths(dstpaths);
+#endif
     delete srcpaths;
     delete dstpaths;
 }
@@ -2298,6 +2310,61 @@ void FFAlltoAll::updatetrafficmatrix() {
     flag=0;
 }
 
+// Build the (p, q, g) plan for a gateway-aggregated all-to-all. Returns false if
+// the topology is not glass-FB, in which case the caller runs the flat A2A.
+//
+// Stage 1 gathers, inside panel p, everything destined for panel q onto G proxy
+// GPUs; stage 2 crosses the edge as ONE flow per proxy; stage 3 scatters inside
+// panel q. Bytes across the edge are unchanged; intra-panel bytes rise by 2x the
+// cross-panel volume, which the width sweep says is free (400 -> 896 GB/s moved
+// nothing). The proxies ARE the gateway slots the multi-gateway routing already
+// uses, so get_paths sends stage 2 over the right edge with no routing change.
+bool FFAlltoAll::build_hier_plan() {
+    GlassFBTopology *top = dynamic_cast<GlassFBTopology *>(ffapp->topology);
+    if (!top) return false;
+    const int G = top->_gw_parallel > 0 ? top->_gw_parallel : 1;
+
+    std::map<int, std::vector<int>> by_panel_src, by_panel_dst;
+    for (uint64_t s0 : from_node_ids) by_panel_src[top->panel((int)s0)].push_back((int)s0);
+    for (uint64_t d0 : to_node_ids)   by_panel_dst[top->panel((int)d0)].push_back((int)d0);
+
+    a2a_plan.clear();
+    for (auto &pe : by_panel_src) {
+        for (auto &qe : by_panel_dst) {
+            if (pe.first == qe.first) continue;
+            for (int g = 0; g < G; g++) {
+                FFA2APlan e;
+                e.p = pe.first; e.q = qe.first; e.g = g;
+                e.gw_src = top->gw(pe.first, qe.first, g);
+                e.gw_dst = top->gw(qe.first, pe.first, g);
+                for (size_t i = 0; i < pe.second.size(); i++) {
+                    if ((int)(i % G) != g) continue;
+                    int sgpu = pe.second[i];
+                    uint64_t tot = 0;
+                    for (int dgpu : qe.second)
+                        tot += operator_sizes[std::make_pair(sgpu, dgpu)];
+                    if (tot == 0) continue;
+                    e.edge_bytes += tot;
+                    if (sgpu != e.gw_src) e.gather.push_back(std::make_pair(sgpu, tot));
+                }
+                for (int dgpu : qe.second) {
+                    uint64_t tot = 0;
+                    for (size_t i = 0; i < pe.second.size(); i++) {
+                        if ((int)(i % G) != g) continue;
+                        tot += operator_sizes[std::make_pair(pe.second[i], dgpu)];
+                    }
+                    if (tot == 0 || dgpu == e.gw_dst) continue;
+                    e.scatter.push_back(std::make_pair(dgpu, tot));
+                }
+                if (e.edge_bytes == 0) continue;
+                e.pending_gather = (int)e.gather.size();
+                a2a_plan.push_back(e);
+            }
+        }
+    }
+    return true;
+}
+
 void FFAlltoAll::doNextEvent() {
     //std::cerr << "Task: " << (uint64_t)this << " type: " << type << " counter: " << counter << std::endl;
     std::cerr << "FFAlltoAll::doNextEvent()" <<std::endl;
@@ -2315,6 +2382,45 @@ void FFAlltoAll::doNextEvent() {
         }
     }
     
+    // ---- hierarchical path: staged flows instead of the all-pairs launch ----
+    if (ffapp->a2a_hier && build_hier_plan()) {
+        GlassFBTopology *top = dynamic_cast<GlassFBTopology *>(ffapp->topology);
+        total_rounds = 0;
+        std::vector<std::pair<int,int>> direct;
+        for (uint64_t s0 : from_node_ids)
+            for (uint64_t d0 : to_node_ids)
+                if (top->panel((int)s0) == top->panel((int)d0)
+                    && operator_sizes[std::make_pair((int)s0,(int)d0)] > 0)
+                    direct.push_back(std::make_pair((int)s0,(int)d0));
+        for (auto &e : a2a_plan)
+            total_rounds += (int)e.gather.size() + 1 + (int)e.scatter.size();
+        total_rounds += (int)direct.size();
+        std::cerr << " all2all HIERARCHICAL: " << a2a_plan.size()
+                  << " (panel,panel,gw) entries, " << direct.size()
+                  << " intra-panel direct, total rounds " << total_rounds << std::endl;
+        if (total_rounds == 0) {
+            // Nothing to send: this all-to-all has no bytes to move (the GROUP_BY
+            // tasks carry xfersize 0). finish_alltoall only ever runs from a flow
+            // callback, so with no flow launched the completion test below would
+            // never be reached and every dependent task would wait forever.
+            finish_time = max(finish_time, eventlist().now());
+            run_time = finish_time - start_time;
+            cleanup();
+            return;
+        }
+        for (auto &d : direct)
+            start_flow(d.first, d.second, operator_sizes[std::make_pair(d.first,d.second)], 0, -1);
+        for (size_t k = 0; k < a2a_plan.size(); k++) {
+            FFA2APlan &e = a2a_plan[k];
+            if (e.gather.empty())
+                start_flow(e.gw_src, e.gw_dst, e.edge_bytes, 2, (int)k);
+            else
+                for (auto &gsz : e.gather)
+                    start_flow(gsz.first, e.gw_src, gsz.second, 1, (int)k);
+        }
+        return;
+    }
+
     std::cerr<< " all2all task " << " total rounds " << total_rounds << std::endl;
     
     // Start flows
@@ -2332,7 +2438,7 @@ void FFAlltoAll::doNextEvent() {
     }
 }
 
-void FFAlltoAll::start_flow(int src_gpu, int dst_gpu) {
+void FFAlltoAll::start_flow(int src_gpu, int dst_gpu, uint64_t size, int stage, int plan_idx) {
     /*
         mixnet:
             1. conn is node matrix not expert matrix
@@ -2342,7 +2448,8 @@ void FFAlltoAll::start_flow(int src_gpu, int dst_gpu) {
     std::cerr << " FFAlltoAll::start_flow: "<<" from: "<< src_gpu << " to: "<< dst_gpu <<std::endl;
     uint64_t flow_size;
     
-    flow_size = operator_sizes[std::make_pair(src_gpu, dst_gpu)];
+    // hierarchical stages carry their own size; the flat path reads the matrix
+    flow_size = (size > 0) ? size : operator_sizes[std::make_pair(src_gpu, dst_gpu)];
     
     // f->src_idx = src_idx;
     // f->round = round;
@@ -2352,6 +2459,8 @@ void FFAlltoAll::start_flow(int src_gpu, int dst_gpu) {
     f->a2a = this;
     f->src_idx = src_gpu;
     f->dst_idx = dst_gpu;
+    f->stage = stage;
+    f->plan_idx = plan_idx;
 
     if (src_gpu == dst_gpu || (!ffapp->disable_intra_node_shortcut && (src_gpu / NUM_GPU_PER_NODE) == (dst_gpu / NUM_GPU_PER_NODE))) {
         // intra-node communication (or a true self-loop, always a no-op regardless of the shortcut flag)
@@ -2464,6 +2573,10 @@ void FFAlltoAll::start_flow(int src_gpu, int dst_gpu) {
         flowSrc->connect(*routeout, *routein, *flowSnk, curr_round > 0 ? eventlist().now() : start_time);
     }
 
+#ifdef PACKET_SCATTER
+    flowSrc->set_paths(srcpaths);
+    flowSnk->set_paths(dstpaths);
+#endif
     delete srcpaths;
     delete dstpaths;
 }
@@ -2476,6 +2589,19 @@ void finish_alltoall(void * a2ainfo) {
 
     a2a_task->curr_round++;
     
+    // Hierarchical: a finished stage-1 flow may release stage 2, and a finished
+    // stage-2 flow releases stage 3. Stage-3 and direct flows only count.
+    if (a2a->plan_idx >= 0 && a2a->plan_idx < (int)a2a_task->a2a_plan.size()) {
+        FFA2APlan &e = a2a_task->a2a_plan[a2a->plan_idx];
+        if (a2a->stage == 1) {
+            if (--e.pending_gather == 0)
+                a2a_task->start_flow(e.gw_src, e.gw_dst, e.edge_bytes, 2, a2a->plan_idx);
+        } else if (a2a->stage == 2) {
+            for (auto &ssz : e.scatter)
+                a2a_task->start_flow(e.gw_dst, ssz.first, ssz.second, 3, a2a->plan_idx);
+        }
+    }
+
     if (a2a_task->curr_round == a2a_task->total_rounds) {
         std::cerr << "finish_alltoall_task "<< " total rounds "<< a2a_task->total_rounds << " intra node routing num "<< a2a->intra_node_routing << std::endl;
         a2a_task->finish_time = max(a2a_task->finish_time, a2a_task->eventlist().now());
@@ -2591,6 +2717,10 @@ void FFP2P::start_flow(uint64_t src_gpu, uint64_t dst_gpu) {
 
     flowSrc->connect(*routeout, *routein, *flowSnk, start_time);
 
+#ifdef PACKET_SCATTER
+    flowSrc->set_paths(srcpaths);
+    flowSnk->set_paths(dstpaths);
+#endif
     delete srcpaths;
     delete dstpaths;
 }

@@ -142,6 +142,10 @@ int main(int argc, char **argv)
     // gets to a credit-flow-controlled fabric with congestion notification.
     // NOTE it is still packet-level TCP, NOT cycle-level credit backpressure -- see
     // docs/paper_todo.md A35. Default ECN, so this switch is inert until asked for.
+    // Hierarchical (gateway-aggregated) all-to-all: gather inside the panel,
+    // cross each edge as one flow per gateway, scatter inside the destination
+    // panel. Same bytes across the edge, G flows instead of psize^2.
+    bool a2a_hier = false;
     queue_type qtype = ECN;
     const char *qtype_name = "ECN";
 
@@ -266,6 +270,10 @@ int main(int argc, char **argv)
         {
             disable_intra_shortcut = true;
         }
+        else if (!strcmp(argv[i], "-a2a_hier"))
+        {
+            a2a_hier = true;
+        }
         else if (!strcmp(argv[i], "-queuetype"))
         {
             qtype_name = argv[i + 1];
@@ -387,6 +395,9 @@ int main(int argc, char **argv)
     // FFApplication app = FFApplication(top, ssthresh, sinkLogger, traffic_logger, tcpRtxScanner, eventlist);
     FFApplication app = FFApplication(top, ssthresh, logdir, &fct_util_out, tcpRtxScanner, eventlist);
     app.disable_intra_node_shortcut = disable_intra_shortcut;
+    app.a2a_hier = a2a_hier;
+    std::cerr << "A2A: " << (a2a_hier ? "hierarchical (gather -> one flow per gateway -> scatter)"
+                                       : "flat (all pairs direct)") << std::endl;
     // Print the mode that actually ran: a setting is not considered active until the
     // log shows evidence it was used (see docs/interconnect_parameters.md 4b).
     std::cerr << "Intra-node NVLink shortcut: "

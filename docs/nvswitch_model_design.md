@@ -81,10 +81,26 @@ NVLink stripes one transfer across all 18 links; a TCP flow in htsim follows one
 
 ## 4. Transport (derived, printed)
 
-- NVLink tier BDP: `L × 2·nvs_lat` = 50 GB/s × 500 ns = 25 KB ≈ 17 pkts at 1500 B. Use
-  `q = k·BDP` with `k` printed; start at k=8 (`-nvs_q 136`), sensitivity k∈{4,8,16} on the
-  EP=32 row. ECN K as a fraction of `q`. Real NVSwitch ports buffer far more than 8×BDP,
-  so k=8 is conservative for NVLink.
+- **BDP is `link_bw × the round trip of the path that queue serves`** — not a fixed multiple
+  of the hop latency. Count the hops:
+  - NVLink tier: GPU → switch → GPU is **two hops each way**, so RTT = `4·nvs_lat` =
+    1000 ns and BDP = 50 GB/s × 1 µs = 50 KB ≈ 33 pkts at 1500 B. (This bullet previously
+    said `2·nvs_lat`; the code has always used `4·nvs_lat` — `nvswitch_topology.cpp:39`,
+    *"the round trip through a switch (two hops each way)"* — and the code is right.)
+  - Glass inter-panel tier: a port-mapped edge is **one hop each way**, so RTT =
+    `2·inter_lat` = 1000 ns and BDP = 400 GB/s × 1 µs = 400 KB ≈ 267 pkts. q=1064 is
+    therefore **4.0×BDP**, not the 8.0 first reported (which divided by one *one-way*
+    latency) nor 2.0 (which read `4·lat` as a formula and so double-counted the trip).
+  - NIC tier: `-rtt` is already a round trip, so BDP = `nic_bw × rtt`.
+
+  Both fabrics are quoted "over one port, for that port's own round trip", which excludes
+  the other hops an end-to-end flow also crosses. Stating the definition matters more than
+  which of the two is chosen, but the two must be the same on both fabrics or the
+  comparison is not one.
+
+  Use `q = k·BDP` with `k` printed; start at k=8, sensitivity k∈{4,8,16} on the EP=32 row.
+  ECN K as a fraction of `q`. Real NVSwitch ports buffer far more than 8×BDP, so k=8 is
+  conservative for NVLink.
 - NIC tier: as the island baselines (q ≈ 4×BDP at 2 µs, printed `q_over_bdp`).
 - RTO floor 100 µs (every row in the paper), MTU 1500.
 
@@ -98,7 +114,7 @@ NVLink stripes one transfer across all 18 links; a TCP flow in htsim follows one
 Banner (one line each, so a row states its substrate):
 ```
 NVSwitch model: D=64 GPUs/domain, S=18 switches x 50 GB/s (= 900 GB/s/GPU/dir), hop 250 ns
-NVSwitch queue: 136 pkt (8.0x BDP at 500 ns RTT), ECN K 68, stripe=ecmp, analytic island OFF
+NVSwitch queue: 520 pkt (15.6237x BDP at 1000 ns RTT), ECN K 272, stripe=ecmp, analytic island OFF
 Scale-out: 100 GB/s NIC per GPU, feeder 540 pkt (4.0x BDP at 2000 ns), EGRESS ONLY
 ```
 

@@ -45,7 +45,7 @@ def load_drops():
             out[(r.get("system", ""), (r.get("ep") or "").strip(), (r.get("q") or "").strip())] = int(d)
     return out
 
-PAPER = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper"
+PAPER = os.environ.get("PAPER_RES", "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper")
 GRID_FILES = {"dse_cabling_2x2.csv"}
 
 

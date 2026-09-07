@@ -72,10 +72,10 @@ binary reproduced 46 028 299 484 ps and 6 448 818 088 ps exactly, now with
 `RTO floor: 10000 us (default)` present. The rule cost one re-run and converted
 an assumption into a record.
 
-### Eight sub-classes discovered after the original six
+### Nine sub-classes discovered after the original six
 
 The six instances above are all one failure: a setting that was configured but never read.
-Eight further failures have since been found that the banner rule provably **cannot** catch,
+Nine further failures have since been found that the banner rule provably **cannot** catch,
 because in each the run used exactly what it was handed and reported it accurately.
 
 | # | Sub-class | Instance | Why banners miss it |
@@ -85,6 +85,7 @@ because in each the run used exactly what it was handed and reported it accurate
 | C | **Post-processing failed silently after a successful solve** | MAPDL wrote to files literally named `%CSVTILE%.csv` because the parameter never substituted; all four expected panel CSVs were absent, and a stale output from a *different configuration* sat in their place looking current | The solve succeeded and its `.rth` is correct; only the extraction failed, and it failed without an error |
 | D | **Uncommitted code that keeps reapplying** | The flat port-cap implementation was written, built and run from a working tree and never committed; a commit referencing its `extern`s would not link from a clean checkout | `git -c rebase.autoStash=true pull --rebase` stashed and reapplied the files cleanly across many commits, so they stayed live in the tree while appearing in none of them |
 
+| J | **The run stopped before the quantity converged** | The tile transient reported a 26.159 K rise at `TEND = 0.05 s`. Its own 10–90 rise time is 33 ms, so the run stopped at ~1.5 rise-times and never reached its asymptote; a direct steady solve at identical boundary conditions gives 28.941 K, **10.6% higher** | The solve converged at every time step, the extraction worked, and the reported peak *is* the peak of what was simulated. Nothing is wrong except the stopping time, which no banner reports and no gate checks |
 | I | **Two runs sharing one output path** | The simulator names its output directory from a **one-second** timestamp (`put_time(now_tm, "%m-%d-%H-%M-%S")`). Running six sweeps in parallel put two cells of different jobs into the same second, so both appended to one `fct_util_out.txt` and their lines spliced | Both runs are correct and both report success. The corruption is in a *third* file neither run is aware it shares, and it appears only in columns derived from it — `makespan` and `rtos`, read from each run's own stdout, stay right |
 | H | **The schema moved under a writer that did not** | `island_ep64_qwenmoe.sh` appended rows positionally against a 36-column header. `fct_recompute.py` had since added nine columns to `cliff.csv` and the model/model_name split one more, taking the file to 46 — so 36 values were written under a 46-column header, `final` landed under a different column's name, and every field after `model` was one place out | A short CSV row is not a parse error; it is a row with empty trailing fields. Every tool read it without complaint, and the only visible symptom was a blank `status` on two rows out of eight |
 | G | **A dead artifact is indistinguishable from an unborn one** | `experiments/results/paper/cliff_pkt.csv` sat header-only for days. The job meant to fill it aborted two seconds in, every time it was submitted, on an unbound `${tag}` in a `local` line under `set -u`. The packet-level NVSwitch cliff rows were on the must-have list and had never been measured | Nothing was wrong at run time, because there was no run. An empty output file is the *same* artifact whether the job has not been submitted, is queued, or has failed on every attempt — and "not started yet" is the reading that raises no alarm |
@@ -226,6 +227,35 @@ Contaminated rows are marked, never deleted: their makespan and RTO count remain
 FCT columns are spliced. `fct_logdir` is a separate column from `status_fct` because that one already
 records the payload/bracket mode, and one column carrying two meanings is how the `Q64` and `model`
 collisions started.
+
+**Sub-class J is the one that passes every check this document has so far imposed.** The
+parameter was read, the banner was right, the artifact had a producer, the output path was its own,
+the status was derived. The defect is that `TEND` was chosen before the response time was known, and
+nothing re-examined it once the run had measured a 33 ms rise time and stopped at 50 ms.
+
+> **A quantity that approaches a limit must be shown to have reached it.** Report the integration
+> horizon in rise-times, not seconds, and gate on it: a transient quoted as a steady value needs its
+> end time to be several times its own measured response.
+
+It was caught only by a *cross-check against an independently computed value* — the R_int sweep's
+perfect-contact reference disagreed with the published peak by 2.78 K, and chasing that disagreement
+showed the reference was right and the published number short. Applied: both step runs re-run at
+`TEND = 0.30 s` (~9 rise-times), and the R_int deck now prints its reference against the known value
+so the comparison is recorded rather than done in someone's head.
+
+Note what the first version of that reference did: at `R = 1e-9 cm²·K/W` the layer conductivity
+`k = t/R` is **10⁸ W/mK against glass's 1.2**, and the ill-conditioned solve returned a temperature
+18.8 K *below* the true one — while the three real resistance cases sat within 0.73 K of each other,
+which is what exposed it. A reference cell is not automatically trustworthy for being the "null"
+case; it can be the only broken one.
+
+Sub-class D also acquired a new instance worth recording: the hierarchical all-to-all's
+`dynamic_cast<GlassFBTopology *>` put a typeinfo dependency into `ffapp.o`, which every binary links,
+while only the four glass targets link `glassfb_topology.o`. Twelve targets — `nvswitch`, `flat`,
+`fattree`, `mixnet`, `wafer`, `fc` and more — silently stopped being buildable, and kept working only
+because their binaries predated the change. **The binaries on disk had ceased to be reproducible from
+the committed source**, which is D's exact definition arrived at from the opposite direction: not
+uncommitted code that keeps working, but committed code that cannot be rebuilt.
 
 ### Scope limit
 

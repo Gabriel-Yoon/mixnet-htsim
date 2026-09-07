@@ -24,7 +24,13 @@ public:
 
     inline simtime_picosec drainTime(Packet *pkt)
     {
-        return (simtime_picosec)(pkt->size() * _ps_per_byte);
+        // Exact, per packet. The old form multiplied size by a per-byte constant
+        // that had been truncated to a whole picosecond, so any link whose rate
+        // did not divide 1000 GB/s ran fast -- 450 GB/s became 500, and 1800
+        // became infinite because the constant truncated to zero. Rounding to
+        // nearest here bounds the error at half a picosecond per PACKET.
+        return (simtime_picosec)(((uint64_t)pkt->size() * 8ULL * 1000000000000ULL
+                                  + (uint64_t)_bitrate / 2ULL) / (uint64_t)_bitrate);
     }
     inline mem_b serviceCapacity(simtime_picosec t)
     {
@@ -68,7 +74,10 @@ public:
     virtual void completeService();
 
     linkspeed_bps _bitrate;
-    simtime_picosec _ps_per_byte;  // service time, in picoseconds per byte
+    // Fractional on purpose: serviceTime() estimates a whole queue's drain from
+    // this, and rounding it to a whole picosecond per byte is the defect above.
+    // Per-packet timing does NOT use it; see drainTime.
+    double _ps_per_byte;           // service time, in picoseconds per byte
     mem_b _queuesize;
     list<Packet*> _enqueued;
     int _num_drops;

@@ -148,7 +148,7 @@ DynFlatScheduler::DynFlatScheduler(int nnodes, int degree, FlatTopology *topo,
       if (src_port == dst_port)
         continue;
       topo->queues[src_port][dst_port]->_bitrate = init_conn[src_port * nnodes + dst_port] * speedFromMbps((uint64_t)SPEED);
-      topo->queues[src_port][dst_port]->_ps_per_byte = (simtime_picosec)((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
+      topo->queues[src_port][dst_port]->_ps_per_byte = ((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
     }
   }
   finish_reconf();
@@ -619,7 +619,7 @@ void DynFlatScheduler::update_all_queue_bandwidth()
             {
               topo->queues[src_port][dst_port]->_bitrate += speedFromMbps((uint64_t)SPEED);
               topo->queues[src_port][dst_port]->_ps_per_byte =
-                  (simtime_picosec)((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
+                  ((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
             }
           }
         }
@@ -778,7 +778,7 @@ void DynFlatScheduler::update_all_queue_bandwidth()
           if (src_port == dst_port)
             continue;
           topo->queues[src_port][dst_port]->_bitrate = allocation.get_elem(src_port, dst_port) * speedFromMbps((uint64_t)SPEED);
-          topo->queues[src_port][dst_port]->_ps_per_byte = (simtime_picosec)((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
+          topo->queues[src_port][dst_port]->_ps_per_byte = ((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
         }
       }
       delete[] flows;
@@ -819,7 +819,7 @@ void DynFlatScheduler::update_all_queue_bandwidth()
         if (src_port == dst_port)
           continue;
         topo->queues[src_port][dst_port]->_bitrate = conn[src_port * nnodes + dst_port] * speedFromMbps((uint64_t)SPEED);
-        topo->queues[src_port][dst_port]->_ps_per_byte = (simtime_picosec)((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
+        topo->queues[src_port][dst_port]->_ps_per_byte = ((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
       }
     }
 
@@ -911,7 +911,7 @@ for ( int src_port = 0; src_port < nnodes; src_port ++ ) {
 for ( int dst_port = 0; dst_port < nnodes; dst_port ++ ) {
   if (src_port == dst_port) continue;
   topo->queues[src_port][dst_port]->_bitrate = conn[src_port * nnodes + dst_port] * speedFromMbps((uint64_t)SPEED);
-  topo->queues[src_port][dst_port]->_ps_per_byte = (simtime_picosec)((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
+  topo->queues[src_port][dst_port]->_ps_per_byte = ((pow(10.0, 12.0) * 8) / topo->queues[src_port][dst_port]->_bitrate);
 }
 }
 }

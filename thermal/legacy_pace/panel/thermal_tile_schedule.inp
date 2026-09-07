@@ -1,0 +1,106 @@
+! ==========================================================================
+! thermal_tile_schedule.inp -- SINGLE TILE of the glass panel stack, PERIODIC load.
+!
+! WHY THIS EXISTS. thermal_tile_transient.inp answers "how fast does the stack
+! respond to an idle->TDP step", and measured 33-37 ms 10-90 rise. That is an
+! OUTER bound: a real training iteration never sits at idle. The question the
+! paper needs is what the PIC actually swings by when the GPU alternates between
+! compute and communication at the rate our own runs measure.
+!
+! The two periods are taken from measured rows of this paper, not chosen:
+!   86.75 ms  one EP=16 iteration   (the glass EP=16 cliff row)
+!   10.84 ms  one microbatch        (that iteration / mb=8)
+! The 33-37 ms response time sits BETWEEN them, so the answer genuinely differs:
+! the slow period should nearly reach the full swing, the fast one should be
+! largely averaged out by thermal mass. That is the point of running both.
+!
+! ASSUMPTION, stated because it is not measured: the low phase is 30% of TDP,
+! not zero. A GPU waiting on an all-to-all is not at 0 W. P_LO is a parameter so
+! the assumption can be moved; the idle->TDP step remains the outer bound.
+!
+! The PIC is NOT switched: its power is set by the link budget, not the compute
+! phase, exactly as in the step deck.
+!
+! Same tile, stack, materials and boundary conditions as thermal_tile_transient.
+! Params (wrapper *SET): MATFLAG, HCP, TCP, P_PIC, P_HI, P_LO, FHOT, NDPT,
+!                        PERIOD, NPER.
+! ==========================================================================
+/PREP7
+TILE_W=28.3e-3
+T_BRD=0.5e-3 $ T_SUB=0.7e-3 $ T_PIC=0.05e-3 $ T_RDL=0.1e-3 $ T_DIE=0.75e-3
+
+*IF,MATFLAG,EQ,1,THEN
+  KMAT=1.2
+*ELSE
+  KMAT=150.0
+*ENDIF
+MP,KXX,1,1.0   $ MP,KYY,1,1.0   $ MP,KZZ,1,1.0   $ MP,DENS,1,1900 $ MP,C,1,1200
+MP,KXX,2,KMAT  $ MP,KYY,2,KMAT  $ MP,KZZ,2,KMAT  $ MP,DENS,2,2500 $ MP,C,2,800
+MP,KXX,3,80.0  $ MP,KYY,3,80.0  $ MP,KZZ,3,80.0  $ MP,DENS,3,2330 $ MP,C,3,700
+MP,KXX,4,200.0 $ MP,KYY,4,200.0 $ MP,KZZ,4,60.0  $ MP,DENS,4,8900 $ MP,C,4,385
+MP,KXX,5,150.0 $ MP,KYY,5,150.0 $ MP,KZZ,5,150.0 $ MP,DENS,5,2330 $ MP,C,5,700
+
+ET,1,SOLID70
+ESIZE,TILE_W/NDPT
+Z0=0 $ Z1=Z0+T_BRD $ Z2=Z1+T_SUB $ Z3=Z2+T_PIC $ Z4=Z3+T_RDL $ Z5=Z4+T_DIE
+BLOCK,0,TILE_W,0,TILE_W,Z0,Z1 $ VSEL,S,LOC,Z,(Z0+Z1)/2 $ VATT,1,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,Z1,Z2 $ VSEL,S,LOC,Z,(Z1+Z2)/2 $ VATT,2,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,Z2,Z3 $ VSEL,S,LOC,Z,(Z2+Z3)/2 $ VATT,3,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,Z3,Z4 $ VSEL,S,LOC,Z,(Z3+Z4)/2 $ VATT,4,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,Z4,Z5 $ VSEL,S,LOC,Z,(Z4+Z5)/2 $ VATT,5,,1 $ VMESH,ALL $ ALLSEL
+ALLSEL $ NUMMRG,NODE,1e-6 $ NUMCMP,NODE
+
+AHOT=(TILE_W/3)*(TILE_W/3)
+APIC=TILE_W*TILE_W
+XA=TILE_W/3 $ XB=2*TILE_W/3
+YA=TILE_W/3 $ YB=2*TILE_W/3
+
+! hot-spot and background volumetric heat generation, per phase
+HGH_HI=FHOT*P_HI/(AHOT*T_DIE)
+HGC_HI=(1.0-FHOT)*P_HI/((TILE_W*TILE_W-AHOT)*T_DIE)
+HGH_LO=FHOT*P_LO/(AHOT*T_DIE)
+HGC_LO=(1.0-FHOT)*P_LO/((TILE_W*TILE_W-AHOT)*T_DIE)
+
+ZPIC=(Z2+Z3)/2
+NMON=NODE(TILE_W/2,TILE_W/2,ZPIC)
+
+ASEL,S,LOC,Z,Z5 $ SFA,ALL,,CONV,HCP,TCP $ ALLSEL
+ASEL,S,LOC,Z,Z0 $ SFA,ALL,,CONV,50.0,40.0 $ ALLSEL
+FINISH
+
+/SOLU
+ANTYPE,TRANS
+TRNOPT,FULL
+OUTRES,ALL,ALL
+KBC,1
+
+! ---- steady baseline at the LOW phase, so the run starts on the duty cycle
+!      rather than from idle: the first period is then already representative
+!      and only the last one is reported anyway. ----
+TIMINT,OFF
+ESEL,S,MAT,,3 $ BFE,ALL,HGEN,1,P_PIC/(APIC*T_PIC) $ ALLSEL
+ESEL,S,MAT,,5 $ BFE,ALL,HGEN,1,HGC_LO $ ALLSEL
+ESEL,S,MAT,,5 $ ESEL,R,CENT,X,XA,XB $ ESEL,R,CENT,Y,YA,YB $ BFE,ALL,HGEN,1,HGH_LO $ ALLSEL
+TIME,1e-6
+SOLVE
+
+! ---- NPER periods of 50% duty: high for PERIOD/2, then low for PERIOD/2 ----
+TIMINT,ON
+AUTOTS,ON
+! resolve the half-period: the swing is what is being measured, so the time step
+! must be small against it, not against the total run.
+DELTIM,PERIOD/1000,1e-7,PERIOD/200
+
+*DO,IP,1,NPER
+  ! compute phase
+  ESEL,S,MAT,,5 $ BFE,ALL,HGEN,1,HGC_HI $ ALLSEL
+  ESEL,S,MAT,,5 $ ESEL,R,CENT,X,XA,XB $ ESEL,R,CENT,Y,YA,YB $ BFE,ALL,HGEN,1,HGH_HI $ ALLSEL
+  TIME,(IP-1)*PERIOD+PERIOD/2
+  SOLVE
+  ! communication phase
+  ESEL,S,MAT,,5 $ BFE,ALL,HGEN,1,HGC_LO $ ALLSEL
+  ESEL,S,MAT,,5 $ ESEL,R,CENT,X,XA,XB $ ESEL,R,CENT,Y,YA,YB $ BFE,ALL,HGEN,1,HGH_LO $ ALLSEL
+  TIME,IP*PERIOD
+  SOLVE
+*ENDDO
+FINISH

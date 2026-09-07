@@ -1,3 +1,5 @@
-paper_ref,cabling,ep,nodes,q,q_over_bdp,q_pct_vs_1064,relayed_pairs,completed,makespan_ms,pct_vs_1064,rtos,max_fct_ms,wall_s,status,note,status_fct,fct_logdir
-,,,,,,,,,,,,,,submitted,job=12895952 host=atl1-1-02-002-20-1 start=2026-09-06T22:26:34,,
-cliff,portmap_ground_truth,32,256,1000,3.75,-6.02,0,COMPLETE,88.089,-3.59,1764,5644288.0000,707,sensitivity,fine q sensitivity around the cliff row,,shared_logdir
+paper_ref,cabling,ep,nodes,q,q_over_bdp,q_pct_vs_1064,relayed_pairs,completed,makespan_ms,pct_vs_1064,rtos,max_fct_ms,wall_s,status,note,status_fct,fct_logdir,quotable,quotable_why
+,,,,,,,,,,,,,,submitted,job=12895952 host=atl1-1-02-002-20-1 start=2026-09-06T22:26:34,,,no,no completed iteration
+cliff,portmap_ground_truth,32,256,1000,3.75,-6.02,0,COMPLETE,88.089,-3.59,1764,5644288.0000,707,sensitivity,fine q sensitivity around the cliff row,,shared_logdir,no,timeouts present: 1764 (vanishing-timeout rule)
+cliff,portmap_ground_truth,32,256,1032,3.87,-3.01,0,COMPLETE,92.088,+0.79,1639,14.6336,656,sensitivity,fine q sensitivity around the cliff row,,,no,timeouts present: 1639 (vanishing-timeout rule)
+cliff,portmap_ground_truth,32,256,1064,3.99,+0.00,0,COMPLETE,91.367,+0.00,1364,10.5971,678,sensitivity,fine q sensitivity around the cliff row,,,no,timeouts present: 1364 (vanishing-timeout rule)

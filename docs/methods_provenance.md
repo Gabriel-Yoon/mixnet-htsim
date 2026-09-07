@@ -72,10 +72,10 @@ binary reproduced 46 028 299 484 ps and 6 448 818 088 ps exactly, now with
 `RTO floor: 10000 us (default)` present. The rule cost one re-run and converted
 an assumption into a record.
 
-### Five sub-classes discovered after the original six
+### Six sub-classes discovered after the original six
 
 The six instances above are all one failure: a setting that was configured but never read.
-Five further failures have since been found that the banner rule provably **cannot** catch,
+Six further failures have since been found that the banner rule provably **cannot** catch,
 because in each the run used exactly what it was handed and reported it accurately.
 
 | # | Sub-class | Instance | Why banners miss it |
@@ -85,6 +85,7 @@ because in each the run used exactly what it was handed and reported it accurate
 | C | **Post-processing failed silently after a successful solve** | MAPDL wrote to files literally named `%CSVTILE%.csv` because the parameter never substituted; all four expected panel CSVs were absent, and a stale output from a *different configuration* sat in their place looking current | The solve succeeded and its `.rth` is correct; only the extraction failed, and it failed without an error |
 | D | **Uncommitted code that keeps reapplying** | The flat port-cap implementation was written, built and run from a working tree and never committed; a commit referencing its `extern`s would not link from a clean checkout | `git -c rebase.autoStash=true pull --rebase` stashed and reapplied the files cleanly across many commits, so they stayed live in the tree while appearing in none of them |
 
+| G | **A dead artifact is indistinguishable from an unborn one** | `experiments/results/paper/cliff_pkt.csv` sat header-only for days. The job meant to fill it aborted two seconds in, every time it was submitted, on an unbound `${tag}` in a `local` line under `set -u`. The packet-level NVSwitch cliff rows were on the must-have list and had never been measured | Nothing was wrong at run time, because there was no run. An empty output file is the *same* artifact whether the job has not been submitted, is queued, or has failed on every attempt — and "not started yet" is the reading that raises no alarm |
 | F | **Partial instrumentation read as a census** | The used-pair set for regenerating the inter-panel port maps was extracted from ffapp's `flow_size:` print, which exists at **one** site — inside the all-to-all — while `set_flowsize()` is called from **nine**. The extract came out as 8 pairs, all `(2k, 2k+1)` with identical bytes: the EP pairs, with every DP and PP flow absent | Every line the log emitted was correct. Nothing was misconfigured, so no banner could report anything wrong; the log was silent about what it did not cover, and a set of 8 clean symmetric pairs looks exactly like a correct answer |
 
 | E | **Runner script disagrees with the solve** | `run_panel_hq.sh` declares `HCP=70000` and cites Coenen for it; the solve it produced used **100000**, recovered from `panhq_glass.db` `*STATUS`. The solve has **no `.out` log** at all | Nothing at run time is inconsistent — the deck used what it was given; only the *script* claims otherwise, and scripts are read as documentation |
@@ -132,6 +133,27 @@ choke point every collective passes through, rather than from any per-collective
 decomposition is **withdrawn** pending regeneration; it described the all-to-all alone, not the
 workload. Sub-class F also has a second instance in this repo: `used_pairs.py` reported its 8 pairs
 without ever stating what fraction of flows its input covered.
+
+**Sub-class G is the only one whose evidence is an absence.** Every other failure here left a
+wrong artifact to be caught by reading it. This one leaves nothing, and nothing is what a
+not-yet-run experiment also leaves. The absence sat in a directory of finished results, next to
+files that were merely incomplete, and read as the same thing.
+
+> **An output file must record that its job was attempted.** A run writes a `status=submitted`
+> sentinel carrying the job id and start time before it does any work; reaching the end removes it,
+> and dying rewrites it as `ABORTED` with the exit code. A file that never ran stays empty; a file
+> whose job died says so.
+
+Applied: `scripts/paper_csv.sh` provides `csv_open`/`csv_close`, and the sentinel is placed by
+column *name* so it works across these CSVs' differing column orders. Retrofitted into the runners
+not currently executing; `island_cliff.sh` is deliberately excluded because it accumulates rows
+across invocations and `csv_open` truncates, which is a lifecycle decision rather than a mechanical
+edit.
+
+The helper's own first deployment failed this way in miniature: a wrong relative `source` path meant
+`csv_open` was never defined, and the script carried on appending rows to a file with no header. It
+was caught by checking the job's stderr rather than the CSV, which is the same rule as sub-class C —
+**check the producer, not the product.**
 
 ### Scope limit
 

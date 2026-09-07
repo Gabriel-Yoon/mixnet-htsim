@@ -10,12 +10,13 @@
 #     2-GPU benchmark -- the largest completed flow's bytes/FCT is the achieved
 #     per-flow rate, which is what mode 1's one-link limit predicts.
 set -uo pipefail
+source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test; PAPER=../../../experiments/results/paper
 mkdir -p "$PAPER" ./nvs_logs
 CSV=$PAPER/nvswitch_gates.csv
-echo "gate,config,makespan_ps,makespan_ms,rtos,flows,max_flow_GB,max_flow_fct_ms,single_flow_GBps,note" > "$CSV"
+csv_open "$CSV" "gate,config,makespan_ps,makespan_ms,rtos,flows,max_flow_GB,max_flow_fct_ms,single_flow_GBps,note"
 FB=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf
 
 run () { # tag args...
@@ -53,3 +54,4 @@ R1=$(awk -F, '$1=="G3_run1"{print $3}' "$CSV"); R2=$(awk -F, '$1=="G3_run2"{prin
 echo "  G4 vs island 86.508: $G4  (delta $(awk -v a="$G4" 'BEGIN{printf "%+.1f%%", (a-86.508)/86.508*100}'))"
 [ "$R1" = "$R2" ] && echo "  G3 PASS (deterministic: $R1)" || echo "  G3 FAIL ($R1 vs $R2)"
 cat "$CSV"
+csv_close

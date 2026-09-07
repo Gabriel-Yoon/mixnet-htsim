@@ -1,0 +1,92 @@
+! ==========================================================================
+! thermal_tile_rint.inp -- SINGLE TILE, steady state, with explicit interface
+! thermal resistance at the three interfaces between the die and the substrate.
+!
+! WHY. Every steady result so far merges the layer nodes (NUMMRG), i.e. assumes
+! PERFECT thermal contact. Real stacks have interface resistance, and the PIC
+! sits under two of these interfaces, so its temperature -- and hence the
+! resonance drift the paper claims -- is directly exposed to them. An assumed-
+! perfect interface is an unstated optimism in our favour.
+!
+! Modelled as a thin resistive layer rather than contact elements: each interface
+! is T_INT thick with conductivity KINT = T_INT / R_INT, giving exactly the
+! specified area-normalised resistance in 1-D through-thickness conduction, which
+! is the direction that matters here. The layer is thinner than the PIC layer the
+! existing decks already mesh one element through, so the mesh treatment is the
+! same one those results rely on.
+!
+! R_INT is given in cm^2.K/W (the convention interface materials are quoted in)
+! and converted: 1 cm^2.K/W = 1e-4 m^2.K/W.
+!
+! Interfaces (three, between the die and the substrate):
+!   die | RDL,  RDL | PIC,  PIC | substrate
+!
+! Params (wrapper *SET): MATFLAG, HCP, TCP, P_GPU, P_PIC, FHOT, NDPT, R_INT_CM2KW.
+! ==========================================================================
+/PREP7
+TILE_W=28.3e-3
+T_BRD=0.5e-3 $ T_SUB=0.7e-3 $ T_PIC=0.05e-3 $ T_RDL=0.1e-3 $ T_DIE=0.75e-3
+T_INT=0.01e-3
+
+R_INT_SI=R_INT_CM2KW*1e-4
+KINT=T_INT/R_INT_SI
+
+*IF,MATFLAG,EQ,1,THEN
+  KMAT=1.2
+*ELSE
+  KMAT=150.0
+*ENDIF
+MP,KXX,1,1.0   $ MP,KYY,1,1.0   $ MP,KZZ,1,1.0
+MP,KXX,2,KMAT  $ MP,KYY,2,KMAT  $ MP,KZZ,2,KMAT
+MP,KXX,3,80.0  $ MP,KYY,3,80.0  $ MP,KZZ,3,80.0
+MP,KXX,4,200.0 $ MP,KYY,4,200.0 $ MP,KZZ,4,60.0
+MP,KXX,5,150.0 $ MP,KYY,5,150.0 $ MP,KZZ,5,150.0
+! interface layer: isotropic at the value that yields R_INT through the thickness
+MP,KXX,6,KINT  $ MP,KYY,6,KINT  $ MP,KZZ,6,KINT
+
+ET,1,SOLID70
+ESIZE,TILE_W/NDPT
+
+! board | substrate | [I1] | PIC | [I2] | RDL | [I3] | die
+Z0=0
+Z1=Z0+T_BRD
+Z2=Z1+T_SUB
+ZI1=Z2+T_INT
+Z3=ZI1+T_PIC
+ZI2=Z3+T_INT
+Z4=ZI2+T_RDL
+ZI3=Z4+T_INT
+Z5=ZI3+T_DIE
+
+BLOCK,0,TILE_W,0,TILE_W,Z0,Z1   $ VSEL,S,LOC,Z,(Z0+Z1)/2   $ VATT,1,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,Z1,Z2   $ VSEL,S,LOC,Z,(Z1+Z2)/2   $ VATT,2,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,Z2,ZI1  $ VSEL,S,LOC,Z,(Z2+ZI1)/2  $ VATT,6,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,ZI1,Z3  $ VSEL,S,LOC,Z,(ZI1+Z3)/2  $ VATT,3,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,Z3,ZI2  $ VSEL,S,LOC,Z,(Z3+ZI2)/2  $ VATT,6,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,ZI2,Z4  $ VSEL,S,LOC,Z,(ZI2+Z4)/2  $ VATT,4,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,Z4,ZI3  $ VSEL,S,LOC,Z,(Z4+ZI3)/2  $ VATT,6,,1 $ VMESH,ALL $ ALLSEL
+BLOCK,0,TILE_W,0,TILE_W,ZI3,Z5  $ VSEL,S,LOC,Z,(ZI3+Z5)/2  $ VATT,5,,1 $ VMESH,ALL $ ALLSEL
+ALLSEL $ NUMMRG,NODE,1e-6 $ NUMCMP,NODE
+
+AHOT=(TILE_W/3)*(TILE_W/3)
+APIC=TILE_W*TILE_W
+HGH=FHOT*P_GPU/(AHOT*T_DIE)
+HGC=(1.0-FHOT)*P_GPU/((TILE_W*TILE_W-AHOT)*T_DIE)
+XA=TILE_W/3 $ XB=2*TILE_W/3
+YA=TILE_W/3 $ YB=2*TILE_W/3
+
+ZPIC=(ZI1+Z3)/2
+NMON=NODE(TILE_W/2,TILE_W/2,ZPIC)
+
+ASEL,S,LOC,Z,Z5 $ SFA,ALL,,CONV,HCP,TCP $ ALLSEL
+ASEL,S,LOC,Z,Z0 $ SFA,ALL,,CONV,50.0,40.0 $ ALLSEL
+
+ESEL,S,MAT,,3 $ BFE,ALL,HGEN,1,P_PIC/(APIC*T_PIC) $ ALLSEL
+ESEL,S,MAT,,5 $ BFE,ALL,HGEN,1,HGC $ ALLSEL
+ESEL,S,MAT,,5 $ ESEL,R,CENT,X,XA,XB $ ESEL,R,CENT,Y,YA,YB $ BFE,ALL,HGEN,1,HGH $ ALLSEL
+FINISH
+
+/SOLU
+ANTYPE,STATIC
+SOLVE
+FINISH

@@ -111,6 +111,8 @@ if __name__ == "__main__":
     # tag, ep, nodes, makespan of the row these bytes belong to
     # makespan is the QUOTED row's for that EP -- its vanishing-timeout point.
     # EP=64 is 39.395 ms at q=17067 (64x BDP), zero timeouts and zero measured drops.
-    main([("tier_ep16", 16, 128, 86.750),
-          ("tier_ep32", 32, 256, 75.542),
-          ("tier_ep64", 64, 512, 39.395)])
+    # POST-FIX makespans (link-rate truncation fixed, 9ac4f76). Bytes x hops are
+    # rate-independent, so only the static term moves.
+    main([("tier_ep16", 16, 128, 87.613),
+          ("tier_ep32", 32, 256, 77.918),
+          ("tier_ep64", 64, 512, 43.088)])

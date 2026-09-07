@@ -125,6 +125,8 @@ rows = []
 # 1088. Bytes do not depend on the buffer and the makespan enters only the static-energy
 # time integral, but the row says so rather than leaving it to be reconstructed.
 RUNS = {
+    # nvl64_pkt (pinned) is UNCHANGED: L=50 gives exactly 20 ps/byte under both the
+    # old integer arithmetic and the new exact one.
     "nvl64_pkt": ((16, 128, 130.797,  544,  544),
                   (32, 256, 119.397,  544, 1088),
                   (64, 512,  82.502, 2176, 2176)),
@@ -137,9 +139,15 @@ RUNS = {
     # q is the buffer the BYTE PASS ran at and q_makespan the buffer the MAKESPAN
     # was measured at; for these they are necessarily different, because the byte
     # pass is the pinned one and the makespan is the striped quoted row.
-    "nvl64_pkt_s1": ((16, 128, 88.842,  544, 2400),
-                     (32, 256, 69.364,  544, 4800),
-                     (64, 512, 29.327, 2176, 9600)),
+    # POST-FIX striped makespans; the byte pass is still the pinned one, since S
+    # changes how a GPU's bandwidth is divided and not which links a packet crosses.
+    "nvl64_pkt_s1": ((16, 128, 89.430,  544, 2400),
+                     (32, 256, 69.989,  544, 4800),
+                     (64, 512, 29.904, 2176, 9600)),
+    # hgx8_pkt is UNCHANGED post-fix: it is bounded by the NIC tier at 100 GB/s,
+    # a rate that divided 1000 exactly, so the +11% on its NVLink tier never
+    # reached the makespan. Verified, not assumed: the post-fix walk returned
+    # 145.497 / 164.522 / 144.519, identical to these.
     "hgx8_pkt":  ((16, 128, 145.497, 1224, 1224),
                   (32, 256, 164.522, 1224, 1224),
                   (64, 512, 144.519, 1224, 1224)),

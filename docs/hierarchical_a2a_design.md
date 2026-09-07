@@ -72,7 +72,7 @@ changed nothing), and it is the experiment's honest price to report.
   pairs → makespan bit-identical to the flat A2A (the switch is inert there).
 - **G3 EP=32 LLaMA-MoE @1600 mb8:** flat 186.383 ms / 368 RTO vs hierarchical; report
   makespan, RTO, mean/P99/max FCT. Expected: RTO → 0, max FCT collapses, makespan improves
-  by the incast share of the EP=32 gap (decomp says 48.7% of bytes cross the edge).
+  by the incast share of the EP=32 gap (the earlier "48.7% of bytes cross the edge" figure was A2A-only — decompose_flows.py read the A2A print only; regenerate from GLASS_LOG_FLOWS before quoting).
 - **G4 EP=64 qwenMoE top-4 @1600 and @3200:** the 3200 "reversal" row. If the tail was
   incast, hierarchical @3200 should now beat @1600.
 

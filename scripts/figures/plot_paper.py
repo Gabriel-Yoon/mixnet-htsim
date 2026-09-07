@@ -105,18 +105,20 @@ def decomp():
     classes = [("compute_ms", "compute", "compute"), ("expert_a2a_ms", "expert A2A", "a2a_inter"),
                ("dp_allreduce_ms", "DP all-reduce", "dp"), ("pp_p2p_ms", "PP p2p", "pp"), ("other_ms", "other", "tail")]
     # only rows whose (system, ep, q) is a quotable cliff row (sweep rows with timeouts stay out)
+    # keyed on (system, ep, makespan) because the labels spell the buffer three ways
+    # ("q=2133", "q2176", "k64"); the makespan is the row's identity in both tables
     quot = set()
     try:
         for c in csv.DictReader(open(os.path.join(RES, "cliff_all.csv"))):
             if (c.get("quotable") or "").lower() == "yes":
-                quot.add((c["system"], str(int(float(c["ep"]))), str(int(float(c["q"]))) if c.get("q") else ""))
+                quot.add((c["system"], str(int(float(c["ep"]))), round(float(c["makespan_ms"]), 3)))
     except Exception:
         quot = None
     parsed = []
     for r in rows:
-        m = re.match(r"(\S+) EP=(\d+)(?: q=(\d+))?", r["label"])
+        m = re.match(r"(\S+) EP=(\d+)", r["label"])
         if not m: continue
-        key = (m.group(1), m.group(2), m.group(3) or "")
+        key = (m.group(1), m.group(2), round(float(r["makespan_ms"]), 3))
         if quot is not None and key not in quot:
             print(f"[decomp] skip {r['label']}: not a quotable cliff row"); continue
         parsed.append((int(m.group(2)), m.group(1), r))

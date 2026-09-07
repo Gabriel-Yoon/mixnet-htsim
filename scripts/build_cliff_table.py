@@ -33,7 +33,7 @@ except Exception as e:                      # never let the gate stop the table
     print("WARNING: gate_quotable.py did not run (%s); `quotable` may be stale" % e,
           file=sys.stderr)
 
-PAPER = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper"
+PAPER = os.environ.get("PAPER_RES", "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper")
 OUT = os.path.join(PAPER, "cliff_all.csv")
 
 FIELDS = ["paper_ref", "family", "system", "model_name", "topk", "ep", "mb", "nodes",
@@ -50,6 +50,7 @@ SOURCES = {
     "cliff_ep32_gt.csv":        ("glassfb", "llamaMoE"),
     "cliff_ep32_gt_ksweep.csv": ("glassfb", "llamaMoE"),
     "cliff_ep64_gt.csv":        ("glassfb", "qwenMoE"),
+    "cliff_ep64_gt_ext.csv":    ("glassfb", "qwenMoE"),   # 16x/32x/64x walk rungs incl. the quoted 64x row
     "cliff_portmap.csv":        ("glassfb", None),
     "mb_sweep.csv":             (None,      "llamaMoE"),
     "pkt_vanishing_timeout.csv":(None,      None),

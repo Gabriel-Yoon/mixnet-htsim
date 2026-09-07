@@ -22,7 +22,7 @@ the hgx8_pkt EP=16 run's FCT log has 78 592 records.
 pJ/bit brackets are carried as brackets. The NIC figure is a per-tier number, not
 an NVLink one, and is named separately so it cannot be silently folded in.
 """
-import csv, os
+import csv, os, glob, re
 
 DC = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter/tier_logs"
 OUT = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper/power_tiers_pkt.csv"
@@ -83,13 +83,70 @@ def split(tag, domain):
     return ind, cross, flows, mode
 
 
+RE_QBANNER = re.compile(r"NVSwitch queue:\s*(\d+)\s*pkt")
+
+
+def banner_q(tag):
+    """The queue the RUN reported, in payload-equivalent packets, or None.
+
+    The runner passes -nvs_q in full-MTU packets and the topology prints the
+    payload-equivalent count, so the two differ by a constant ~0.956 (1436/1500):
+    544 -> 520, 1224 -> 1171. They name the same buffer. Reading it back is what
+    makes the requested value in RUNS checkable rather than remembered -- if a
+    row ever claims a buffer the run did not use, the ratio moves and the
+    mismatch is printed beside the row.
+    """
+    for name in sorted(glob.glob(os.path.join(DC, tag + "_*.log")), reverse=True) + \
+                [os.path.join(DC, tag + ".log")]:
+        try:
+            with open(name, errors="replace") as fh:
+                for line in fh:
+                    m = RE_QBANNER.search(line)
+                    if m:
+                        return int(m.group(1))
+        except OSError:
+            continue
+    return None
+
+
 rows = []
+# ep -> (nodes, makespan_ms, q the BYTE PASS ran at, q the MAKESPAN was measured at),
+# PER SYSTEM. Both differ between the two: the tier runs pass -nvs_q 544 for NVL-64 and
+# 1224 for HGX-8, and each system's makespan is its own.
+#
+# Until this was keyed per system, both systems took NVL-64's makespan, so HGX-8's static
+# energy was computed from 130.797/119.397 ms instead of its own 145.497/164.522 -- 11%
+# low at EP=16 and 38% low at EP=32, on the term that dominates its budget, in the
+# direction that flatters the incumbent. The banner cross-check below is what surfaced it:
+# it reported HGX-8 running at 1171 pkt where the table claimed 544.
+#
+# q_bytes and q_makespan also differ from each other for NVL-64 at EP=32: the tier runs
+# predate the vanishing-timeout walk and used 544, while the quoted makespan comes from
+# 1088. Bytes do not depend on the buffer and the makespan enters only the static-energy
+# time integral, but the row says so rather than leaving it to be reconstructed.
+RUNS = {
+    "nvl64_pkt": ((16, 128, 130.797,  544,  544),
+                  (32, 256, 119.397,  544, 1088),
+                  (64, 512,  82.502, 2176, 2176)),
+    "hgx8_pkt":  ((16, 128, 145.497, 1224, 1224),
+                  (32, 256, 164.522, 1224, 1224),
+                  (64, 512, 144.519, 1224, 1224)),
+}
+
 for sysname, domain in (("nvl64_pkt", 64), ("hgx8_pkt", 8)):
-    for ep, nodes, ms in ((16, 128, 130.797), (32, 256, 119.397)):
+    for ep, nodes, ms, q_bytes, q_ms in RUNS[sysname]:
         tag = "tier_%s_ep%d" % (sysname.replace("_pkt", ""), ep)
         if not os.path.exists(os.path.join(DC, tag + ".flowlog")):
             print("skip %s (not run yet)" % tag); continue
         ind, cross, flows, mode = split(tag, domain)
+        bq = banner_q(tag)
+        if bq is None:
+            print("    NOTE: %s has no queue banner -- q recorded from the run table,"
+                  " unverified" % tag)
+        elif not (0.94 <= bq / float(q_bytes) <= 0.97):
+            print("    MISMATCH: %s ran at %d pkt (banner) but the table says %d --"
+                  " ratio %.4f is outside the 1436/1500 conversion" % (tag, bq, q_bytes,
+                                                                      bq / float(q_bytes)))
         it_s = ms / 1000.0
         e_lo = ind * 8 * NVLINK[0] * 1e-12 + cross * 8 * NIC_PJ_BIT * 1e-12
         e_hi = ind * 8 * NVLINK[1] * 1e-12 + cross * 8 * NIC_PJ_BIT * 1e-12
@@ -103,7 +160,10 @@ for sysname, domain in (("nvl64_pkt", 64), ("hgx8_pkt", 8)):
               % (e_lo, e_hi, st_lo, st_hi))
         rows.append(dict(
             paper_ref="power", system=sysname, ep=ep, nodes=nodes, domain=domain,
-            makespan_ms="%.3f" % ms, flows=flows,
+            makespan_ms="%.3f" % ms, q=q_bytes, q_makespan=q_ms,
+            q_banner_pkt=(bq if bq is not None else ""),
+            q_banner_ratio=("%.4f" % (bq / float(q_bytes)) if bq else ""),
+            flows=flows,
             bytes_in_domain=ind, bytes_nic=cross,
             hops_in_domain=HOPS_IN_DOMAIN, hops_cross=HOPS_CROSS,
             nvlink_pj_bit_lo=NVLINK[0], nvlink_pj_bit_hi=NVLINK[1], nic_pj_bit=NIC_PJ_BIT,

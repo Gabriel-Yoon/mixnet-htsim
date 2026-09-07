@@ -70,6 +70,7 @@ QME=qwenMoE_paper_dp2tp1pp4_ep64top4_L4_seq1024_mb8_H100.fbuf
 echo "########## glass quoted rows ##########"
 glass 16 128 "$L16" wm_ep16.txt ep16_0_8_4.txt 1064
 glass 32 256 "$L32" wm_ep32.txt ep32_gt.txt    2133
+glass 64 512 "$QME" wm_ep64.txt ep64_gt.txt    17067
 echo "########## incumbent quoted rows ##########"
 pkt nvl64_pkt 32 256 "$L32" wm_ep32.txt 64 18 50    100 1088 540
 pkt nvl64_pkt 64 512 "$QME" wm_ep64.txt 64 18 50    100 2176 540

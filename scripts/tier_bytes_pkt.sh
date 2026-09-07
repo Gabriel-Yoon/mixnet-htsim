@@ -45,10 +45,12 @@ run () { # tag nodes fb wm D S L nic qn qc
 
 L16=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf
 L32=llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
+QME=qwenMoE_paper_dp2tp1pp4_ep64top4_L4_seq1024_mb8_H100.fbuf
 
 echo "########## NVL-64 ##########"
 run tier_nvl64_ep16 128 "$L16" wm_ep16.txt 64 18 50    100 544  540
 run tier_nvl64_ep32 256 "$L32" wm_ep32.txt 64 18 50    100 544  540
+run tier_nvl64_ep64 512 "$QME" wm_ep64.txt 64 18 50    100 2176 540
 echo "########## HGX-8 ##########"
 run tier_hgx8_ep16  128 "$L16" wm_ep16.txt  8  4 112.5  50 1224 270
 run tier_hgx8_ep32  256 "$L32" wm_ep32.txt  8  4 112.5  50 1224 270

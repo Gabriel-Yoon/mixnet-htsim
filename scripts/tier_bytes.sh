@@ -42,9 +42,12 @@ run () { # tag nodes fbuf wm map q
 
 L16=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf
 L32=llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
+QME=qwenMoE_paper_dp2tp1pp4_ep64top4_L4_seq1024_mb8_H100.fbuf
 
 echo "########## EP=16 (quoted at q=1064, its zero-RTO point) ##########"
 run tier_ep16 128 "$L16" wm_ep16.txt ep16_0_8_4.txt 1064
 echo "########## EP=32 (quoted at q=2133, its zero-RTO point) ##########"
 run tier_ep32 256 "$L32" wm_ep32.txt ep32_gt.txt   2133
+echo "########## EP=64 (quoted at q=17067, its zero-RTO point) ##########"
+run tier_ep64 512 "$QME" wm_ep64.txt ep64_gt.txt  17067
 echo "=== DONE ==="

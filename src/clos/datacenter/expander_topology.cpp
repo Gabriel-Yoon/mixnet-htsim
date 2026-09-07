@@ -213,7 +213,7 @@ void ExpanderTopology::init_network() {
 
 }
 
-void check_non_null(Route* rt){
+static void check_non_null(Route* rt){
   int fail = 0;
   for (unsigned int i=1; i<rt->size()-1; i+=2)
     if (rt->at(i)==NULL){

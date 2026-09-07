@@ -1,2 +1,5 @@
 paper_ref,system,ep,nodes,q,feeder_pkts,rto_min_us,makespan_ms,rtos,rto_times,drops_reported,vs_100us_ms,status,note
-,,,,,,,,,,,,submitted,job=12898842 host=atl1-1-01-003-31-2 start=2026-09-07T00:29:32
+probe,hgx8,32,256,270,135,100,164.522,105,58 ,0
+0,+0.0000,probe,spurious-RTO probe: raising the floor must remove the firing by construction, so the drop count at the ORIGINAL floor is the test that does not change what it measures
+probe,hgx8,32,256,270,135,1000,164.518,0,none,0
+0,-0.0040,probe,spurious-RTO probe: raising the floor must remove the firing by construction, so the drop count at the ORIGINAL floor is the test that does not change what it measures

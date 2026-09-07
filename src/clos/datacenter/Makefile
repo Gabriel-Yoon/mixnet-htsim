@@ -64,6 +64,11 @@ htsim_tcp_nvswitch_hop: main_tcp_nvswitch.o firstfit.o nvswitch_topology.o
 htsim_tcp_flat: main_tcp_flat.o firstfit.o flat_topology.o
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_flat.o flat_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_flat
 
+# Same as htsim_tcp_flat plus the ECN drop counter reported at exit. Separate
+# output name so the running island jobs keep using the untouched binary.
+htsim_tcp_flat_drop: main_tcp_flat.o firstfit.o flat_topology.o
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_flat.o flat_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_flat_drop
+
 htsim_tcp_aggosft: main_tcp_aggosft.o firstfit.o agg_os_fattree.o
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_aggosft.o agg_os_fattree.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_aggosft
 

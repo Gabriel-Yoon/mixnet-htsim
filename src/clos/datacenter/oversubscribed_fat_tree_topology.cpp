@@ -209,7 +209,7 @@ void OversubscribedFatTreeTopology::init_network(){
 	  }*/
 }
 
-void check_non_null(Route* rt);
+static void check_non_null(Route* rt);
 
 vector<const Route*>* OversubscribedFatTreeTopology::get_paths(int src, int dest){
     vector<const Route*>* paths = new vector<const Route*>();

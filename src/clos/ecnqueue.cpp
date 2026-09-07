@@ -7,6 +7,20 @@
 #include "mixnet_topomanager.h"
 #include <iostream>
 
+// Drop accounting. The queues have always counted drops in _num_drops and
+// never reported them, so a log cannot distinguish 'no loss' from 'no
+// reporting' -- a run with 13812 timeouts prints as many drop lines as one
+// with 73: none. Printed once at exit, so normal runs gain one line.
+unsigned long long GLASS_TOTAL_DROPS = 0;
+namespace {
+struct GlassDropReporter {
+    ~GlassDropReporter() {
+        std::cerr << "dropcount: " << GLASS_TOTAL_DROPS
+                  << " packets dropped by ECN queues" << std::endl;
+    }
+} glass_drop_reporter;
+}
+
 ECNQueue::ECNQueue(linkspeed_bps bitrate, mem_b maxsize,
 									 EventList &eventlist, QueueLogger *logger, mem_b K)
 		: Queue(bitrate, maxsize, eventlist, logger),
@@ -57,6 +71,7 @@ void ECNQueue::receivePacket(Packet &pkt)
 		pkt.flow().logTraffic(pkt, *this, TrafficLogger::PKT_DROP);
 		pkt.free();
 		_num_drops++;
+		GLASS_TOTAL_DROPS++;
 		return;
 	}
 	pkt.flow().logTraffic(pkt, *this, TrafficLogger::PKT_ARRIVE);

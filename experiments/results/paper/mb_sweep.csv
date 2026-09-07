@@ -16,3 +16,4 @@ mb,pkt,llamaMoE,training,nvl64_pkt,16,16,128,544,16.5,100,1500,0,COMPLETE,184.69
 mb,pkt,llamaMoE,training,nvl64_pkt,16,16,128,1088,33.0,100,1500,0,COMPLETE,186.384,0,510,yes,sweep,vanishing-timeout rule; quoted=yes is the shallowest zero-RTO buffer,yes,relay-clean and zero timeouts
 mb,pkt,llamaMoE,training,glassfb,16,32,128,1064,4.0,100,1500,0,COMPLETE,97.094,0,845,yes,sweep,vanishing-timeout rule; quoted=yes is the shallowest zero-RTO buffer,yes,relay-clean and zero timeouts
 mb,pkt,llamaMoE,training,nvl64_pkt,16,32,128,136,4.1,100,1500,0,COMPLETE,384.251,1266,908,no,sweep,vanishing-timeout rule; quoted=yes is the shallowest zero-RTO buffer,,
+mb,pkt,llamaMoE,training,nvl64_pkt,16,32,128,272,8.2,100,1500,0,COMPLETE,381.269,193,959,no,sweep,vanishing-timeout rule; quoted=yes is the shallowest zero-RTO buffer,,

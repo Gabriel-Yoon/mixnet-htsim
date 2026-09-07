@@ -65,7 +65,7 @@ void StarTopology::init_network(){
   }
 }
 
-void check_non_null(Route* rt);
+static void check_non_null(Route* rt);
 
 vector<const Route*>* StarTopology::get_paths(int src, int dest){
   vector<const Route*>* paths = new vector<const Route*>();

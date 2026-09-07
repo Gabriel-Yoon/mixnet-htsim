@@ -18,6 +18,10 @@ import csv, os, sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+try:
+    sys.path.insert(0, os.path.dirname(__file__)); import paper_style as _ps; _ps.apply()
+except Exception:
+    _ps = None
 
 RES = os.environ.get("PAPER_RES", os.path.join(os.path.dirname(__file__), "..", "..", "experiments", "results", "paper"))
 OUT = os.environ.get("OUT", ".")
@@ -95,16 +99,33 @@ def cliff():
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_cliff.png")); print("wrote fig_cliff.png")
 
 def decomp():
-    rows = [r for r in load("decomp")]
+    """R2: critical-path decomposition per class (decomp_critpath.csv; label = '<system> EP=<n> q=<q>')."""
+    import re
+    rows = load("decomp_critpath")
+    classes = [("compute_ms", "compute", "compute"), ("expert_a2a_ms", "expert A2A", "a2a_inter"),
+               ("dp_allreduce_ms", "DP all-reduce", "dp"), ("pp_p2p_ms", "PP p2p", "pp"), ("other_ms", "other", "tail")]
+    parsed = []
+    for r in rows:
+        m = re.match(r"(\S+) EP=(\d+)", r["label"])
+        if not m: continue
+        parsed.append((int(m.group(2)), m.group(1), r))
+    parsed.sort(key=lambda t: (t[0], 0 if t[1] == "glassfb" else 1))
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    systems = sorted({r["system"] for r in rows}, key=lambda s: list(SYS_LABEL).index(s) if s in SYS_LABEL else 99)
-    comps = [c for c in ("a2a_ms", "dp_allreduce_ms", "pp_ms", "compute_ms", "other_ms") if any(r.get(c) for r in rows)]
-    bottoms = [0] * len(systems)
-    for c in comps:
-        vals = [float(next(r for r in rows if r["system"] == s).get(c) or 0) for s in systems]
-        ax.bar([SYS_LABEL.get(s, s) for s in systems], vals, bottom=bottoms, label=c.replace("_ms", ""), width=0.6)
-        bottoms = [b + v for b, v in zip(bottoms, vals)]
-    ax.set_ylabel("EP=32 iteration (ms)", fontsize=7); ax.tick_params(labelsize=6); ax.legend(fontsize=5.5, frameon=False)
+    xs, labels = [], []; x = 0
+    for ep, sysname, r in parsed:
+        bottom = 0.0
+        for col, lab, ckey in classes:
+            v = float(r.get(col) or 0)
+            if v <= 0: continue
+            ax.bar(x, v, bottom=bottom, width=0.7, color=_ps.COL.get(ckey, "#999") if _ps else None,
+                   edgecolor=SYS_COLOR.get(sysname, "#333"), linewidth=0.8, label=lab if x == 0 else None)
+            bottom += v
+        ax.text(x, bottom * 1.02, f"{bottom:.1f}", ha="center", fontsize=5.5)
+        xs.append(x); labels.append(f"{SYS_LABEL.get(sysname, sysname).split(' (')[0]}\nEP={ep}"); x += 1
+        if sysname != "glassfb": x += 0.5
+    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=5.5)
+    ax.set_ylabel("critical-path time (ms)", fontsize=7); ax.tick_params(labelsize=6)
+    ax.legend(fontsize=5.5, frameon=False, loc="upper left")
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
 
 def beyond():

@@ -74,11 +74,27 @@ for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
     if not rows or "rtos" not in rows[0]:
         continue
     fields = list(rows[0].keys())
-    for c in ("quotable", "quotable_why"):
+    for c in ("quotable", "quotable_why", "link_rate_fixed"):
         if c not in fields:
             fields.append(c)
     counts = {"yes": 0, "no": 0, "grid": 0, "?": 0}
     for r in rows:
+        # --- link-rate truncation (see docs/methods_provenance.md) -------------
+        # A row from an affected fabric must prove it came from a fixed binary.
+        # Absence of the proof disqualifies: there is no binary id on the older
+        # rows, so a rule that passed what it could not identify would pass all
+        # of them.
+        sysname = (r.get("system") or "").strip()
+        affected = (sysname.startswith("glassfb") or sysname.startswith("glass_")
+                    or sysname == "hgx8_pkt" or sysname == "nvl64_pkt_s1"
+                    or sysname.startswith("calib"))
+        if affected and (r.get("link_rate_fixed") or "").strip().lower() != "yes":
+            r["quotable"] = "no"
+            r["quotable_why"] = ("link-rate truncation: pre-fix binary "
+                                 "(no link_rate_fixed=yes on this row)")
+            counts[r["quotable"]] = counts.get(r["quotable"], 0) + 1
+            continue
+
         rt = num(r.get("rtos"))
         relay = num(r.get("relayed_pairs")) if "relayed_pairs" in r else 0
         ms = num(r.get("makespan_ms"))

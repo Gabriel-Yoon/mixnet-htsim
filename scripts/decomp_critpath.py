@@ -210,6 +210,34 @@ if __name__ == "__main__":
                 run("%s EP=%s mb=%s %s" % (_r.get("system"), _r.get("ep"),
                                            _r.get("mb") or "-", _tag), _f)
 
+    # Walks with NO quotable row: decompose the best rung and mark it. R2 needs an
+    # EP=128 glass bar and there is no quoted row to build one from; a labelled
+    # best rung is honest, a hole is a hole, and an unlabelled point would be a
+    # quoted row that never was.
+    if os.path.exists(_post):
+        _rows = list(_csv.DictReader(open(_post, newline="")))
+        _grp = {}
+        for _r in _rows:
+            _grp.setdefault((_r.get("system"), _r.get("ep")), []).append(_r)
+        for _key, _g2 in sorted(_grp.items()):
+            if any(x.get("quotable") == "yes" for x in _g2):
+                continue
+            _done = []
+            for x in _g2:
+                try:
+                    _done.append((float(x.get("makespan_ms")), x))
+                except (TypeError, ValueError):
+                    pass
+            if not _done:
+                continue
+            _ms, _best = min(_done, key=lambda t: t[0])
+            _tag = (_best.get("source") or "").replace(".csv", "")
+            _rto = _best.get("rtos") or "?"
+            for _f in sorted(_g.glob(os.path.join(DC, "rung_logs", _tag + "_*.log"))):
+                run("%s EP=%s mb=%s %s BEST-RUNG-NOT-QUOTED (%s RTO)"
+                    % (_best.get("system"), _best.get("ep"), _best.get("mb") or "-",
+                       _tag, _rto), _f)
+
     hgx = os.path.join(DC, "pktvt_logs")
     import glob as _g
     for f in sorted(_g.glob(os.path.join(hgx, "hgx8_pkt_ep32_q*.log"))):

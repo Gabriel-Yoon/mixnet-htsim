@@ -94,6 +94,7 @@ cliff,glass,glassfb,,g64,qwenMoE,,64,8,512,4267,16.00,,,46.997,2373,no,not the f
 cliff,glass,glassfb,,g64,qwenMoE,,64,8,512,533,2.00,,,50.169,69106,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,glass,glassfb,,g64,qwenMoE,,64,8,512,1064,3.99,,,52.103,37144,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,glass,glassfb,,g64,qwenMoE,,64,8,512,2133,8.00,,,55.990,12840,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
+cliff,glass,glassfb,,g128,arctic,,128,8,1024,4267,16.00,,,266.337,107670,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,glass,glassfb,,g128,arctic,,128,8,1024,1066,4.00,,,273.493,394052,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,glass,glassfb,,g128,arctic,,128,8,1024,2133,8.00,,,274.510,238854,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,glass,glassfb,,g128,arctic,,128,8,1024,533,2.00,,,293.493,601806,no,not the first qualifying rung of this walk,,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
@@ -157,7 +158,7 @@ cliff,pkt,nvl64_pkt,,,qwenMoE,,64,,512,1088,31.2474,100,1500,81.272,13,no,"timeo
 cliff,pkt,nvl64_pkt,,,qwenMoE,,64,,512,2176,62.4947,100,1500,82.502,0,yes,relay-clean and zero timeouts,shared_logdir,pkt_vanishing_timeout.csv,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer,,
 cliff,pkt,nvl64_pkt,,,qwenMoE,,64,,512,544,15.6237,100,1500,86.163,7237,no,"timeouts present: 7237, loss not measured",clean,pkt_vanishing_timeout.csv,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer,,
 cliff,pkt,nvl64_pkt,,,qwenMoE,4,64,8,512,544,15.6237,100,1500,86.163,7237,no,"timeouts present: 7237, loss not measured",clean,cliff_pkt.csv,packet-level NVSwitch; stripe=ecmp (mode 1); island OFF,,
-cliff,pkt,nvl64_pkt,,n128,arctic,,128,,1024,2176,,,,247.218,0,yes,first zero-timeout rung (post-fix binary),,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
+cliff,pkt,nvl64_pkt,,n128,arctic,,128,,1024,2176,,,,247.218,0,yes,first zero-timeout rung (post-fix binary),./logs/rung_12908158_2706299_1788798105046048097,cliff_postfix.csv,post-fix rung; one job per rung,yes,collector
 cliff,pkt,nvl64_pkt,,,arctic,2,128,8,1024,2176,62.4947,100,1500,247.218,0,yes,relay-clean and zero timeouts,shared_logdir,cliff_pkt_ep128.csv,EP=128 vanishing-timeout walk; FCT columns blank -- the walk's cells shared one output directory and the hgx8 sweep overwrote it before this cell could be read,,
 cliff,pkt,nvl64_pkt,,,arctic,2,128,8,1024,1088,31.2474,100,1500,248.820,25,no,"timeouts present: 25, loss not measured",shared_logdir,cliff_pkt_ep128.csv,EP=128 vanishing-timeout walk; FCT columns blank -- the walk's cells shared one output directory and the hgx8 sweep overwrote it before this cell could be read,,
 cliff,pkt,nvl64_pkt,,,arctic,2,128,8,1024,544,15.6237,100,1500,331.611,17152,no,"timeouts present: 17152, loss not measured",clean,cliff_pkt_ep128.csv,packet-level NVSwitch; stripe=ecmp; island OFF,,

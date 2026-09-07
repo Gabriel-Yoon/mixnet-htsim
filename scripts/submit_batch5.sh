@@ -133,4 +133,4 @@ done
 unset RUNG_PORT_BW RUNG_SYS
 
 echo
-echo "submitted/listed $N job(s) in section (1)"
+echo "submitted/listed $N job(s)"   # N counts both sections

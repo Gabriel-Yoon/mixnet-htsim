@@ -78,7 +78,7 @@ def load(tag):
 
 def main(rows):
     out = []
-    for tag, ep, nodes, makespan_ms, ms_note in rows:
+    for tag, ep, nodes, makespan_ms, ms_note, sysname in rows:
         try:
             tiers, flows, unm, unm_b = load(tag)
         except OSError as e:
@@ -101,7 +101,7 @@ def main(rows):
         print("    link energy/iter  %.2f - %.2f J    static (laser+tune) %.2f J" %
               (e_lo, e_hi, static_j))
         out.append(dict(
-            paper_ref="power", system="glassfb", ep=ep, nodes=nodes, panels=panels,
+            paper_ref="power", system=sysname, ep=ep, nodes=nodes, panels=panels,
             makespan_ms="%.3f" % makespan_ms,
             bytes_elec=tiers["elec"], bytes_opt=tiers["opt"], bytes_inter=tiers["inter"],
             flows_total=flows, flows_unmatched=unm, bytes_unmatched=unm_b,
@@ -127,9 +127,22 @@ if __name__ == "__main__":
     # EP=64 is 39.395 ms at q=17067 (64x BDP), zero timeouts and zero measured drops.
     # POST-FIX makespans (link-rate truncation fixed, 9ac4f76). Bytes x hops are
     # rate-independent, so only the static term moves.
-    main([("tier_ep16", 16, 128, 87.613, ""),
-          ("tier_ep32", 32, 256, 77.918, ""),
-          ("tier_ep64", 64, 512, 43.088, ""),
+    main([("tier_ep16", 16, 128, 87.613, "", "glassfb"),
+          ("tier_ep32", 32, 256, 77.918, "", "glassfb"),
+          ("tier_ep64", 64, 512, 43.088, "", "glassfb"),
+          # 200G/lane, EP=64. The SAME tier_ep64 hop log and the SAME flow log:
+          # g64b800 runs ep64_gt.txt, the design point's cabling, so bytes x hops
+          # are identical and the link term cannot move -- 1.15 pJ/bit is dynamic,
+          # and the same bits over the same hops cost the same joules however fast
+          # the link carries them. Only the static term moves, because it is a
+          # power integrated over a shorter iteration.
+          ("tier_ep64", 64, 512, 39.879,
+           "200G/lane (GLASS_PORT_BW=800) quoted rung q=8533, 32x BDP, 0 timeouts; "
+           "bytes and hops are the design point's (same ep64_gt.txt cabling and the "
+           "same flow log) so link J is unchanged by construction and only the "
+           "static term moves; STATIC LASER+TUNE NOT RE-BUDGETED -- 5.3 W/panel was "
+           "costed for 100G/lane and is likely low for the higher-rate lanes",
+           "glassfb_800"),
           # EP=128. The bytes are final; the makespan is not.
           #
           # Bytes x hops here come from a hop log the topology emitted WITHOUT
@@ -151,11 +164,11 @@ if __name__ == "__main__":
           # timeout-free rung yet (four of six in, 601806 / 394052 / 238854 RTO at
           # q=533/1066/2133 and 6883 at q=17067) and may never get one. Only the
           # static term depends on it; link J is final either way.
-          ("tier_ep128", 128, 1024, 273.493,
+          ("tier_ep128", 128, 1024, 266.337,
            "EP=128 hop log from glassfb_hopdump (topology's own classification, no "
            "traffic run; validated byte-for-byte against the EP 16/32/64 run hop logs "
            "by scripts/hopdump_validate.sh) on cabling ep128_gt.txt; flow set from "
            "fl_ep128_arc.flowlog, topology-independent; MAKESPAN IS PROVISIONAL -- "
-           "the best hollow rung (q=1066, 394052 timeouts), not a quoted row, because "
+           "the best hollow rung (q=4267, 107670 timeouts), not a quoted row, because "
            "this walk has no timeout-free rung; link J does not depend on it, static "
-           "J does")])
+           "J does", "glassfb")])

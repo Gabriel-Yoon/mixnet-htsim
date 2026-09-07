@@ -58,6 +58,12 @@ glassfb,128,arctic,2133,8.00,8.00,274.510,238854,56969388,44.0207,clean,no,yes,9
 glassfb,128,arctic,4267,16.00,16.00,266.337,107670,,63.7266,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb,128,arctic,8533,32.00,32.00,754.319,42830,,338.6120,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb,128,arctic,17067,64.00,64.00,1175.319,6883,,627.3230,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,64,qwenMoE,1066,,,51.212,17777,8211523,7.3939,clean,no,yes,2128410,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,64,qwenMoE,2133,,,45.037,3095,4324577,3.9167,clean,no,yes,2128410,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,64,qwenMoE,4267,,,39.386,80,94274,2.5904,clean,no,yes,2128410,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,64,qwenMoE,8533,,,39.879,0,0,2.5744,clean,yes,yes,2128410,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,64,qwenMoE,17067,,,39.879,0,0,2.5744,clean,no,yes,2128410,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,64,qwenMoE,34133,,,39.879,0,0,2.5744,clean,no,yes,2128410,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 hgx8,32,llamaMoE,270,4.05,4.05,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
 hgx8,32,llamaMoE,540,8.10,8.10,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
 hgx8,32,llamaMoE,1080,16.20,16.20,164.522,105,,,shared_logdir,no,,,,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"

@@ -14,7 +14,12 @@ csv_open "$CSV" "paper_ref,system,ep,k,q_pkts,ecn_k,makespan_ms,rtos,mean_fct_ms
 FB=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf
 
 for k in 32 64; do
-  q=$((17 * k)); ek=$((q / 2))
+  # BDP_PKTS: 50 GB/s over the NVLink round trip (4 hops x 250 ns = 1000 ns),
+  # at 1500 B = 33 packets. The 17 here was 2*nvs_lat, the stale figure from
+  # nvswitch_model_design.md that the code never used, so every k label this
+  # sweep produced was 2x the multiple actually run.
+  BDP_PKTS=33
+  q=$((BDP_PKTS * k)); ek=$((q / 2))
   log=./nvs_logs/ksweep_k${k}.log; t0=$(date +%s)
   GLASS_RTO_MIN_US=100 timeout 20000 ./htsim_tcp_nvswitch -nodes 128 -flowfile "$R/$FB" \
     -nvs_domain 64 -nvs_switches 18 -nvs_link 50 -nvs_lat 250 -nvs_q $q -nvs_ecn_k $ek \

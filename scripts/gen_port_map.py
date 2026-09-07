@@ -71,8 +71,13 @@ def give(p, q, n):
 for p in range(P):
     eps, dps, pps = sorted(nb[p]["ep"]), sorted(nb[p]["dp"]), sorted(nb[p]["pp"])
     if eps:
-        base, extra = divmod(a.ep_ports, len(eps))
-        for i, q in enumerate(eps): give(p, q, base + (1 if i < extra else 0))
+        # symmetric split inside the EP group: pair (i,j) of a k-panel group gets
+        # base + 1 iff (i+j) mod (k-1) < extra, so both endpoints agree on the count
+        group = sorted(set(eps) | {p}); k = len(group); i = group.index(p)
+        base, extra = divmod(a.ep_ports, k - 1)
+        for q in eps:
+            j = group.index(q)
+            give(p, q, base + (1 if ((i + j) % (k - 1)) < extra else 0))
     if dps:
         base, extra = divmod(a.dp_ports, len(dps))
         for i, q in enumerate(dps): give(p, q, base + (1 if i < extra else 0))

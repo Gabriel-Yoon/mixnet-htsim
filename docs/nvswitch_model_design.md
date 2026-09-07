@@ -215,7 +215,7 @@ are ignored in mode 3 (banner says so). `scripts/gen_port_map.py` derives the ma
 (dp,tp,pp,ep), the EP-aware placement rule (`phys()`), and a port split {ep, dp, pp};
 `--hi-order` (dp_major | pp_major) must be verified against the task graph's DP all-reduce
 pairs. Maps in `experiments/portmaps/`: ep16_0_8_4, ep32_12_2_1, ep32_8_4_2, ep64_12_2_1,
-ep128_13_1_1 (16 ports at every interior-stage panel).
+ep128_12_1_1 (symmetric EP split; <=16 ports at every panel).
 Why: the 4-edge mesh rows stranded 3/4 (EP=32) and 2/4 (EP=64) of a panel's egress and
 relayed DP/PP traffic through other panels' EP edges; all-pairs cabling is infeasible at
 16–64 panels (deg 15–63 > 16 ports). The port map is the physical design: cabling follows

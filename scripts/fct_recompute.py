@@ -90,6 +90,7 @@ def pct(vals, f):
 
 def stats(path, mss=1436):
     allv, payv, one = [], [], 0
+    exact = [False]
     try:
         with open(path, "r", errors="replace") as fh:
             for line in fh:
@@ -100,7 +101,15 @@ def stats(path, mss=1436):
                     continue
                 sz, fct = float(f[3]), float(f[4])
                 allv.append(fct)
-                if sz <= mss:
+                # Column 7, when the run's binary writes it, is the size the caller
+                # asked for before the one-MSS floor -- an exact split instead of
+                # the bracket. Older runs have 6 columns and fall back.
+                if len(f) >= 7:
+                    exact[0] = True
+                    trivial = float(f[6]) <= 0
+                else:
+                    trivial = sz <= mss
+                if trivial:
                     one += 1
                 else:
                     payv.append(fct)
@@ -109,7 +118,8 @@ def stats(path, mss=1436):
     if not allv:
         return None
     allv.sort(); payv.sort()
-    d = dict(total=len(allv), one_mss=one, payload=len(payv))
+    d = dict(total=len(allv), one_mss=one, payload=len(payv),
+             mode="requested_size" if exact[0] else "one_mss_bracket")
     for tag, v in (("all", allv), ("pay", payv)):
         if v:
             d[tag] = dict(mean=sum(v) / len(v), p50=pct(v, .50), p99=pct(v, .99), mx=v[-1])
@@ -169,7 +179,7 @@ def main():
             r["p99_fct_ms_all"] = fmt(st["all"]["p99"]);  r["max_fct_ms_all"] = fmt(st["all"]["mx"])
             r["mean_fct_ms"] = fmt(st["pay"]["mean"]);    r["p50_fct_ms"] = fmt(st["pay"]["p50"])
             r["p99_fct_ms"] = fmt(st["pay"]["p99"]);      r["max_fct_ms"] = fmt(st["pay"]["mx"])
-            r["status_fct"] = "payload_gt_1mss"
+            r["status_fct"] = st["mode"]
             print("  makespan=%-11s total=%-7d one-MSS=%-6d (%4.1f%%)  mean %s -> %s   p99 %s -> %s   p50(all)=%s p50(pay)=%s"
                   % (key, st["total"], st["one_mss"], 100.0 * st["one_mss"] / st["total"],
                      om or "-", r["mean_fct_ms"] or "-", op or "-", r["p99_fct_ms"] or "-",

@@ -446,6 +446,7 @@ class TcpSrc : public PacketSink, public EventSource {
     virtual const string& nodename() { return _nodename; }
 
     inline uint64_t get_flowsize() {return _flow_size;} // bytes
+    inline uint64_t get_flowsize_req() {return _flow_size_req;}
     inline int get_flow_src() {return _flow_src;}
     inline int get_flow_dst() {return _flow_dst;}
     inline void set_start_time(simtime_picosec startTime) {_start_time = startTime;}
@@ -527,6 +528,10 @@ class TcpSrc : public PacketSink, public EventSource {
     virtual void deflate_window();
 
     simtime_picosec _start_time;
+    // Size the caller asked for, before the one-MSS floor in set_flowsize. A
+    // zero-byte collective flow is floored to _mss and is otherwise
+    // indistinguishable from a real single-packet flow in the FCT log.
+    uint64_t _flow_size_req = 0;
     int _flow_src; // the sender (source) for this flow
     int _flow_dst; // the receiver (sink) for this flow
 

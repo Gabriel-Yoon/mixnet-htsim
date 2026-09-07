@@ -23,7 +23,10 @@ echo "paper_ref,model,cabling,ep,nodes,panels,dim_a2a,placement,q,rto_min_us,mtu
 L32=llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
 
 run () { # tag dim
-  local tag=$1 dim=$2 log=./attr_logs/${tag}.log t0 t1
+  local tag=$1 dim=$2
+  # separate statement: bash expands every RHS before local binds any of them,
+  # so ${tag} on this line would be unbound under set -u
+  local log=./attr_logs/${tag}.log t0 t1
   t0=$(date +%s)
   GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
   GLASS_EP_PLACE=1 GLASS_DIM_A2A=$dim GLASS_PORT_MAP="$PM/ep32_12_2_1.txt" \

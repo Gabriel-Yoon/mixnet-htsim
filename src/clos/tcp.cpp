@@ -152,6 +152,7 @@ void TcpSrc::set_flowsize(uint64_t flow_size_in_bytes)
 		        (unsigned long)flow_size_in_bytes);
 	}
 
+	_flow_size_req = flow_size_in_bytes;
 	_flow_size = flow_size_in_bytes; // + _mss; // not sure "+ _mss" is necessary...
 																	 // if (_flow_size == 0)
 																	 // 	_flow_size = 1;
@@ -322,7 +323,7 @@ void TcpSrc::receivePacket(Packet &pkt)
 		// cout << "Flow " << nodename() << " finished at " << timeAsMs(eventlist().now()) << endl;
 
 		// FCT output for processing: (src dst bytes fct_ms timestarted_ms)
-		*(fstream_out) << "FCT " << get_flow_src() << " " << get_flow_dst() << " " << get_flowsize() << " " << timeAsMs(eventlist().now() - get_start_time()) << " " << timeAsMs(get_start_time()) << " " << (double)get_flowsize() / timeAsSec(eventlist().now() - get_start_time()) * 8 / 1000000000UL << endl;
+		*(fstream_out) << "FCT " << get_flow_src() << " " << get_flow_dst() << " " << get_flowsize() << " " << timeAsMs(eventlist().now() - get_start_time()) << " " << timeAsMs(get_start_time()) << " " << (double)get_flowsize() / timeAsSec(eventlist().now() - get_start_time()) * 8 / 1000000000UL << " " << get_flowsize_req() << endl;
 		if (application_callback != nullptr)
 		{
 			application_callback(application_callback_data);

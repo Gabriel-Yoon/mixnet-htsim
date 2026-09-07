@@ -52,6 +52,12 @@ CLASS_OF = {
 
 RE_FIN = re.compile(r"finished task:(\d+),.*?type (\d+) now (\d+)")
 RE_EDGE = re.compile(r"^(\d+) -> Task (\d+) counter at")
+# The run's OWN reported makespan. A still-running log yields a perfectly
+# well-formed but partial critical path -- glass EP=64 read 33.547 ms from a
+# log whose completed siblings are 52-61 ms. Existence of task records is not
+# evidence the run finished, so the reconstruction is checked against what the
+# run itself reported and a mismatch is refused rather than published.
+RE_ITER = re.compile(r"finished one iter.*?now (\d+)")
 
 
 def parse(path):
@@ -104,6 +110,17 @@ def bytes_split(flowlog, psize=16):
 
 
 def run(label, log, flowlog=None):
+    if not os.path.exists(log):
+        print("%-26s (log not present yet)" % label); return None
+    reported = None
+    with open(log, errors="replace") as fh:
+        for line in fh:
+            m = RE_ITER.search(line)
+            if m:
+                reported = int(m.group(1))
+    if reported is None:
+        print("%-26s SKIPPED: no completed iteration in the log (still running?)" % label)
+        return None
     finish, ttype, preds = parse(log)
     path = critical_path(finish, preds)
     if not path:
@@ -113,6 +130,10 @@ def run(label, log, flowlog=None):
         cls = CLASS_OF.get(TYPE_NAMES.get(ttype.get(tid, -1), "?"), "other")
         per[cls] += contrib
     total = sum(per.values())
+    if total != reported:
+        print("%-26s SKIPPED: critical path sums to %.3f ms but the run reports %.3f ms"
+              % (label, total / 1e9, reported / 1e9))
+        return None
     print("\n=== %s ===" % label)
     print("  critical path: %d tasks, %d distinct tasks logged, makespan %.3f ms"
           % (len(path), len(finish), total / 1e9))
@@ -147,9 +168,23 @@ def run(label, log, flowlog=None):
 
 if __name__ == "__main__":
     DC = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter"
+    # EP=16, the quoted rows (86.750 and 130.797); taken from mb_logs so both come
+    # from the same script and job rather than two unrelated sweeps.
+    run("glassfb EP=16 q=1064", os.path.join(DC, "mb_logs/glass_mb8_q1064.log"),
+        os.path.join(DC, "tier_logs/tier_ep16.flowlog"))
+    run("nvl64_pkt EP=16 q=544", os.path.join(DC, "mb_logs/nvl64_mb8_q544.log"))
+    # EP=32, the quoted rows
     run("glassfb EP=32 q=2133", os.path.join(DC, "gtk_logs/gt_k4.log"),
         os.path.join(DC, "tier_logs/tier_ep32.flowlog"))
     run("nvl64_pkt EP=32 q=1088", os.path.join(DC, "pktvt_logs/nvl64_pkt_ep32_q1088.log"))
+    # EP=64, picked up when the walks produce a zero-timeout row. A log that
+    # exists but has no completed iteration is skipped by run() itself, so a
+    # still-running cell cannot contribute a half-built path.
+    import glob as _g
+    for f in sorted(_g.glob(os.path.join(DC, "gt64x_logs/k*.log"))):
+        run("glassfb EP=64 " + os.path.basename(f).replace(".log", ""), f)
+    for f in sorted(_g.glob(os.path.join(DC, "pktvt_logs/nvl64_pkt_ep64_q*.log"))):
+        run("nvl64_pkt EP=64 " + os.path.basename(f).split("_")[-1].replace(".log", ""), f)
     hgx = os.path.join(DC, "pktvt_logs")
     import glob as _g
     for f in sorted(_g.glob(os.path.join(hgx, "hgx8_pkt_ep32_q*.log"))):

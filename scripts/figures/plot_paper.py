@@ -158,14 +158,22 @@ def beyond():
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_beyond.png")); print("wrote fig_beyond.png")
 
 def mb():
-    rows = load("mb") + [r for r in (load("load") if os.path.exists(os.path.join(RES, "load.csv")) else [])]
-    fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    for (sysname, model), style in {("glassfb", "llamaMoE"): "o-", ("nvl64", "llamaMoE"): "s--", ("glassfb", "dbrx"): "o:", ("nvl64", "dbrx"): "s-."}.items():
-        pts = sorted([(r["mb"], r["makespan_ms"]) for r in rows if r["system"] == sysname and mname(r) == model])
-        if pts: ax.plot([p[0] for p in pts], [p[1] for p in pts], style, color=SYS_COLOR[sysname], label=f"{SYS_LABEL[sysname]} {model}", lw=1.3, ms=4)
+    """R6: iteration vs microbatch at EP=16, glass vs the queued NVL-64 domain (quotable rows of cliff_all)."""
+    rows = [r for r in load("cliff_all") if r["_quotable"] and str(r.get("ep")) == "16" and r.get("mb")]
+    fig, ax = plt.subplots(figsize=(3.4, 2.4), dpi=200)
+    for sysname in ("nvl64_pkt", "glassfb"):
+        best = {}
+        for r in rows:
+            if r["system"] != sysname: continue
+            m = int(r["mb"]); best[m] = min(best.get(m, 1e9), r["makespan_ms"])
+        pts = sorted(best.items())
+        if not pts: continue
+        st = _ps.style_line(sysname) if _ps else dict(color=SYS_COLOR[sysname], marker="o", label=SYS_LABEL[sysname])
+        ax.plot([p[0] for p in pts], [p[1] for p in pts], "-", **st)
+        for m, v in pts: ax.text(m, v * 1.03, f"{v:.0f}", ha="center", fontsize=5.5, color=st["color"])
     ax.set_xscale("log", base=2); ax.set_xticks([4, 8, 16, 32]); ax.set_xticklabels([4, 8, 16, 32])
-    ax.set_xlabel("microbatch (EP=16)", fontsize=7); ax.set_ylabel("iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)
-    ax.legend(fontsize=5.5, frameon=False); ax.grid(alpha=0.3)
+    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=7); ax.set_ylabel("iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)
+    ax.legend(fontsize=5.5, frameon=False, loc="upper left"); ax.grid(alpha=0.3)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_mb.png")); print("wrote fig_mb.png")
 
 def ladder():

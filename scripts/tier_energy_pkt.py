@@ -128,14 +128,31 @@ RUNS = {
     "nvl64_pkt": ((16, 128, 130.797,  544,  544),
                   (32, 256, 119.397,  544, 1088),
                   (64, 512,  82.502, 2176, 2176)),
+    # The striping control (S=1, L=900) is the other end of the bracket. Bytes and
+    # hops are IDENTICAL to the pinned rows -- the same transfers over the same
+    # two-hop paths -- so link energy is unchanged and only the static term moves,
+    # because static is a power integrated over the iteration and the striped
+    # iteration is shorter. Quoting the incumbent here is quoting it at its best
+    # case on both axes at once: faster AND therefore less static energy.
+    # q is the buffer the BYTE PASS ran at and q_makespan the buffer the MAKESPAN
+    # was measured at; for these they are necessarily different, because the byte
+    # pass is the pinned one and the makespan is the striped quoted row.
+    "nvl64_pkt_s1": ((16, 128, 88.842,  544, 2400),
+                     (32, 256, 69.364,  544, 4800),
+                     (64, 512, 29.327, 2176, 9600)),
     "hgx8_pkt":  ((16, 128, 145.497, 1224, 1224),
                   (32, 256, 164.522, 1224, 1224),
                   (64, 512, 144.519, 1224, 1224)),
 }
 
-for sysname, domain in (("nvl64_pkt", 64), ("hgx8_pkt", 8)):
+# Which tier byte pass a system's rows are measured from. nvl64_pkt_s1 has no byte
+# pass of its own and needs none: S changes how a GPU's bandwidth is divided, not
+# which links a packet crosses, so its per-tier byte counts are the pinned ones.
+BYTES_FROM = {"nvl64_pkt_s1": "nvl64"}
+
+for sysname, domain in (("nvl64_pkt", 64), ("nvl64_pkt_s1", 64), ("hgx8_pkt", 8)):
     for ep, nodes, ms, q_bytes, q_ms in RUNS[sysname]:
-        tag = "tier_%s_ep%d" % (sysname.replace("_pkt", ""), ep)
+        tag = "tier_%s_ep%d" % (BYTES_FROM.get(sysname, sysname.replace("_pkt", "")), ep)
         if not os.path.exists(os.path.join(DC, tag + ".flowlog")):
             print("skip %s (not run yet)" % tag); continue
         ind, cross, flows, mode = split(tag, domain)

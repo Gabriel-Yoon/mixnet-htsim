@@ -185,6 +185,15 @@ if __name__ == "__main__":
         run("glassfb EP=64 " + os.path.basename(f).replace(".log", ""), f)
     for f in sorted(_g.glob(os.path.join(DC, "pktvt_logs/nvl64_pkt_ep64_q*.log"))):
         run("nvl64_pkt EP=64 " + os.path.basename(f).split("_")[-1].replace(".log", ""), f)
+    # The striping control's quoted rows, so R2 can show the fabric share at BOTH
+    # ends of the bracket. Only the quoted cell of each walk is decomposed -- the
+    # rungs below it have timeouts, and a critical path through retransmissions
+    # measures the timeout, not the fabric.
+    for ep, q in ((16, 2400), (32, 4800), (64, 9600)):
+        f = os.path.join(DC, "stripe_logs", "*_ep%d_q%d.log" % (ep, q))
+        for g in sorted(_g.glob(f)):
+            run("nvl64_pkt_s1 EP=%d q=%d" % (ep, q), g)
+
     hgx = os.path.join(DC, "pktvt_logs")
     import glob as _g
     for f in sorted(_g.glob(os.path.join(hgx, "hgx8_pkt_ep32_q*.log"))):

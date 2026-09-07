@@ -1,43 +1,43 @@
-system,ep,model_name,q,q_over_bdp,q_over_bdp_source,makespan_ms,rtos,drops,max_fct_ms,fct_status,quotable,source
-glassfb,32,llamaMoE,1000,3.75,3.75,88.089,1764,,,shared_logdir,no,qfine_ep32.csv
-glassfb,32,llamaMoE,1032,3.87,3.87,92.088,1639,,14.6336,clean,no,qfine_ep32.csv
-glassfb,32,llamaMoE,1064,3.99,3.99,91.367,1364,,10.5971,clean,no,qfine_ep32.csv
-glassfb,32,llamaMoE,1067,4.00,2.0,85.365,1499,,13.3118,clean,no,cliff_ep32_gt_ksweep.csv
-glassfb,32,llamaMoE,1096,4.11,4.11,88.421,1431,,7.6519,clean,no,qfine_ep32.csv
-glassfb,32,llamaMoE,1128,4.23,4.23,83.381,1096,,5.3778,clean,no,qfine_ep32.csv
-glassfb,32,llamaMoE,2100,7.88,7.88,75.520,0,,,shared_logdir,yes,qplateau_ep32.csv
-glassfb,32,llamaMoE,2133,8.00,4.0,75.542,0,208,7.5426,clean,yes,cliff_ep32_gt_ksweep.csv
-glassfb,32,llamaMoE,2166,8.12,8.12,75.522,0,,,shared_logdir,yes,qplateau_ep32.csv
-glassfb,32,llamaMoE,4267,16.00,8.0,75.540,0,,4.9890,clean,yes,cliff_ep32_gt_ksweep.csv
-glassfb,64,qwenMoE,533,2.00,2.00,54.182,128415,,8.2083,clean,no,cliff_ep64_gt.csv
-glassfb,64,qwenMoE,1064,3.99,3.99,52.004,102601,,,shared_logdir,no,cliff_ep64_gt.csv
-glassfb,64,qwenMoE,2133,8.00,8.00,60.998,64804,,14.9117,clean,no,cliff_ep64_gt.csv
-glassfb,64,qwenMoE,4267,16.00,16.0,59.485,13812,,,shared_logdir,no,cliff_ep64_gt_ext.csv
-glassfb,64,qwenMoE,8533,32.00,32.0,39.410,564,,2.5217,clean,no,cliff_ep64_tail.csv
-glassfb,64,qwenMoE,17067,64.00,64.0,39.395,0,0,2.5338,clean,yes,cliff_ep64_tail.csv
-hgx8,32,llamaMoE,270,4.05,4.05,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,32,llamaMoE,540,8.10,8.10,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,32,llamaMoE,1080,16.20,16.20,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,32,llamaMoE,2160,32.40,32.40,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,270,4.05,4.05,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,540,8.10,8.10,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,1080,16.20,16.20,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8,64,qwenMoE,2160,32.40,32.40,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv
-hgx8_pkt,32,llamaMoE,1224,16.32,15.6237,164.522,105,0,,shared_logdir,no,pkt_vanishing_timeout.csv
-hgx8_pkt,32,llamaMoE,2448,32.64,31.2474,164.522,105,,,shared_logdir,no,pkt_vanishing_timeout.csv
-hgx8_pkt,32,llamaMoE,4896,65.28,62.4947,164.522,105,,,shared_logdir,no,pkt_vanishing_timeout.csv
-hgx8_pkt,64,qwenMoE,1224,16.32,15.6237,144.519,2192,,,shared_logdir,no,pkt_vanishing_timeout.csv
-hgx8_pkt,64,qwenMoE,2448,32.64,31.2474,144.519,2192,,,shared_logdir,no,pkt_vanishing_timeout.csv
-hgx8_pkt,64,qwenMoE,4896,65.28,62.4947,144.519,2192,,,shared_logdir,no,pkt_vanishing_timeout.csv
-nvl64,32,llamaMoE,540,4.05,4.05,64.139,0,,1.0416,clean,yes,island_vanishing_timeout.csv
-nvl64,64,qwenMoE,540,4.05,4.05,24.365,0,,1.0416,clean,yes,island_vanishing_timeout.csv
-nvl64_pkt,16,llamaMoE,68,2.04,1.95296,151.895,6423,,12.5839,clean,no,nvl64_ksweep.csv
-nvl64_pkt,16,llamaMoE,136,4.08,4.08,147.051,1227,463301,12.7167,clean,no,nvl64_ep16_clean.csv
-nvl64_pkt,16,llamaMoE,272,8.16,8.16,281.100,166,56356,100.4170,clean,no,nvl64_ep16_clean.csv
-nvl64_pkt,16,llamaMoE,544,16.32,16.32,130.797,0,375,6.7361,clean,yes,nvl64_ep16_clean.csv
-nvl64_pkt,16,llamaMoE,1088,32.64,31.2474,130.295,0,,6.4933,clean,yes,nvl64_ksweep_hi.csv
-nvl64_pkt,32,llamaMoE,544,16.32,15.6237,159.948,73,,17.1386,clean,no,pkt_vanishing_timeout.csv
-nvl64_pkt,32,llamaMoE,1088,32.64,31.2474,119.397,0,0,,shared_logdir,yes,pkt_vanishing_timeout.csv
-nvl64_pkt,64,qwenMoE,544,16.32,15.6237,86.163,7237,,17.1386,clean,no,pkt_vanishing_timeout.csv
-nvl64_pkt,64,qwenMoE,1088,32.64,31.2474,81.272,13,,,shared_logdir,no,pkt_vanishing_timeout.csv
-nvl64_pkt,64,qwenMoE,2176,65.28,62.4947,82.502,0,0,,shared_logdir,yes,pkt_vanishing_timeout.csv
+system,ep,model_name,q,q_over_bdp,q_over_bdp_source,makespan_ms,rtos,drops,max_fct_ms,fct_status,quotable,source,quotable_why
+glassfb,32,llamaMoE,1000,3.75,3.75,88.089,1764,,,shared_logdir,no,qfine_ep32.csv,"timeouts present: 1764, loss not measured"
+glassfb,32,llamaMoE,1032,3.87,3.87,92.088,1639,,14.6336,clean,no,qfine_ep32.csv,"timeouts present: 1639, loss not measured"
+glassfb,32,llamaMoE,1064,3.99,3.99,91.367,1364,,10.5971,clean,no,qfine_ep32.csv,"timeouts present: 1364, loss not measured"
+glassfb,32,llamaMoE,1067,4.00,2.0,85.365,1499,,13.3118,clean,no,cliff_ep32_gt_ksweep.csv,"timeouts present: 1499, loss not measured"
+glassfb,32,llamaMoE,1096,4.11,4.11,88.421,1431,,7.6519,clean,no,qfine_ep32.csv,"timeouts present: 1431, loss not measured"
+glassfb,32,llamaMoE,1128,4.23,4.23,83.381,1096,,5.3778,clean,no,qfine_ep32.csv,"timeouts present: 1096, loss not measured"
+glassfb,32,llamaMoE,2100,7.88,7.88,75.520,0,,,shared_logdir,yes,qplateau_ep32.csv,relay-clean and zero timeouts
+glassfb,32,llamaMoE,2133,8.00,4.0,75.542,0,208,7.5426,clean,yes,cliff_ep32_gt_ksweep.csv,relay-clean and zero timeouts
+glassfb,32,llamaMoE,2166,8.12,8.12,75.522,0,,,shared_logdir,yes,qplateau_ep32.csv,relay-clean and zero timeouts
+glassfb,32,llamaMoE,4267,16.00,8.0,75.540,0,,4.9890,clean,yes,cliff_ep32_gt_ksweep.csv,relay-clean and zero timeouts
+glassfb,64,qwenMoE,533,2.00,2.00,54.182,128415,,8.2083,clean,no,cliff_ep64_gt.csv,"timeouts present: 128415, loss not measured"
+glassfb,64,qwenMoE,1064,3.99,3.99,52.004,102601,,,shared_logdir,no,cliff_ep64_gt.csv,"timeouts present: 102601, loss not measured"
+glassfb,64,qwenMoE,2133,8.00,8.00,60.998,64804,,14.9117,clean,no,cliff_ep64_gt.csv,"timeouts present: 64804, loss not measured"
+glassfb,64,qwenMoE,4267,16.00,16.0,59.485,13812,,,shared_logdir,no,cliff_ep64_gt_ext.csv,"timeouts present: 13812, loss not measured"
+glassfb,64,qwenMoE,8533,32.00,32.0,39.410,564,,2.5217,clean,no,cliff_ep64_tail.csv,"timeouts present: 564, loss not measured"
+glassfb,64,qwenMoE,17067,64.00,64.0,39.395,0,0,2.5338,clean,yes,cliff_ep64_tail.csv,relay-clean and zero timeouts
+hgx8,32,llamaMoE,270,4.05,4.05,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8,32,llamaMoE,540,8.10,8.10,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8,32,llamaMoE,1080,16.20,16.20,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8,32,llamaMoE,2160,32.40,32.40,164.522,105,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8,64,qwenMoE,270,4.05,4.05,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+hgx8,64,qwenMoE,540,8.10,8.10,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+hgx8,64,qwenMoE,1080,16.20,16.20,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+hgx8,64,qwenMoE,2160,32.40,32.40,144.519,2192,,,shared_logdir,no,island_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+hgx8_pkt,32,llamaMoE,1224,16.32,15.6237,164.522,105,0,,shared_logdir,yes,pkt_vanishing_timeout.csv,"105 spurious timeouts, 0 drops (validated counter), buffer-invariant"
+hgx8_pkt,32,llamaMoE,2448,32.64,31.2474,164.522,105,,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8_pkt,32,llamaMoE,4896,65.28,62.4947,164.522,105,,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 105, loss not measured"
+hgx8_pkt,64,qwenMoE,1224,16.32,15.6237,144.519,2192,,,shared_logdir,yes,pkt_vanishing_timeout.csv,"2192 spurious timeouts, 0 drops (validated counter), buffer-invariant"
+hgx8_pkt,64,qwenMoE,2448,32.64,31.2474,144.519,2192,,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+hgx8_pkt,64,qwenMoE,4896,65.28,62.4947,144.519,2192,,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 2192, loss not measured"
+nvl64,32,llamaMoE,540,4.05,4.05,64.139,0,,1.0416,clean,yes,island_vanishing_timeout.csv,relay-clean and zero timeouts
+nvl64,64,qwenMoE,540,4.05,4.05,24.365,0,,1.0416,clean,yes,island_vanishing_timeout.csv,relay-clean and zero timeouts
+nvl64_pkt,16,llamaMoE,68,2.04,1.95296,151.895,6423,,12.5839,clean,no,nvl64_ksweep.csv,"timeouts present: 6423, loss not measured"
+nvl64_pkt,16,llamaMoE,136,4.08,4.08,147.051,1227,463301,12.7167,clean,no,nvl64_ep16_clean.csv,"timeouts present: 1227, loss not measured"
+nvl64_pkt,16,llamaMoE,272,8.16,8.16,281.100,166,56356,100.4170,clean,no,nvl64_ep16_clean.csv,"timeouts present: 166, loss not measured"
+nvl64_pkt,16,llamaMoE,544,16.32,16.32,130.797,0,375,6.7361,clean,yes,nvl64_ep16_clean.csv,relay-clean and zero timeouts
+nvl64_pkt,16,llamaMoE,1088,32.64,31.2474,130.295,0,,6.4933,clean,yes,nvl64_ksweep_hi.csv,relay-clean and zero timeouts
+nvl64_pkt,32,llamaMoE,544,16.32,15.6237,159.948,73,,17.1386,clean,no,pkt_vanishing_timeout.csv,"timeouts present: 73, loss not measured"
+nvl64_pkt,32,llamaMoE,1088,32.64,31.2474,119.397,0,0,,shared_logdir,yes,pkt_vanishing_timeout.csv,relay-clean and zero timeouts
+nvl64_pkt,64,qwenMoE,544,16.32,15.6237,86.163,7237,,17.1386,clean,no,pkt_vanishing_timeout.csv,"timeouts present: 7237, loss not measured"
+nvl64_pkt,64,qwenMoE,1088,32.64,31.2474,81.272,13,,,shared_logdir,no,pkt_vanishing_timeout.csv,"timeouts present: 13, loss not measured"
+nvl64_pkt,64,qwenMoE,2176,65.28,62.4947,82.502,0,0,,shared_logdir,yes,pkt_vanishing_timeout.csv,relay-clean and zero timeouts

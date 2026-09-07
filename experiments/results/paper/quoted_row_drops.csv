@@ -2,6 +2,8 @@ paper_ref,system,ep,nodes,q,makespan_ms,rtos,drops,loss_verdict,wall_s,status,no
 drops,glassfb,16,128,1064,86.750,0,0,clean,203,measured,drop counter validated: 2317980 on the mesh control; 0 on the island; zero here means no loss; not no counting,clean
 drops,glassfb,32,256,2133,75.542,0,208,real_loss,710,measured,drop counter validated: 2317980 on the mesh control; 0 on the island; zero here means no loss; not no counting,clean
 drops,glassfb,64,512,17067,39.395,0,0,clean,2163,measured,drop counter validated: 2317980 on the mesh control; 0 on the island; zero here means no loss; not no counting,clean
+drops,hgx8_pkt,32,256,1224,164.522,105,0,spurious_timeouts_no_loss,491,measured,drop counter validated: 2317980 on the mesh control; 0 on the island; zero here means no loss; not no counting,shared_logdir
+drops,hgx8_pkt,64,512,1224,144.519,2192,0,spurious_timeouts_no_loss,1129,measured,reproduced 144.519 ms exactly; drop counter validated: 2317980 on the mesh control; 0 on the island; a zero here means no loss rather than no counting,
+drops,hgx8_pkt,128,1024,1224,365.733,138883,0,spurious_timeouts_no_loss,6379,measured,reproduced 365.733 ms exactly; drop counter validated: 2317980 on the mesh control; 0 on the island; a zero here means no loss rather than no counting,
 drops,nvl64_pkt,32,256,1088,119.397,0,0,clean,601,measured,drop counter validated: 2317980 on the mesh control; 0 on the island; zero here means no loss; not no counting,shared_logdir
 drops,nvl64_pkt,64,512,2176,82.502,0,0,clean,1363,measured,drop counter validated: 2317980 on the mesh control; 0 on the island; zero here means no loss; not no counting,shared_logdir
-drops,hgx8_pkt,32,256,1224,164.522,105,0,spurious_timeouts_no_loss,491,measured,drop counter validated: 2317980 on the mesh control; 0 on the island; zero here means no loss; not no counting,shared_logdir

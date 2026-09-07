@@ -1,0 +1,3 @@
+paper_ref,model,cabling,workload_type,model_name,topk,ep,mb,nodes,panels,system,ports_lit,opt_bw,elec_bw,q,q_over_bdp,rto_min_us,mtu,placement,dim_a2a,relayed_pairs,completed,makespan_ms,rtos,flows_a2a_only,wall_s,status,note
+cliff,pkt_glass,portmap_ground_truth,training,llamaMoE,2,32,8,256,16,glassfb,15..16,384,1800,1064,4.0,100,1500,on,1,0,COMPLETE,91.367,1364,131072,775,final,map from GLASS_LOG_FLOWS 36/36 pairs direct
+cliff,pkt_glass,portmap_ground_truth,training,llamaMoE,2,32,8,256,16,glassfb,15..16,384,1800,1064,4.0,100,1500,on,0,0,COMPLETE,117.363,1502,131072,757,final,map from GLASS_LOG_FLOWS 36/36 pairs direct

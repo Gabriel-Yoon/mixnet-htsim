@@ -45,7 +45,7 @@ run () { # tag dim
   ports=$(grep -m1 "ports lit per panel" "$log" | grep -oE "per panel [0-9]+\.\.[0-9]+" | awk '{print $3}')
   [ "$rc" = "124" ] && comp=TRUNCATED || comp=COMPLETE
   if [ "$comp" = COMPLETE ] && [ "$relay" = 0 ] && [ "$ps" != 0 ]; then status=final; else status=blocked; fi
-  echo "cliff,pkt_glass,portmap_ground_truth,training,llamaMoE,2,32,8,256,16,glassfb,$ports,384,1800,1064,8.0,100,1500,on,$dim,$relay,$comp,$ms,$rtos,$flows,$((t1-t0)),$status,map from GLASS_LOG_FLOWS 36/36 pairs direct" >> "$CSV"
+  echo "cliff,pkt_glass,portmap_ground_truth,training,llamaMoE,2,32,8,256,16,glassfb,$ports,384,1800,1064,4.0,100,1500,on,$dim,$relay,$comp,$ms,$rtos,$flows,$((t1-t0)),$status,map from GLASS_LOG_FLOWS 36/36 pairs direct" >> "$CSV"
   printf "  %-16s dim_a2a=%s  %-10s relay=%-3s %10s ms  rtos=%-7s ports=%-7s wall=%ss [%s]\n" \
     "$tag" "$dim" "$comp" "$relay" "$ms" "$rtos" "$ports" "$((t1-t0))" "$status"
   if [ "$relay" != 0 ]; then

@@ -59,6 +59,33 @@ else
   echo "link gate: PASS"
 fi
 
+# ---- 1b. does this build carry the link-rate fix? ---------------------------
+# Queue::Queue used to truncate picoseconds-per-byte to an integer, so a link ran
+# at its stated rate only when the rate divided 1000 GB/s -- glass's electrical
+# tier at 1800 truncated to ZERO and had no transmission time at all. Rows from
+# such a binary are refused by gate_quotable unless they carry
+# link_rate_fixed=yes, and this is what sets it.
+#
+# Two conditions, and it fails safe: the source must carry the exact-integer
+# drainTime, AND the production binary must be newer than the object it links
+# (otherwise the fix is in the tree but not in the binary -- the stale-binary
+# defect this project has already hit). Either unmet leaves the flag empty and
+# the rows come out unquotable, which is a missing point rather than a wrong one.
+LINK_RATE_FIXED=""
+if grep -q "8ULL \* 1000000000000ULL" "$REPO/src/clos/queue.h" 2>/dev/null; then
+  _bin="$REPO/src/clos/datacenter/htsim_tcp_glassfb_pm"
+  _obj="$REPO/src/clos/queue.o"
+  if [ -f "$_bin" ] && [ -f "$_obj" ] && [ "$_bin" -nt "$_obj" ]; then
+    LINK_RATE_FIXED=yes
+  else
+    echo "link-rate fix: in the source but the binary is older than queue.o --" \
+         "rows will be marked unquotable until a rebuild" >&2
+  fi
+fi
+export LINK_RATE_FIXED
+export HTSIM_BINARY_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+echo "link_rate_fixed=${LINK_RATE_FIXED:-<no>}  binary_sha=$HTSIM_BINARY_SHA"
+
 # ---- 2. freeze the scripts tree ---------------------------------------------
 SNAP="$REPO/jobsnaps/$(date +%Y%m%d_%H%M%S)_$(basename "$JOB" .sbatch)_$$"
 mkdir -p "$SNAP" || { echo "cannot create snapshot dir $SNAP" >&2; exit 1; }
@@ -91,4 +118,4 @@ RUNNER=$(grep -oE "$SNAP/scripts/[A-Za-z0-9_]+\.sh" "$SNAP/job.sbatch" | head -1
 
 echo "frozen scripts: $SNAP"
 grep -E "^(commit|tree|runner) " "$SNAP/PROVENANCE.txt" | sed "s/^/  /"
-exec sbatch "$SNAP/job.sbatch" "$@"
+exec sbatch --export=ALL "$SNAP/job.sbatch" "$@"

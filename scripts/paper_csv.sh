@@ -80,6 +80,16 @@ _csv_unmark() { [ -n "${1:-}" ] && rm -f "$1.writing" 2>/dev/null || true; }
 csv_open() {  # csv_open <file> <header>
     _CSV_FILE=$1
     _CSV_DONE=0
+    # Provenance every row carries: did the binary that produced it have the
+    # link-rate fix, and which commit was it built from. gate_quotable refuses an
+    # affected fabric's row without the first, so a run whose environment does not
+    # assert it produces unquotable rows rather than silently trusted ones.
+    _CSV_FIXED=${LINK_RATE_FIXED:-}
+    _CSV_SHA=${HTSIM_BINARY_SHA:-}
+    case ",$2," in
+        *,link_rate_fixed,*) ;;
+        *) set -- "$1" "$2,link_rate_fixed,binary_sha" ;;
+    esac
     csv_warn_truncate "$1" "$2"
     printf '%s\n' "$2" > "$_CSV_FILE"
     _csv_emit_row submitted \
@@ -117,6 +127,13 @@ csv_row() {
         echo "csv_row: header is: $hdr" >&2
         return 1
     fi
+    # fill the provenance columns unless the caller set them explicitly
+    case ",$hdr," in
+        *,link_rate_fixed,*) [ -z "${kv[link_rate_fixed]+x}" ] && kv[link_rate_fixed]=${_CSV_FIXED:-} ;;
+    esac
+    case ",$hdr," in
+        *,binary_sha,*) [ -z "${kv[binary_sha]+x}" ] && kv[binary_sha]=${_CSV_SHA:-} ;;
+    esac
     local out="" first=1
     local IFS=,
     for col in $hdr; do

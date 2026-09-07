@@ -1,0 +1,2 @@
+paper_ref,system,cabling,model_name,topk,ep,nodes,mb,k,q,q_over_bdp,relayed_pairs,completed,makespan_ms,rtos,ports_lit,wall_s,quotable,status,note
+cliff,glassfb,ep128_gt,arctic,2,128,1024,8,8,2133,8.0,0,COMPLETE,266.645,557309,14..16,11547,no,sweep,EP=128 vanishing-timeout walk; started at 8x because EP=64 never cleared at 2x/4x/8x | PRE-FIX binary (link-rate truncation); walk cancelled at k=8 because every further rung would also be pre-fix

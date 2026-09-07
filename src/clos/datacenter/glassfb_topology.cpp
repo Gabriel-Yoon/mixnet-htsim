@@ -1,4 +1,5 @@
 // -*- c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t -*-
+#include <set>
 #include "glassfb_topology.h"
 #include <cmath>
 #include <cstdlib>
@@ -406,6 +407,26 @@ vector<int> GlassFBTopology::node_path(int src, int dest) const
     if (same_panel(a, b) && !intra_link(a, b))
       path.push_back(relay_for(a, b)); // 2-hop intra-panel FB (dim-order balanced if enabled)
     path.push_back(b);
+  }
+
+  // Per-tier hop classification, for the energy accounting. Uses the same
+  // predicate the link construction uses above (adjacent_link -> electrical RDL,
+  // otherwise optical waveguide), so the byte split cannot drift from the
+  // routing it describes. Once per (src,dest) pair; off unless GLASS_LOG_HOPS.
+  static const bool log_hops = getenv("GLASS_LOG_HOPS") != NULL;
+  if (log_hops) {
+    static std::set<std::pair<int, int> > seen;
+    if (seen.insert(std::make_pair(src, dest)).second) {
+      int n_elec = 0, n_opt = 0, n_inter = 0;
+      for (size_t i = 1; i < path.size(); i++) {
+        int a = path[i - 1], b = path[i];
+        if (!same_panel(a, b))        n_inter++;
+        else if (adjacent_link(a, b)) n_elec++;
+        else                          n_opt++;
+      }
+      cerr << "hoplog: " << src << " " << dest << " "
+           << n_elec << " " << n_opt << " " << n_inter << endl;
+    }
   }
   return path;
 }

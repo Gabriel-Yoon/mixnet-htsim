@@ -138,6 +138,12 @@ htsim_tcp_glassfb_pm: main_tcp_glassfb.o firstfit.o glassfb_topology.o
 htsim_tcp_glassfb_pmlog: main_tcp_glassfb.o firstfit.o glassfb_topology.o
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_glassfb_pmlog
 
+# Carries GLASS_LOG_HOPS (per-tier hop classification from the topology itself)
+# alongside GLASS_LOG_FLOWS. Separate output name so it can be built while the
+# _pm and _pmlog binaries are in use by running jobs.
+htsim_tcp_glassfb_pmhop: main_tcp_glassfb.o firstfit.o glassfb_topology.o
+	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_glassfb_pmhop
+
 htsim_tcp_glassfb: main_tcp_glassfb.o firstfit.o glassfb_topology.o
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o htsim_tcp_glassfb
 

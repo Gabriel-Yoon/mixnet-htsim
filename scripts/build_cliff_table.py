@@ -161,25 +161,39 @@ def _n(v):
         return 0.0
 
 
-# Demote pre-fix rungs of the affected fabrics here, not in whichever gate pass
+# Drop pre-fix rungs of the affected fabrics here, not in whichever gate pass
 # happens to run last. build_cliff_table invokes the gate BEFORE it builds, so a
 # `python3 scripts/build_cliff_table.py` on its own left five pre-fix glass EP=32
 # rows marked quotable -- 75.52 ms from a binary whose electrical tier had no
-# transmission time, sitting below the 77.918 the paper quotes. Demoted, not
-# dropped: this table's hollow sensitivity points are drawn from these rows.
+# transmission time, sitting below the 77.918 the paper quotes.
+#
+# Dropped rather than demoted. Demoting kept them drawable as hollow sensitivity
+# points, and for an AFFECTED fabric a pre-fix row is not a sensitivity point: it
+# is an artifact. 48 survived that way, and glass EP=64's pre-fix 39.395 and
+# 39.410 sit BELOW the post-fix quoted 43.088, where a hollow marker reads as
+# "glass does better at some other buffer". build_buffer_sweeps drops them; this
+# is the same rule in its sibling.
+#
+# The cost is one point: hgx8_pkt EP=128, whose only row is the pre-fix 365.733.
+# Batch 4 is measuring it, and a gap that fills when the job lands is better than
+# a number from a binary whose NVLink tier ran 11% fast.
 _AFFECTED = ("glassfb", "hgx8_pkt", "nvl64_pkt_s1")
-_demoted = 0
-for r in out:
-    if (str(r.get("system", "")).startswith(_AFFECTED)
-            and (r.get("link_rate_fixed") or "").strip().lower() != "yes"
-            and r.get("quotable") == "yes"):
-        r["quotable"] = "no"
-        r["quotable_why"] = ("link-rate truncation: pre-fix binary "
-                             "(no link_rate_fixed=yes on this row)")
-        _demoted += 1
-if _demoted:
-    print("demoted %d pre-fix rung(s) of glassfb/hgx8_pkt/nvl64_pkt_s1; "
-          "nvl64_pkt (L=50, always exact) kept" % _demoted, file=sys.stderr)
+_before = len(out)
+_gone = sorted({(r["system"], r["ep"]) for r in out
+                if str(r.get("system", "")).startswith(_AFFECTED)
+                and (r.get("link_rate_fixed") or "").strip().lower() != "yes"})
+out = [r for r in out
+       if not (str(r.get("system", "")).startswith(_AFFECTED)
+               and (r.get("link_rate_fixed") or "").strip().lower() != "yes")]
+_dropped = _before - len(out)
+_left = {(r["system"], r["ep"]) for r in out}
+if _dropped:
+    print("dropped %d pre-fix rung(s) of glassfb/hgx8_pkt/nvl64_pkt_s1; "
+          "nvl64_pkt (L=50, always exact) kept" % _dropped, file=sys.stderr)
+    for k in _gone:
+        if k not in _left:
+            print("  NOTE: %s ep=%s now has NO row at all -- its only measurement was "
+                  "pre-fix" % k, file=sys.stderr)
 
 out.sort(key=lambda r: (r["family"], r["system"], _n(r["ep"]), _n(r["mb"]), _n(r["makespan_ms"])))
 with open(OUT, "w", newline="") as fh:

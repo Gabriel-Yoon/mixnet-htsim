@@ -1,2 +1,2 @@
 paper_ref,system,cabling,ep,nodes,mb,q,relayed_pairs,completed,makespan_ms,rtos,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note,link_rate_fixed,binary_sha
-,,,,,,,,,,,,,,,,,,submitted,job=12905293 host=atl1-1-01-003-13-2 start=2026-09-07T10:26:38,,
+cliff,glassfb,ep128_gt.txt,128,1024,8,1066,0,COMPLETE,273.493,394052,4757504,3671040,0.2831,0.0008,6.6976,47.1933,13179,sweep,post-fix rung; one job per rung,yes,9ac4f76

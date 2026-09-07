@@ -28,7 +28,7 @@ DECK=/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/th
 OUT=/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/thermal/tile_schedule.csv
 cp "$DECK" ./thermal_tile_schedule.inp
 
-echo "paper_ref,variant,substrate,hcp,tcp_C,p_pic_W,p_hi_W,p_lo_W,duty,period_s,n_periods,t_min_C,t_max_C,delta_pp_K,n_points_last_period,status,note" > "$OUT"
+echo "paper_ref,variant,substrate,hcp,tcp_C,p_pic_W,p_hi_W,p_lo_W,duty,period_s,n_periods,total_s,rise_s,total_over_rise,t_min_C,t_max_C,delta_pp_K,mean_last_C,mean_prev_C,drift_K,n_points_last_period,status,note" > "$OUT"
 
 run () { # variant period nper p_hi p_lo
   local v=$1 period=$2 nper=$3 phi=$4 plo=$5
@@ -72,10 +72,26 @@ if len(last) < 3:
     print(f"    !! only {len(last)} points in the last period -- time step too coarse")
     raise SystemExit
 lo, hi = min(last), max(last)
-print(f"    last period: {lo:.3f} -> {hi:.3f} C, peak-to-trough {hi-lo:.3f} K over {len(last)} points")
+# Convergence: compare the mean of the last period with the one before it. A
+# periodic steady state has zero drift; the 44 ms measured response means a run
+# of only a few periods has not reached one -- the same under-integration that
+# made the step deck understate its rise by 10-39%.
+prev = [T for t, T in pts if (nper - 2) * period - 1e-12 <= t < (nper - 1) * period]
+mean_last = sum(last) / len(last)
+mean_prev = (sum(prev) / len(prev)) if prev else float("nan")
+drift = mean_last - mean_prev
+RISE = 0.044          # measured 10-90 response of this stack at h=200k
+total = nper * period
+tor = total / RISE
+if tor < 5 or (prev and abs(drift) > 0.05):
+    status = "not_converged"
+print(f"    last period: {lo:.3f} -> {hi:.3f} C, peak-to-trough {hi-lo:.3f} K over {len(last)} points"
+      f"   [{total:.3f} s = {tor:.1f} response times, mean drift {drift:+.4f} K]")
 with open(out, "a") as fh:
     fh.write(f"thermal,{v},glass,200000,60,43,{phi},{plo},0.5,{period},{nper},"
-             f"{lo:.3f},{hi:.3f},{hi-lo:.3f},{len(last)},{status},"
+             f"{total:.4f},{RISE:g},{tor:.1f},"
+             f"{lo:.3f},{hi:.3f},{hi-lo:.3f},{mean_last:.4f},{mean_prev:.4f},{drift:+.4f},"
+             f"{len(last)},{status},"
              f"\"periodic 50% duty; P_lo is an ASSUMPTION (30% of TDP as the communication-phase "
              f"floor, not measured); periods from this paper's own EP=16 row (86.75 ms iteration, "
              f"/8 microbatch); PIC constant at 43 W; peak-to-trough over the last period\"\n")
@@ -91,9 +107,12 @@ echo "########## iteration period (86.75 ms), P_LO bracket ##########"
 run iter_86p75ms_lo0   0.08675 6 700   0
 run iter_86p75ms       0.08675 6 700 210
 run iter_86p75ms_lo350 0.08675 6 700 350
-echo "########## microbatch period (10.84 ms), P_LO bracket ##########"
-run mb_10p84ms_lo0     0.01084 6 700   0
-run mb_10p84ms         0.01084 6 700 210
-run mb_10p84ms_lo350   0.01084 6 700 350
+echo "########## microbatch period (10.84 ms), P_LO bracket ##########
+# 40 periods, not 6: at the corrected 44 ms response, 6 x 10.84 ms is only ~1.5
+# response times -- the same under-integration that made the step deck understate
+# its rise. 40 x 10.84 ms = 434 ms is ~10."
+run mb_10p84ms_lo0     0.01084 40 700   0
+run mb_10p84ms         0.01084 40 700 210
+run mb_10p84ms_lo350   0.01084 40 700 350
 echo "=== DONE ==="
 column -s, -t "$OUT" 2>/dev/null | cut -c1-190

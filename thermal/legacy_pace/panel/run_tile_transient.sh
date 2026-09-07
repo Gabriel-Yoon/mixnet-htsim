@@ -5,6 +5,11 @@ set -uo pipefail
 cd /storage/scratch1/8/syoon351/repos/mixnet-sim/thermal
 MAPDL="${MAPDL:-ansys252}"; NP="${NP:-8}"
 export ANSYS_LOCK=OFF; rm -f ./*.lock 2>/dev/null
+# This script printed its results and never wrote the CSV that
+# experiments/results/thermal/tile_transient.csv claims to hold them -- an
+# artifact with no producer (methods_provenance sub-class B). It writes it now.
+OUTCSV=/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/thermal/tile_transient.csv
+echo "paper_ref,variant,substrate,hcp,tcp_C,p_pic_W,p_gpu_W,tend_s,base_C,peak_C,delta_T_K,rise_10_90_s,tend_over_rise,n_points,status,note" > "$OUTCSV"
 
 run () { # variant matflag hcp tcp p_pic ndpt tend
   local v=$1 mf=$2 hcp=$3 tcp=$4 ppic=$5 ndpt=$6 tend=$7
@@ -23,9 +28,10 @@ run () { # variant matflag hcp tcp p_pic ndpt tend
   "$MAPDL" -b -j "tr_${v}" -np "$NP" -smp -i "_tr_${v}.inp" -o "_out_tr_${v}.out" >/dev/null 2>&1
   grep -q "NUMBER OF ERROR   MESSAGES ENCOUNTERED=          0" "_out_tr_${v}.out" 2>/dev/null \
     || echo "    !! errors -- see _out_tr_${v}.out"
-  python3 - "$v" <<'PY'
+  python3 - "$v" "$hcp" "$tcp" "$ppic" "$tend" "$OUTCSV" <<'PY'
 import sys,re
-v=sys.argv[1]
+v=sys.argv[1]; hcp=sys.argv[2]; tcp=sys.argv[3]; ppic=sys.argv[4]
+tend=float(sys.argv[5]); outcsv=sys.argv[6]
 try: lines=open(f"tile_transient_{v}.csv",errors="ignore").read().splitlines()
 except OSError: print("    !! no csv"); raise SystemExit
 pts=[]
@@ -41,9 +47,21 @@ t10=t90=None
 for t,T in pts:
     if t10 is None and T>=tgt10: t10=t
     if t90 is None and T>=tgt90: t90=t; break
+rise = (t90 - t10) if (t10 is not None and t90 is not None) else None
 print(f"    base={T0:.3f} C  peak={Tmax:.3f} C  dT={dT:.3f} K  "
-      f"t10={t10}  t90={t90}  rise_10_90={'%.6g'%(t90-t10) if t10 is not None and t90 is not None else 'n/a'} s  "
+      f"t10={t10}  t90={t90}  rise_10_90={'%.6g'%rise if rise else 'n/a'} s  "
       f"({len(pts)} pts)")
+# tend/rise is the convergence gate: a transient quoted as a steady value needs an
+# end time several times its own measured response. Below 5 the row says so
+# instead of presenting a truncated integration as an asymptote.
+ratio = (tend / rise) if rise else 0.0
+status = "final" if ratio >= 5 else "truncated_integration"
+with open(outcsv, "a") as fh:
+    fh.write(f"thermal,{v},glass,{hcp},{tcp},{ppic},700,{tend:g},{T0:.3f},{Tmax:.3f},{dT:.3f},"
+             f"{'%.6g'%rise if rise else ''},{ratio:.2f},{len(pts)},{status},"
+             f"\"idle->TDP step; tend_over_rise is TEND in units of this run's own measured "
+             f"10-90 rise -- below 5 the peak is NOT the asymptote (the original TEND=0.05 s runs "
+             f"sat at ~1.1-1.5 and understated the rise by 10% at h=200k and 39% at h=70k)\"\n")
 PY
 }
 

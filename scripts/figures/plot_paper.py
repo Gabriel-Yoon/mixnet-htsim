@@ -91,8 +91,12 @@ def cliff():
                 ax.annotate(f"{r['rtos']:,} RTO", (ep, y), fontsize=5, textcoords="offset points", xytext=(3, 3))
     # model per point
     models = {}
-    for r in sorted(rows, key=lambda r: 0 if r["system"] == "glassfb" else 1):   # label each EP by the glass row's model
-        models.setdefault(r["ep"], (r.get("model_name") or "") + (f" top-{r['topk']}" if r.get("topk") else ""))
+    # label each EP by the glass row's model; a row with a blank model_name (collector rows) defers to
+    # any other row at that EP that carries one
+    for r in sorted(rows, key=lambda r: (0 if r.get("model_name") else 1, 0 if r["system"] == "glassfb" else 1)):
+        if not r.get("model_name"): models.setdefault(r["ep"], ""); continue
+        if not models.get(r["ep"]):
+            models[r["ep"]] = (r.get("model_name") or "") + (f" top-{r['topk']}" if r.get("topk") else "")
     ax.set_xscale("log", base=2); ax.set_xticks(sorted(models)); ax.set_xticklabels([f"{ep}\n{models[ep]}" for ep in sorted(models)], fontsize=5.5)
     ax.set_yscale("log"); ax.set_ylabel("iteration (ms)", fontsize=7); ax.set_xlabel("EP degree (model per point)", fontsize=7)
     ax.axvline(16, color="#1f6f8b", ls=":", lw=0.8); ax.axvline(8, color="#d95f0e", ls=":", lw=0.8); ax.axvline(64, color="#7a0177", ls=":", lw=0.8)

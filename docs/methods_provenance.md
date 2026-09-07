@@ -72,10 +72,10 @@ binary reproduced 46 028 299 484 ps and 6 448 818 088 ps exactly, now with
 `RTO floor: 10000 us (default)` present. The rule cost one re-run and converted
 an assumption into a record.
 
-### Seven sub-classes discovered after the original six
+### Eight sub-classes discovered after the original six
 
 The six instances above are all one failure: a setting that was configured but never read.
-Seven further failures have since been found that the banner rule provably **cannot** catch,
+Eight further failures have since been found that the banner rule provably **cannot** catch,
 because in each the run used exactly what it was handed and reported it accurately.
 
 | # | Sub-class | Instance | Why banners miss it |
@@ -85,6 +85,7 @@ because in each the run used exactly what it was handed and reported it accurate
 | C | **Post-processing failed silently after a successful solve** | MAPDL wrote to files literally named `%CSVTILE%.csv` because the parameter never substituted; all four expected panel CSVs were absent, and a stale output from a *different configuration* sat in their place looking current | The solve succeeded and its `.rth` is correct; only the extraction failed, and it failed without an error |
 | D | **Uncommitted code that keeps reapplying** | The flat port-cap implementation was written, built and run from a working tree and never committed; a commit referencing its `extern`s would not link from a clean checkout | `git -c rebase.autoStash=true pull --rebase` stashed and reapplied the files cleanly across many commits, so they stayed live in the tree while appearing in none of them |
 
+| I | **Two runs sharing one output path** | The simulator names its output directory from a **one-second** timestamp (`put_time(now_tm, "%m-%d-%H-%M-%S")`). Running six sweeps in parallel put two cells of different jobs into the same second, so both appended to one `fct_util_out.txt` and their lines spliced | Both runs are correct and both report success. The corruption is in a *third* file neither run is aware it shares, and it appears only in columns derived from it — `makespan` and `rtos`, read from each run's own stdout, stay right |
 | H | **The schema moved under a writer that did not** | `island_ep64_qwenmoe.sh` appended rows positionally against a 36-column header. `fct_recompute.py` had since added nine columns to `cliff.csv` and the model/model_name split one more, taking the file to 46 — so 36 values were written under a 46-column header, `final` landed under a different column's name, and every field after `model` was one place out | A short CSV row is not a parse error; it is a row with empty trailing fields. Every tool read it without complaint, and the only visible symptom was a blank `status` on two rows out of eight |
 | G | **A dead artifact is indistinguishable from an unborn one** | `experiments/results/paper/cliff_pkt.csv` sat header-only for days. The job meant to fill it aborted two seconds in, every time it was submitted, on an unbound `${tag}` in a `local` line under `set -u`. The packet-level NVSwitch cliff rows were on the must-have list and had never been measured | Nothing was wrong at run time, because there was no run. An empty output file is the *same* artifact whether the job has not been submitted, is queued, or has failed on every attempt — and "not started yet" is the reading that raises no alarm |
 | F | **Partial instrumentation read as a census** | The used-pair set for regenerating the inter-panel port maps was extracted from ffapp's `flow_size:` print, which exists at **one** site — inside the all-to-all — while `set_flowsize()` is called from **nine**. The extract came out as 8 pairs, all `(2k, 2k+1)` with identical bytes: the EP pairs, with every DP and PP flow absent | Every line the log emitted was correct. Nothing was misconfigured, so no banner could report anything wrong; the log was silent about what it did not cover, and a set of 8 clean symmetric pairs looks exactly like a correct answer |
@@ -199,6 +200,32 @@ failing loudly being the acceptable form of the same protection when a rewrite i
 The two corrupted rows were **deleted and re-measured**, not repaired in place: reconstructing which
 value belonged under which name would have been a guess dressed as a recovery, and the cells cost
 sixteen minutes to run again.
+
+**Sub-class I is created by scaling up, not by any change to the code.** The path was unique for
+as long as runs were sequential; parallelising the sweeps made a one-second name collide. Nothing was
+edited to cause it, and re-reading either script would never have shown it.
+
+It was caught by a value that could not be a time: `maxFCT = 5644288.0000` ms in the `qfine` q=1000
+cell. 5 644 288 is a **flow size in bytes** — the field offsets were from two different records
+spliced together. A plausible-looking number would have gone through.
+
+> **A run's outputs must be addressed by identity, not by clock.** Give every cell an explicit output
+> path, and before any FCT column is written, check that no output directory was claimed twice.
+
+Applied: `scripts/logdir_collisions.py` reads each run log's claimed directory and reports every one
+claimed more than once; `scripts/mark_fct_status.py` sets an `fct_logdir` column per row to `clean`
+or `shared_logdir`. The binary already accepts `-logdir`, so each cell now names its own.
+
+The audit put the damage at **one row of one sensitivity CSV** — 23 collisions among 531 directories,
+almost all in serving runs whose rows are not in the paper. Both FCT sources the paper quotes, the
+NVL-64 k-sweep (`nvs_logs`) and the EP=64 edge study (`edge_logs`), were confirmed present in the
+scanned set **and** absent from the collision list — checking that they were scanned, rather than
+reading absence from a report as proof, being the whole point.
+
+Contaminated rows are marked, never deleted: their makespan and RTO count remain valid, and only the
+FCT columns are spliced. `fct_logdir` is a separate column from `status_fct` because that one already
+records the payload/bracket mode, and one column carrying two meanings is how the `Q64` and `model`
+collisions started.
 
 ### Scope limit
 

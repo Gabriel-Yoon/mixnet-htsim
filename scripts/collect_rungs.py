@@ -62,6 +62,13 @@ LADDERS = {
     ("nvl64_pkt_s1", "128"): [600, 1200, 2400, 4800, 9600, 19200],
     ("hgx8_pkt", "128"): [1224, 2448, 4896],
     ("nvl64_pkt", "128"): [2176],
+    # 200G/lane (GLASS_PORT_BW=800). The port rate is per port, so both EPs take
+    # the same six multiples of the 800 GB/s BDP (533.3 pkt). Declared before the
+    # runs exist: without an entry submitted_q() falls back to the files on disk,
+    # which for a NEW system prefix finds nothing at all, and a gap check with an
+    # empty expectation passes on the first rung that lands.
+    ("glassfb_800", "64"):  [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glassfb_800", "128"): [1066, 2133, 4267, 8533, 17067, 34133],
 }
 
 

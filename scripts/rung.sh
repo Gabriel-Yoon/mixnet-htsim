@@ -61,7 +61,10 @@ if [ "$IS_GLASS" = 1 ]; then
   fi
   RC=$?; T1=$(date +%s)
   RELAY=$(grep -oE "unmapped panel pair \([0-9]+,[0-9]+\)" "$LOG" | sort -u | wc -l)
-  SYS=glassfb; CAB=$MAP
+  # A non-default port rate is a different fabric row, not a different setting of
+  # one: RUNG_SYS names it so the 800 GB/s walk cannot land inside the 400 GB/s
+  # design point's line in R1 or its rows in the power tables.
+  SYS=${RUNG_SYS:-glassfb}; CAB=$MAP
 else
   SYS=$1 EP=$2 NODES=$3 FB=$4 WM=$5 D=$6 SW=$7 L=$8 NIC=$9 Q=${10} QC=${11} TAG=${12}
   case "$SYS" in hgx8_pkt) BIN=./htsim_tcp_nvswitch_drop ;; *) BIN=./htsim_tcp_nvswitch ;; esac
@@ -99,6 +102,14 @@ FSTAT=$(awk '/^FCT/{n++; v=$5+0; if($4>1436){m++; p[m]=v; s+=v}}
 # the same makespan -- a re-run reproducing the row it re-ran, for one -- become
 # indistinguishable. FSTAT was read from $LD above, so this is where it came from,
 # not a claim about where it should have come from.
+# A 200G/lane row carries its own caveat. The link term is unaffected -- 1.15 pJ/bit
+# is a DYNAMIC energy-per-bit figure (docs/energy_model.md), so doubling the lane
+# rate moves the same bits faster and changes no joules per bit -- but the static
+# laser+tuning term, 5.3 W per panel, was budgeted for 100G/lane and has not been
+# re-derived. It is very likely low here, which flatters this fabric, so the row
+# says so rather than a caption remembering to.
+PBNOTE=""
+[ "${RUNG_PORT_BW:-400}" != "400" ] && PBNOTE="; 200G/lane: static laser+tune NOT re-budgeted, same 5.3 W/panel as 100G/lane and likely low for the higher-rate lanes; link pJ/bit unchanged (dynamic)"
 FLD="$LD"
 FSTATUS=no_fct
 [ "$(echo "$FSTAT"|cut -d, -f2)" -gt 0 ] 2>/dev/null && FSTATUS=clean
@@ -111,7 +122,7 @@ if [ "$IS_GLASS" = 1 ]; then
     mean_fct_ms="$(echo "$FSTAT"|cut -d, -f3)" p50_fct_ms="$(echo "$FSTAT"|cut -d, -f4)" \
     p99_fct_ms="$(echo "$FSTAT"|cut -d, -f5)" max_fct_ms="$(echo "$FSTAT"|cut -d, -f6)" \
     fct_logdir="$FLD" fct_status="$FSTATUS" \
-    wall_s="$((T1-T0))" status="$ST" note="post-fix rung ($MODE); dim_a2a=${RUNG_DIM_A2A:-1}; portmap=${RUNG_NO_PORTMAP:+none}${RUNG_NO_PORTMAP:-$MAP}; hier=${RUNG_HIER:-0}; port_bw=${RUNG_PORT_BW:-400}"
+    wall_s="$((T1-T0))" status="$ST" note="post-fix rung ($MODE); dim_a2a=${RUNG_DIM_A2A:-1}; portmap=${RUNG_NO_PORTMAP:+none}${RUNG_NO_PORTMAP:-$MAP}; hier=${RUNG_HIER:-0}; port_bw=${RUNG_PORT_BW:-400}${PBNOTE}"
 else
   csv_row "$CSV" paper_ref=cliff system="$SYS" ep="$EP" nodes="$NODES" domain="$D" \
     switches="$SW" link_gbps="$L" nic_bw="$NIC" q_nvs="$Q" q_nic="$QC" \

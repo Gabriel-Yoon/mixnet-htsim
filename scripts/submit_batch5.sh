@@ -17,7 +17,7 @@
 # just hoped for. Each cell gets its own logdir (rung.sh calls _logdir once per
 # cell), which is the failure that cost batch 4 its nvl64 tail.
 #
-# (2) A 200G/lane glass EP=128 ladder, DRY RUN ONLY. GLASS_PORT_BW=800 raises each
+# (2) 200G/lane glass ladders at EP=64 AND EP=128, DRY RUN ONLY. GLASS_PORT_BW=800 raises each
 # inter-panel port from 400 to 800 GB/s on the SAME ep128_gt.txt cabling -- the
 # paper's stated option for the panel boundary. It is not submitted here and this
 # script will not submit it: it is listed so the decision has a cost attached. Run
@@ -34,7 +34,17 @@
 #   q_over_bdp = (q * MTU) / (link_bw * RTT), MTU 1500, RTT = 4 x 250 ns = 1 us
 #   1x BDP at 800 GB/s = 800e9 * 1e-6 / 1500 = 533.3 pkt
 # so the six rungs are 2x/4x/8x/16x/32x/64x of that, the same ladder shape the
-# 400 GB/s walk used at 533..17067 -- which is 2x..64x of ITS 266.7 pkt BDP.
+# 400 GB/s walk used at 533..17067 -- which is 2x..64x of ITS 266.7 pkt BDP. The
+# port rate is PER PORT, so EP=64 and EP=128 take the same six q values; only the
+# node count, workload and cabling differ.
+#
+# The rows land as system=glassfb_800 (RUNG_SYS), so the 400 GB/s rows stay the
+# design point and R1 can draw these as a second glass line. Each row also carries,
+# from rung.sh, the caveat that the static laser+tune term was budgeted for
+# 100G/lane and has NOT been re-derived for 200G/lane -- likely low, in this
+# fabric's favour. The LINK term is unaffected: 1.15 pJ/bit is a dynamic
+# energy-per-bit figure, so doubling the lane rate moves the same bits faster and
+# changes no joules per bit.
 set -uo pipefail
 REPO=/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly
 cd "$REPO"
@@ -85,6 +95,7 @@ sub () { # mem time tag args...
 }
 
 ARC=arctic_paper_dp2tp1pp4_ep128top2_L4_seq1024_mb8_H100.fbuf
+QME=qwenMoE_paper_dp2tp1pp4_ep64top4_L4_seq1024_mb8_H100.fbuf
 
 echo "### (1) glass EP=128 drop cells; makespans must reproduce 273.493 / 274.510"
 for q in 1066 2133; do
@@ -102,17 +113,24 @@ fi
 # environment sbatch itself has, and relying on a prefix to reach it through two
 # function frames is the kind of subtlety that has already cost this pipeline a
 # whole loop once (an unbound $R aborted a submitter AFTER it deleted files).
-[ "${SUBMIT_800:-0}" = 1 ] && export RUNG_PORT_BW=800
-for q in 1066 2133 4267 8533 17067 34133; do
-  tag="g128b800_q$q"
-  if [ "${SUBMIT_800:-0}" = 1 ]; then
-    sub 40G 20:00:00 "$tag" glass 128 1024 "$ARC" wm_ep128.txt ep128_gt.txt "$q" 8 "$tag"
-  else
-    printf "  WOULD SUBMIT  %-16s mem=%-5s t=%-9s  RUNG_PORT_BW=800 glass 128 1024 %s wm_ep128.txt ep128_gt.txt %s 8 %s\n" \
-      "$tag" 40G 20:00:00 "$ARC" "$q" "$tag"
-  fi
+if [ "${SUBMIT_800:-0}" = 1 ]; then export RUNG_PORT_BW=800 RUNG_SYS=glassfb_800; fi
+# tag  ep nodes fbuf         wm            map           mem  time
+for spec in "g64b800 64 512 QME wm_ep64.txt ep64_gt.txt 20G 8:00:00" \
+            "g128b800 128 1024 ARC wm_ep128.txt ep128_gt.txt 40G 20:00:00"; do
+  set -- $spec
+  pre=$1 ep=$2 nodes=$3 fbref=$4 wm=$5 map=$6 mem=$7 tm=$8
+  case $fbref in QME) fb=$QME ;; ARC) fb=$ARC ;; esac
+  for q in 1066 2133 4267 8533 17067 34133; do
+    tag="${pre}_q$q"
+    if [ "${SUBMIT_800:-0}" = 1 ]; then
+      sub "$mem" "$tm" "$tag" glass "$ep" "$nodes" "$fb" "$wm" "$map" "$q" 8 "$tag"
+    else
+      printf "  WOULD SUBMIT  %-18s mem=%-5s t=%-9s  RUNG_SYS=glassfb_800 RUNG_PORT_BW=800 glass %s %s %s %s %s %s 8 %s\n" \
+        "$tag" "$mem" "$tm" "$ep" "$nodes" "$fb" "$wm" "$map" "$q" "$tag"
+    fi
+  done
 done
-unset RUNG_PORT_BW
+unset RUNG_PORT_BW RUNG_SYS
 
 echo
 echo "submitted/listed $N job(s) in section (1)"

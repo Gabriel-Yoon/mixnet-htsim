@@ -36,7 +36,10 @@ except Exception as e:                      # never let the gate stop the table
 PAPER = os.environ.get("PAPER_RES", "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper")
 OUT = os.path.join(PAPER, "cliff_all.csv")
 
-FIELDS = ["paper_ref", "family", "system", "model_name", "topk", "ep", "mb", "nodes",
+# `variant` is the collector's configuration key -- g32 / sk1p2 / sk2p0 / hier32 all
+# share (system, ep, mb) and are different experiments. Dropping it made every
+# consumer downstream unable to tell them apart, and R1 drew whichever was fastest.
+FIELDS = ["paper_ref", "family", "system", "variant", "walk", "model_name", "topk", "ep", "mb", "nodes",
           "q", "q_over_bdp", "rto_min_us", "mtu", "makespan_ms", "rtos",
           "quotable", "quotable_why", "fct_logdir", "source", "note",
           "link_rate_fixed", "quoted_by"]
@@ -137,6 +140,8 @@ for name, (default_system, default_model) in SOURCES.items():
                 "mtu": pick(r, "mtu"),
                 "makespan_ms": ms,
                 "rtos": pick(r, "rtos"),
+                "variant": pick(r, "variant"),
+                "walk": pick(r, "walk"),
                 "quotable": pick(r, "quotable"),
                 "quotable_why": pick(r, "quotable_why"),
                 "fct_logdir": pick(r, "fct_logdir"),
@@ -155,6 +160,26 @@ def _n(v):
     except (TypeError, ValueError):
         return 0.0
 
+
+# Demote pre-fix rungs of the affected fabrics here, not in whichever gate pass
+# happens to run last. build_cliff_table invokes the gate BEFORE it builds, so a
+# `python3 scripts/build_cliff_table.py` on its own left five pre-fix glass EP=32
+# rows marked quotable -- 75.52 ms from a binary whose electrical tier had no
+# transmission time, sitting below the 77.918 the paper quotes. Demoted, not
+# dropped: this table's hollow sensitivity points are drawn from these rows.
+_AFFECTED = ("glassfb", "hgx8_pkt", "nvl64_pkt_s1")
+_demoted = 0
+for r in out:
+    if (str(r.get("system", "")).startswith(_AFFECTED)
+            and (r.get("link_rate_fixed") or "").strip().lower() != "yes"
+            and r.get("quotable") == "yes"):
+        r["quotable"] = "no"
+        r["quotable_why"] = ("link-rate truncation: pre-fix binary "
+                             "(no link_rate_fixed=yes on this row)")
+        _demoted += 1
+if _demoted:
+    print("demoted %d pre-fix rung(s) of glassfb/hgx8_pkt/nvl64_pkt_s1; "
+          "nvl64_pkt (L=50, always exact) kept" % _demoted, file=sys.stderr)
 
 out.sort(key=lambda r: (r["family"], r["system"], _n(r["ep"]), _n(r["mb"]), _n(r["makespan_ms"])))
 with open(OUT, "w", newline="") as fh:

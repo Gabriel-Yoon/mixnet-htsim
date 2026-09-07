@@ -24,7 +24,8 @@ run() { # tag flag caplabel
   [ -z "$ps" ] && ps=0
   ms=$(awk -v p="$ps" "BEGIN{printf \"%.3f\", p/1e9}")
   rtos=$(grep -c "^At " "$log")
-  banner=$(grep -m1 "Flat port cap:" "$log" | sed "s/.*port cap: //" | awk "{print \$1}")
+  # see portcap_gate.sh: awk $1 keeps the banner sentence's comma and shifts the row
+  banner=$(grep -m1 "Flat port cap:" "$log" | sed "s/.*port cap: //" | awk "{print \$1}" | tr -d ",")
   echo "cliff,training,flexflow_qwen2_57b,qwen2_57b,64,512,flat900,$cap,900,5000,100,1500,$banner,$ps,$ms,$rtos,$wall" >> "$CSV"
   printf "  %-10s cap=%-3s banner=%-9s %13s ps (%9s ms) rtos=%-6s wall=%ss\n" "$tag" "$cap" "$banner" "$ps" "$ms" "$rtos" "$wall"
 }

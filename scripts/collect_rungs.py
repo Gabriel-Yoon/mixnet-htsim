@@ -55,6 +55,13 @@ LADDERS = {
     ("nvl64_pkt_s1", "16"): [600, 1200, 2400, 4800, 9600, 19200],
     ("nvl64_pkt_s1", "32"): [600, 1200, 2400, 4800, 9600, 19200],
     ("nvl64_pkt_s1", "64"): [600, 1200, 2400, 4800, 9600, 19200],
+    # submit_batch2.sh (3): all six rungs. submit_batch4.sh: three rungs for
+    # hgx8_pkt at 16x/31x/62x BDP, and one tail rung for nvl64_pkt, which is not a
+    # sweep -- it re-measures the already-quoted q=2176 on a binary that reports
+    # drops, so its ladder is that single point and the gap check must not wait.
+    ("nvl64_pkt_s1", "128"): [600, 1200, 2400, 4800, 9600, 19200],
+    ("hgx8_pkt", "128"): [1224, 2448, 4896],
+    ("nvl64_pkt", "128"): [2176],
 }
 
 
@@ -152,6 +159,8 @@ def label(r):
             r["q_over_bdp"] = "%.2f" % ((q * MTU) / (gbps * 1e9 * RTT_S))
     return r
 
+_CALIB_TAG = re.compile(r"^cal[ab]_M\d+_k\d+\.csv$")
+
 rows, pending, unfixed, contaminated = [], 0, 0, []
 for p in sorted(glob.glob(os.path.join(RUNGS, "*.csv"))):
     if os.path.exists(p + ".writing"):
@@ -173,6 +182,12 @@ for p in sorted(glob.glob(os.path.join(RUNGS, "*.csv"))):
         print("  REFUSED %s: %d completed rows in one rung file -- two jobs wrote it"
               % (os.path.basename(p), len(done_rows)), file=sys.stderr)
         contaminated.append(os.path.basename(p))
+        continue
+
+    # The calibration ladder steps in k, not in the _q<buffer> suffix variant()
+    # keys on, so every cell would read as a one-rung walk and be quoted for
+    # having no timeouts. build_calib.py walks it in k and is its one authority.
+    if _CALIB_TAG.match(os.path.basename(p)):
         continue
 
     for r in rs:
@@ -266,6 +281,10 @@ for key, g in sorted(walks.items()):
     for r in g:
         r["quotable"] = "no"
         r["quotable_why"] = "not the first qualifying rung of this walk"
+        # The walk key, recorded rather than recomputed downstream. Consumers that
+        # cannot see it treat sk1p2 and g32 as one (system, ep, mb) cell and pick
+        # whichever is faster; nothing in the row said they were different runs.
+        r["walk"] = key[3]
         # An explicit marker for the gate to defer on. Deciding precedence from
         # the wording of quotable_why coupled behaviour to prose and silently
         # dropped the drop-aware branch.

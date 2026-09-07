@@ -95,10 +95,10 @@ Three instances here, each caught only because the check was deliberately provok
 The cost of the rule is one deliberately broken input per check. The cost of skipping it is a green
 light over the defect itself, which is how sub-class F and the two vacuous greps above all began.
 
-### Twelve sub-classes discovered after the original six
+### Thirteen sub-classes discovered after the original six
 
 The six instances above are all one failure: a setting that was configured but never read.
-Twelve further failures have since been found that the banner rule provably **cannot** catch,
+Thirteen further failures have since been found that the banner rule provably **cannot** catch,
 because in each the run used exactly what it was handed and reported it accurately.
 
 | # | Sub-class | Instance | Why banners miss it |
@@ -115,6 +115,7 @@ because in each the run used exactly what it was handed and reported it accurate
 | F | **Partial instrumentation read as a census** | The used-pair set for regenerating the inter-panel port maps was extracted from ffapp's `flow_size:` print, which exists at **one** site — inside the all-to-all — while `set_flowsize()` is called from **nine**. The extract came out as 8 pairs, all `(2k, 2k+1)` with identical bytes: the EP pairs, with every DP and PP flow absent | Every line the log emitted was correct. Nothing was misconfigured, so no banner could report anything wrong; the log was silent about what it did not cover, and a set of 8 clean symmetric pairs looks exactly like a correct answer |
 
 | M | **A guard scoped to one producer** | `gate_quotable.py` defers to a ladder-level verdict so it will not re-judge which rung came first -- but the test was `quoted_by == "collector"`, and `build_calib.py` applies the same rule and did not stamp the field. The gate re-judged all 96 calibration rows one at a time, took 16 quotable rows to 76, and the figure's tiebreak then drew the *fastest* clean rung: **19.43%** efficiency where the rule gives **17.96%** | Every row is measured, every value is right, and the gate applied its own rule correctly. The defect is that the rule is the wrong one for that file, and the mechanism written to say so was keyed to a name rather than to a property |
+| N | **The producer discarded the key that told its experiments apart** | `collect_rungs.py` groups rungs into walks by `(system, ep, mb, variant)`, then writes the row without `variant`. Four glass EP=32 rows -- plain `g32` 77.918 ms, skew-1.2 `sk1p2` 74.814, skew-2.0 `sk2p0` 81.419, hierarchical `hier32` 202.683 -- reached R1 as one cell, each correctly quotable as the first clean rung of its own walk, and the figure drew the lowest: **a workload-skew configuration plotted as glass's headline EP=32 point against incumbents measured unskewed** | Every row is right and so is every verdict on it. The distinction existed only inside the producer, for the length of one loop, and nothing downstream could see that four rows describing one (system, ep, mb) were four different experiments |
 | E | **Runner script disagrees with the solve** | `run_panel_hq.sh` declares `HCP=70000` and cites Coenen for it; the solve it produced used **100000**, recovered from `panhq_glass.db` `*STATUS`. The solve has **no `.out` log** at all | Nothing at run time is inconsistent — the deck used what it was given; only the *script* claims otherwise, and scripts are read as documentation |
 
 Sub-class E's rule, which is D's rule pointed at inputs rather than code:
@@ -507,6 +508,75 @@ it a defect was knowing that the rule is *first* clean rung and not *fastest*, w
 about the method and not about the file. The gate is now idempotent over two full
 build-then-gate cycles, and the regenerated table is byte-identical to the committed one in every
 column it already had.
+
+**Sub-class N is the one where the right answer was computed and thrown away.** The collector
+knows exactly which configuration a rung belongs to -- `variant()` derives it from the tag, and the
+walk grouping is keyed on it -- and the emitted row does not carry it. Downstream, `cliff_all.csv`
+is assembled with a fixed key set that could not have carried it anyway, and R1 reduces each
+`(system, ep)` to one point by preferring a quotable row and breaking ties on lowest makespan. Four
+quotable rows arrived for glass at EP=32 and the tiebreak chose:
+
+| walk | what it is | makespan |
+|---|---|---|
+| `sk1p2` | expert load skewed 1.2x | **74.814 ms — drawn** |
+| `g32` | the plain configuration | 77.918 ms |
+| `sk2p0` | expert load skewed 2.0x | 81.419 ms |
+| `hier32` | hierarchical all-to-all | 202.683 ms |
+
+> **A tiebreak is a selection rule wearing other clothes.** "Prefer quotable, then lowest makespan"
+> reads as a tidy-up for duplicate rows. It is a rule that says: among things I cannot tell apart,
+> report the most favourable. It was correct only for as long as the rows really were duplicates,
+> and nothing anywhere asserted that they were.
+
+The rung now records its walk key, `build_cliff_table.py` carries it, and R1 and the EP=128 panel
+draw the plain configuration only -- announcing which cells they excluded, so the exclusion is
+visible in the build log rather than implicit. Skew and hierarchical results are not lost; they are
+their own claims, drawn where they belong, and the cliff figure no longer borrows them.
+
+Two smaller corrections came out of the same pass. The first filter written for this was
+`hier|sk\d|m\d+$`, and `m\d+$` matched `g16m8` -- which is not a microbatch variant but glass's
+plain EP=16 walk, there being no separate `g16` -- so EP=16 fell back to a pre-fix portmap row at
+86.750 in place of the post-fix 87.613. **A filter that removes the row it exists to keep is worse
+than no filter**, and this one was caught only because the figure's own log named what it dropped.
+And the tiebreak among quotable rows now sorts on ladder position rather than makespan: nvl64_pkt at
+EP=16 had two clean rungs, q=544 at 130.797 and q=1088 at 130.295, and the rule names the first.
+That one moves 0.4% against the fabric the paper advocates.
+
+**A new instance of sub-class M, and the same lesson twice in one day.** `gate_quotable.py` walks
+`experiments/results/paper/*.csv`. Five result files sit one directory up -- `edge_ep64.csv`,
+`beyond64.csv`, `flat900_ep64.csv`, `flat_portcap.csv`, `nvl_latency_model.csv` -- all written
+2026-09-06, the day before the link-rate fix landed at 10:01 on 09-07, none carrying
+`link_rate_fixed`, and none reachable by any gate. `edge_ep64.csv` is named as R4's source in
+`docs/figure_plan.md` and quoted in `docs/hierarchical_a2a_design.md` ("at EP=64 the 3200 edge
+improves mean FCT 18% and P99 38% while the max FCT goes 91 -> 565 ms"). Its swept variable is the
+cross-panel edge rate at 1600, 2400 and 3200 GB/s -- **every one of which truncated to zero
+picoseconds per byte**, so the edge cost nothing at any of the three settings and the sweep varied
+something that had no effect on transmission time. It is consistent with that reading that the
+*faster* edge is the slower row throughout: qwenMoE 105.004 ms at 1600 against 2716.669 at 3200.
+The figures do not read these files -- every panel loads from `results/paper/` -- so nothing drawn
+is affected, and R4's glass EP=64 panel is now six post-fix rungs from `buffer_sweeps.csv`. The
+exposure is in two design documents that cite a pre-fix artifact as evidence.
+
+> **The scope of a check is part of the check.** M's first instance keyed a guard to a producer's
+> name; this one keys it to a directory. Both protect exactly what was in front of the author.
+
+**A third instance of the derived-table rule, in the sibling of the file already fixed for it.**
+`build_cliff_table.py` runs the gate *before* it builds, then writes rows carrying whatever verdict
+their source files hold -- so `python3 scripts/build_cliff_table.py` on its own left five pre-fix
+glass EP=32 rows marked quotable at 75.52 ms, below the 77.918 the paper quotes, until some later
+pass happened to demote them. `build_buffer_sweeps.py` was given its own pre-fix exclusion for
+exactly this reason and its sibling was not, which is the second time these two files have been
+fixed one at a time. It now demotes them itself, with a stated reason, rather than depending on
+which script runs last.
+
+**And an instance of sub-class H, still live in two writers.** `portcap_gate.sh` and
+`flat900_ep64.sh` extract the port-cap banner with `awk '{print $1}'` from the line
+`Flat port cap: ENABLED, one 50 GB/s egress port per node, ...`. The first field is `ENABLED,` --
+the sentence's own comma -- pasted unquoted into a CSV. Every capped row in both files is one column
+wide: `makespan_ps` empty, picoseconds under `makespan_ms`, milliseconds under `rtos`, the RTO count
+under `wall_s`. The gate that checks the writer reads field 10 of the `gate_default` row, which is
+the *uncapped* arm, whose banner has no comma; the self-check runs on the one arm the defect cannot
+reach.
 
 ### Scope limit
 

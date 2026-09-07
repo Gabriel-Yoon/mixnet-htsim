@@ -14,7 +14,7 @@ status. Only rows with status == final are drawn. Every figure prints the rows i
   python3 plot_paper.py all
 Env: PAPER_RES (default experiments/results/paper), OUT (default .).
 """
-import csv, os, sys
+import csv, os, re, sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -38,10 +38,22 @@ def load(ref):
     if not os.path.exists(p):
         sys.exit(f"missing {p} (paper_ref={ref} rows have not landed)")
     rows = [r for r in csv.DictReader(open(p)) if r.get("status", "final") == "final"]
-    # quotable=yes -> drawn solid; quotable=no/grid -> kept only as hollow sensitivity points
+    # quotable=yes -> drawn solid; anything else -> kept only as hollow sensitivity points.
+    #
+    # An unstamped row is NOT quotable. The old fallback promoted any row with zero
+    # timeouts, which is the per-row rule the gate is specifically forbidden to apply
+    # to a ladder -- every clean rung of a walk passes it, not just the first. A file
+    # that reaches the figures before gate_quotable.py has stamped it would have been
+    # drawn under that rule with nothing to show it had happened.
+    unstamped = 0
     for r in rows:
         qf = (r.get("quotable") or "").lower()
-        r["_quotable"] = qf == "yes" or (qf == "" and str(r.get("rtos", "")) in ("0", "0.0"))
+        if qf == "" and str(r.get("rtos", "")) not in ("",):
+            unstamped += 1
+        r["_quotable"] = qf == "yes"
+    if unstamped:
+        print("  WARNING %s: %d row(s) carry timeouts but no quotable stamp -- drawn hollow; "
+              "run scripts/gate_quotable.py" % (os.path.basename(p), unstamped))
     if not rows:
         sys.exit(f"{p}: no rows with status=final")
     for r in rows:
@@ -61,9 +73,62 @@ def mname(r):
 def f(name):
     return os.path.join(OUT, name)
 
+# NOT a microbatch rule: cliff() already keeps mb 8 only, and "m\d+$" additionally
+# threw out g16m8 -- the mb=8 cell IS glass's plain EP=16 walk, there is no separate
+# g16 -- leaving EP=16 drawn hollow from a pre-fix portmap row at 86.750 instead of
+# the post-fix 87.613. Skew, hierarchical A2A and the 2x2 cabling grid only.
+# Skew, hierarchical A2A and the 2x2 cabling grid. NOT a microbatch rule: cliff()
+# already keeps mb 8 only, and adding "m\d+$" here additionally threw out g16m8 --
+# the mb=8 cell IS glass's plain EP=16 walk, there is no separate g16 -- which left
+# EP=16 drawn hollow from a pre-fix portmap row at 86.750 instead of the post-fix
+# 87.613. A filter that removes the row it was meant to keep is worse than none.
+def _rung_key(r):
+    """Sort key among equally-quotable rows: ladder position, then makespan.
+
+    A row with no q (the analytic island bounds) sorts last, so a measured rung
+    always wins over a bound when both are quotable at one (system, ep).
+    """
+    try:
+        q = float(r.get("q"))
+    except (TypeError, ValueError):
+        q = float("inf")
+    return (q, r["makespan_ms"])
+
+_VARIANT_CELL = re.compile(r"hier|sk\d|^x2_")
+
+
+def headline_only(rows, what):
+    """Drop configuration cells that share (system, ep) with the plain walk.
+
+    g32 / sk1p2 / sk2p0 / hier32 are four different experiments at one (system, ep,
+    mb); each is the first clean rung of its OWN walk, so each is legitimately
+    quotable, and a figure that picks the lowest makespan among them draws the
+    kindest configuration and labels it the plain one. R1 drew sk1p2's 74.814 ms as
+    glass EP=32 against incumbents measured unskewed; the plain walk is 77.918.
+
+    A row with no variant (the analytic island tables and the older sweeps) is a
+    headline row: there is nothing it could be a variant of.
+    """
+    keep, dropped = [], {}
+    for r in rows:
+        v = (r.get("walk") or "").strip()
+        if v and _VARIANT_CELL.search(v):
+            dropped.setdefault(v, 0)
+            dropped[v] += 1
+        else:
+            keep.append(r)
+    if dropped:
+        print("  [%s] variant cells excluded: %s" % (
+            what, ", ".join("%s x%d" % (k, n) for k, n in sorted(dropped.items()))))
+    if not keep:
+        print("  [%s] WARNING every row is a variant cell; keeping them all" % what)
+        return rows
+    return keep
+
 def cliff():
     rows = load("cliff_all")   # single source built by build_cliff_table.py (carries quotable + source)
     rows = [r for r in rows if str(r.get("mb") or 8) == "8"]   # mb is int after load()
+    rows = headline_only(rows, "cliff")
     # one drawn point per (system, ep): the quotable row with the lowest makespan; otherwise the
     # lowest non-quotable (drawn hollow). Repeated sensitivity rows (same makespan at several q)
     # collapse to one.
@@ -71,8 +136,19 @@ def cliff():
     for r in rows:
         k = (r["system"], r["ep"])
         cur = best.get(k)
-        if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and r["makespan_ms"] < cur["makespan_ms"]):
+        if cur is None or (r["_quotable"] and not cur["_quotable"]) or (
+                r["_quotable"] == cur["_quotable"] and
+                (_rung_key(r) < _rung_key(cur) if r["_quotable"]
+                 else r["makespan_ms"] < cur["makespan_ms"])):
             best[k] = r
+    # The tiebreak below takes the lowest makespan, which is correct only because the
+    # walk-level pass marks ONE rung quotable per key. If it ever marks more, this
+    # silently draws the fastest clean rung instead of the first -- say so.
+    for k in best:
+        n = sum(1 for r in rows if (r["system"], r["ep"]) == k and r["_quotable"])
+        if n > 1:
+            print("  WARNING cliff %s ep=%s: %d quotable rows, the walk rule allows one; "
+                  "drew the first rung (q=%s)" % (k[0], k[1], n, best[k].get("q")))
     rows = list(best.values())
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
     for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "nvl64_pkt_s1", "glassfb_mesh", "glassfb", "glassfb_hier"):
@@ -164,11 +240,20 @@ def beyond():
     line, not a bar."""
     rows = [r for r in load("cliff_all") if r["ep"] == 128 and str(r.get("mb") or 8) == "8"]
     if not rows: sys.exit("beyond: no EP=128 rows in cliff_all")
+    rows = headline_only(rows, "beyond")
     best = {}
     for r in rows:
         cur = best.get(r["system"])
-        if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and r["makespan_ms"] < cur["makespan_ms"]):
+        if cur is None or (r["_quotable"] and not cur["_quotable"]) or (
+                r["_quotable"] == cur["_quotable"] and
+                (_rung_key(r) < _rung_key(cur) if r["_quotable"]
+                 else r["makespan_ms"] < cur["makespan_ms"])):
             best[r["system"]] = r
+    for s_ in best:
+        n = sum(1 for r in rows if r["system"] == s_ and r["_quotable"])
+        if n > 1:
+            print("  WARNING beyond %s: %d quotable rows, the walk rule allows one; "
+                  "drew the first rung (q=%s)" % (s_, n, best[s_].get("q")))
     order = [s_ for s_ in ("glassfb", "nvl64_pkt", "nvl64_pkt_s1", "hgx8_pkt") if s_ in best]
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
     g = best.get("glassfb")

@@ -37,7 +37,10 @@ emit() { # arm wl ep nodes cap speed q feeder log wall
   [ -z "$ps" ] && ps=0
   ms=$(awk -v p="$ps" 'BEGIN{printf "%.3f", p/1e9}')
   rtos=$(grep -c '^At ' "$log")
-  banner=$(grep -m1 'Flat port cap:' "$log" | sed 's/.*port cap: //' | awk '{print $1}')
+  # awk $1 of "ENABLED, one 50 GB/s egress port per node, ..." is "ENABLED," --
+  # the sentence's own comma, pasted straight into a CSV field. Every capped row in
+  # flat_portcap.csv and flat900_ep64.csv is one column wide because of it.
+  banner=$(grep -m1 'Flat port cap:' "$log" | sed 's/.*port cap: //' | awk '{print $1}' | tr -d ',')
   [ -z "$banner" ] && banner=MISSING
   echo "$arm,$wl,$ep,$nodes,$cap,$speed,$q,$feeder,$banner,$ps,$ms,$rtos,$wall" >> "$CSV"
   printf "  %-16s %-10s ep=%-4s cap=%-3s banner=%-9s %13s ps (%9s ms) rtos=%-6s wall=%ss\n" \

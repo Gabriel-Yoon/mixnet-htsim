@@ -5,9 +5,19 @@ is gated. This document exists so the build can start the same day.
 
 ## 1. Why
 
-Every EP>16 glass row loses to its **tail**, not its throughput: at EP=64 the 3200 edge
-improves mean FCT 18% and P99 38% while the max FCT goes 91 → 565 ms (edge_ep64), and the
-only rows that ever time out are glass rows crossing a panel edge (paper_todo A8). The
+Every EP>16 glass row loses to its **tail**, not its throughput, and the only rows that
+ever time out are glass rows crossing a panel edge (paper_todo A8).
+
+> **The edge-width evidence this section originally cited has been withdrawn.** It read: "at
+> EP=64 the 3200 edge improves mean FCT 18% and P99 38% while the max FCT goes 91 → 565 ms
+> (edge_ep64)". `edge_ep64.csv` was measured 2026-09-06, before the link-rate fix landed on
+> 09-07, and its three edge settings -- 1600, 2400 and 3200 GB/s -- every one truncated to zero
+> picoseconds per byte, so the cross-panel edge cost nothing at any of them and the sweep varied
+> a quantity with no effect on transmission time. Consistent with that, the *faster* edge is the
+> slower row throughout (qwenMoE 105.004 ms at 1600 against 2716.669 ms at 3200). The
+> tail-dominates claim itself is independently supported by the post-fix buffer sweeps in
+> `buffer_sweeps.csv`, where glass EP=64 peaks at 7.86 ms of max FCT at 8x BDP while its timeouts
+> fall monotonically; the edge-width numbers are not, and are not quoted until re-measured. The
 mechanism is gateway incast: with `FFAlltoAll::doNextEvent()` (ffapp.cpp:2301) every
 (src, dst) pair of the EP group starts its own DCTCP flow at once, so a panel pair
 (p, q) carries 16 × 16 = 256 concurrent flows through G=4 gateway links, 64 per link, each
@@ -83,4 +93,4 @@ the gateway GPUs: a three-stage all-to-all (intra-panel gather, one flow per gat
 intra-panel scatter) that moves the same bytes across the edge with G flows per panel pair
 instead of 256. It costs 2× the cross-panel bytes on intra-panel links, which the width
 sweep shows are not the bottleneck, and removes the retransmission tail that set every
-EP>16 makespan." — rows `system=glassfb_hier` alongside `glassfb` in cliff/edge_ep64.
+EP>16 makespan." — rows `system=glassfb_hier` alongside `glassfb` in cliff_all.csv. (Not edge_ep64.csv -- see the withdrawal note in §1.)

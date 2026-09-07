@@ -81,3 +81,17 @@ graph `.meta` all exist in the repo, and whose CSV rows carry `workload_type` an
 `status=final`). Figure ← paper_ref: `fig_cliff` ← cliff; `fig_decomp` ← decomp; `fig_beyond` ← beyond
 (+ serving_secondary); `fig_mb` ← mb + load; `fig_ladder` ← ladder; `fig_energy` ← power. Until a CSV
 exists the script prints `skip: missing …` and the DATE repo carries the watermarked ASPDAC PNG.
+
+## DATE 2027 figures as drawn (2026-09-07)
+
+All from `scripts/figures/plot_paper.py`, inputs under `experiments/results/paper/`; every drawn
+point is a row with `quotable=yes` (zero timeouts at its own buffer) unless drawn hollow.
+
+| DATE PNG | plot_paper subcommand | input CSV(s) | rows drawn |
+|---|---|---|---|
+| `fig_isopower.png` (Fig 6a, R1) | `cliff` | `cliff_all.csv` (built by `gate_quotable.py` then `build_cliff_table.py`) | one point per (system, ep): quotable-min solid, else hollow; island rows dashed |
+| `fig_crossover.png` (Fig 6b, R2) | `decomp` | `decomp_critpath.csv` + `cliff_all.csv` (quotable lookup) | critical-path classes per quoted row; partial logs refused by the script's makespan check |
+| `fig_copperfb.png` (Fig 7c, R3) | `ladder` | `dse_cabling_2x2.csv` + `cliff_all.csv` | four cells at q=1064 + quoted port-map row; NVL-64 queued / bound lines |
+| `fig_energy.png` (Fig 7b, R5) | `energy` | `power_tiers.csv`, `power_tiers_pkt.csv` | link J/iter (bytes x hops from the topology hop log) as solid brackets, static as hatched |
+| `fig_paneldse.png` (Fig 7a, R6) | `mb` | `cliff_all.csv` (family=mb) | glass vs nvl64_pkt at mb 4..32, EP=16 |
+| `fig_baselines.png` (Fig 6c) | `beyond` | pending (Arctic EP=128 rows) | still the SUPERSEDED watermark |

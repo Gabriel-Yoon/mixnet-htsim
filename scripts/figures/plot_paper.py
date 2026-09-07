@@ -29,8 +29,8 @@ SYS_LABEL = {"glassfb": "Glass-FB", "hgx8": "HGX-8", "nvl64": "NVL-64", "flat900
              "flat900_uncapped": "900 GB/s uncapped", "copperfb": "Copper-FB @100",
              "glass_A": "A: as submitted", "glass_B": "B: +placement", "glass_C": "C: +16-port cabling",
              "glassfb_mesh": "Glass-FB (4-edge mesh)", "glassfb_hier": "Glass-FB (hier. A2A)", "nvl64_pkt": "NVL-64 (packet-level)", "hgx8_pkt": "HGX-8 (packet-level)",
-             "nvl64_pkt_s1": "NVL-64 (packet-level, striped: 1x900)"}
-SYS_COLOR = {"glassfb": "#1f6f8b", "glassfb_mesh": "#7fb3c8", "glassfb_hier": "#0b3d4f", "hgx8": "#d95f0e", "hgx8_pkt": "#d95f0e", "nvl64": "#7a0177", "nvl64_pkt": "#7a0177", "nvl64_pkt_s1": "#b06fc0", "flat900_capped": "#7a0177",
+             "nvl64_pkt_s1": "NVL-64 (packet-level, striped: 1x900)", "glassfb_800": "Glass-FB, 200G/lane ports (800 GB/s)"}
+SYS_COLOR = {"glassfb": "#1f6f8b", "glassfb_mesh": "#7fb3c8", "glassfb_hier": "#0b3d4f", "hgx8": "#d95f0e", "hgx8_pkt": "#d95f0e", "nvl64": "#7a0177", "nvl64_pkt": "#7a0177", "nvl64_pkt_s1": "#b06fc0", "glassfb_800": "#2a9d8f", "flat900_capped": "#7a0177",
              "flat900_uncapped": "#b8a0c8", "copperfb": "#8c6d31"}
 
 def load(ref):
@@ -151,13 +151,13 @@ def cliff():
                   "drew the first rung (q=%s)" % (k[0], k[1], n, best[k].get("q")))
     rows = list(best.values())
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "nvl64_pkt_s1", "glassfb_mesh", "glassfb", "glassfb_hier"):
+    for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "nvl64_pkt_s1", "glassfb_mesh", "glassfb", "glassfb_800", "glassfb_hier"):
         pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and r["_quotable"]])
         sens = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and not r["_quotable"]])
         if not pts and not sens: continue
         dashed = sysname in ("hgx8", "nvl64")  # analytic island = vendor-claim upper bound
         if pts:
-            ax.plot([p[0] for p in pts], [p[1] for p in pts], "--" if dashed else ("s-." if sysname == "nvl64_pkt_s1" else "o-"), color=SYS_COLOR[sysname],
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], "--" if dashed else ("s-." if sysname == "nvl64_pkt_s1" else ("D:" if sysname == "glassfb_800" else "o-")), color=SYS_COLOR[sysname],
                     label=SYS_LABEL[sysname] + (" (vendor-claim bound)" if dashed else ""), lw=1.2 if dashed else 1.5, ms=4, alpha=0.8 if dashed else 1)
         if sens:  # not at its zero-timeout buffer (or a grid cell): hollow, unconnected
             ax.plot([p[0] for p in sens], [p[1] for p in sens], linestyle="none", marker="o", markerfacecolor="white",
@@ -254,7 +254,7 @@ def beyond():
         if n > 1:
             print("  WARNING beyond %s: %d quotable rows, the walk rule allows one; "
                   "drew the first rung (q=%s)" % (s_, n, best[s_].get("q")))
-    order = [s_ for s_ in ("glassfb", "nvl64_pkt", "nvl64_pkt_s1", "hgx8_pkt") if s_ in best]
+    order = [s_ for s_ in ("glassfb", "glassfb_800", "nvl64_pkt", "nvl64_pkt_s1", "hgx8_pkt") if s_ in best]
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
     g = best.get("glassfb")
     for x, s_ in enumerate(order):
@@ -270,7 +270,7 @@ def beyond():
     for s_ in ("nvl64", "hgx8"):   # vendor-claim bounds
         if s_ in best:
             ax.axhline(best[s_]["makespan_ms"], color=SYS_COLOR[s_], ls="--", lw=1.0, alpha=0.8, label=SYS_LABEL[s_] + " bound")
-    BSHORT = {"glassfb": "Glass-FB", "nvl64_pkt": "NVL-64\npinned", "nvl64_pkt_s1": "NVL-64\nstriped", "hgx8_pkt": "HGX-8"}
+    BSHORT = {"glassfb": "Glass-FB", "glassfb_800": "Glass-FB\n200G/lane", "nvl64_pkt": "NVL-64\npinned", "nvl64_pkt_s1": "NVL-64\nstriped", "hgx8_pkt": "HGX-8"}
     ax.set_xticks(range(len(order))); ax.set_xticklabels([BSHORT.get(s_, s_) for s_ in order], fontsize=6)
     ax.set_ylabel("iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)
     m = next((r for r in rows if r["system"] == "glassfb"), rows[0])

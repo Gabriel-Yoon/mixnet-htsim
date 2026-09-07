@@ -1,0 +1,7 @@
+paper_ref,system,ep,nodes,q,makespan_ms,rtos,drops,loss_verdict,wall_s,status,note
+drops,glassfb,16,128,1064,86.750,0,0,clean,203,measured,drop counter validated: 2317980 on the mesh control, 0 on the island; zero here means no loss, not no counting
+drops,glassfb,32,256,2133,75.542,0,208,real_loss,710,measured,drop counter validated: 2317980 on the mesh control, 0 on the island; zero here means no loss, not no counting
+drops,glassfb,64,512,17067,39.395,0,0,clean,2163,measured,drop counter validated: 2317980 on the mesh control, 0 on the island; zero here means no loss, not no counting
+drops,nvl64_pkt,32,256,1088,119.397,0,0,clean,601,measured,drop counter validated: 2317980 on the mesh control, 0 on the island; zero here means no loss, not no counting
+drops,nvl64_pkt,64,512,2176,82.502,0,0,clean,1363,measured,drop counter validated: 2317980 on the mesh control, 0 on the island; zero here means no loss, not no counting
+drops,hgx8_pkt,32,256,1224,164.522,105,0,spurious_timeouts_no_loss,491,measured,drop counter validated: 2317980 on the mesh control, 0 on the island; zero here means no loss, not no counting

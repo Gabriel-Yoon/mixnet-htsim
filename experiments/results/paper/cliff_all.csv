@@ -49,7 +49,7 @@ cliff,pkt,hgx8_pkt,qwenMoE,,64,,512,1224,15.6237,100,1500,144.519,2192,no,"timeo
 cliff,pkt,hgx8_pkt,qwenMoE,,64,,512,2448,31.2474,100,1500,144.519,2192,no,"timeouts present: 2192, loss not measured",shared_logdir,pkt_vanishing_timeout.csv,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer
 cliff,pkt,hgx8_pkt,qwenMoE,,64,,512,4896,62.4947,100,1500,144.519,2192,no,"timeouts present: 2192, loss not measured",shared_logdir,pkt_vanishing_timeout.csv,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer
 cliff,pkt,hgx8_pkt,qwenMoE,4,64,8,512,1224,16.3,100,1500,144.519,2192,no,"timeouts present: 2192, loss not measured",shared_logdir,cliff_pkt.csv,
-cliff,pkt,hgx8_pkt,arctic,2,128,8,1024,1224,15.6237,100,1500,365.733,138883,no,"timeouts present: 138883, loss not measured",clean,cliff_pkt_ep128.csv,
+cliff,pkt,hgx8_pkt,arctic,2,128,8,1024,1224,15.6237,100,1500,365.733,138883,no,"timeouts present: 138883, loss not measured",pkt128_logs,cliff_pkt_ep128.csv,packet-level NVSwitch; stripe=ecmp; island OFF
 cliff,pkt,nvl64_pkt,llamaMoE,,16,,,1088,31.2474,,,130.295,0,yes,relay-clean and zero timeouts,clean,nvl64_ksweep_hi.csv,
 cliff,pkt,nvl64_pkt,llamaMoE,,16,,,544,15.6237,,,130.797,0,yes,relay-clean and zero timeouts,shared_logdir,nvl64_ksweep_hi.csv,
 cliff,pkt,nvl64_pkt,llamaMoE,,16,,,136,3.90592,,,147.051,1227,no,"timeouts present: 1227, loss not measured",shared_logdir,nvl64_ksweep.csv,
@@ -78,4 +78,6 @@ cliff,pkt,nvl64_pkt,qwenMoE,,64,,512,1088,31.2474,100,1500,81.272,13,no,"timeout
 cliff,pkt,nvl64_pkt,qwenMoE,,64,,512,2176,62.4947,100,1500,82.502,0,yes,relay-clean and zero timeouts,shared_logdir,pkt_vanishing_timeout.csv,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer
 cliff,pkt,nvl64_pkt,qwenMoE,,64,,512,544,15.6237,100,1500,86.163,7237,no,"timeouts present: 7237, loss not measured",clean,pkt_vanishing_timeout.csv,incumbent vanishing-timeout sweep; quoted=yes is its shallowest zero-timeout buffer
 cliff,pkt,nvl64_pkt,qwenMoE,4,64,8,512,544,15.6237,100,1500,86.163,7237,no,"timeouts present: 7237, loss not measured",clean,cliff_pkt.csv,packet-level NVSwitch; stripe=ecmp (mode 1); island OFF
-cliff,pkt,nvl64_pkt,arctic,2,128,8,1024,544,15.6237,100,1500,331.611,17152,no,"timeouts present: 17152, loss not measured",clean,cliff_pkt_ep128.csv,
+cliff,pkt,nvl64_pkt,arctic,2,128,8,1024,2176,62.4947,100,1500,247.218,0,yes,relay-clean and zero timeouts,,cliff_pkt_ep128.csv,EP=128 vanishing-timeout walk; FCT columns blank -- the walk's cells shared one output directory and the hgx8 sweep overwrote it before this cell could be read
+cliff,pkt,nvl64_pkt,arctic,2,128,8,1024,1088,31.2474,100,1500,248.820,25,no,"timeouts present: 25, loss not measured",,cliff_pkt_ep128.csv,EP=128 vanishing-timeout walk; FCT columns blank -- the walk's cells shared one output directory and the hgx8 sweep overwrote it before this cell could be read
+cliff,pkt,nvl64_pkt,arctic,2,128,8,1024,544,15.6237,100,1500,331.611,17152,no,"timeouts present: 17152, loss not measured",pkt128_logs,cliff_pkt_ep128.csv,packet-level NVSwitch; stripe=ecmp; island OFF

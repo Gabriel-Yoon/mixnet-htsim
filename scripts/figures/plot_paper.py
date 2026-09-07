@@ -55,7 +55,8 @@ def f(name):
     return os.path.join(OUT, name)
 
 def cliff():
-    rows = load("cliff")
+    rows = load("cliff_all")   # single source built by build_cliff_table.py (carries quotable + source)
+    rows = [r for r in rows if (r.get("mb") or "8") == "8"]
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
     for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "glassfb_mesh", "glassfb", "glassfb_hier"):
         pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and r["_quotable"]])

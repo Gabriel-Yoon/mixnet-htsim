@@ -202,3 +202,21 @@ k sweep so far (EP=16 LLaMA-MoE, nvl64_pkt, mode 1): k=4 151.9 ms / 6423 RTO / m
 on the glass edge (fewer, deeper timeouts, starved tail). k=32/64 invalid (binary removed
 mid-sweep by the scatter build; being re-run). No number is quoted until the sweep is
 complete and the mode-2 row exists; the row quoted for NVL is the most NVL-favourable one.
+
+## 11. Glass-FB inter-panel PORT MAP (mode 3) — implemented 2026-09-06
+
+`GLASS_PORT_MAP=<file>` selects mode 3 in `glassfb_topology`: each panel's `_psize` optical
+ports (one MTP-16 per GPU, `GLASS_PORT_BW` = 400 GB/s each) are assigned per panel pair from
+a "p q n" table; `gw(p,q,g)` hands out distinct gateway GPUs per pair from a per-panel slot
+base, `gw_g` hashes over that pair's port count, `panels_conn` = n>0, unmapped pairs are BFS-
+relayed and COUNTED (banner warns; the generator should leave that count at 0), and the
+loader exits if any panel needs more than `_psize` ports. `GLASS_INTER_BW` / `GLASS_GW_PARALLEL`
+are ignored in mode 3 (banner says so). `scripts/gen_port_map.py` derives the map from
+(dp,tp,pp,ep), the EP-aware placement rule (`phys()`), and a port split {ep, dp, pp};
+`--hi-order` (dp_major | pp_major) must be verified against the task graph's DP all-reduce
+pairs. Maps in `experiments/portmaps/`: ep16_0_8_4, ep32_12_2_1, ep32_8_4_2, ep64_12_2_1,
+ep128_13_1_1 (16 ports at every interior-stage panel).
+Why: the 4-edge mesh rows stranded 3/4 (EP=32) and 2/4 (EP=64) of a panel's egress and
+relayed DP/PP traffic through other panels' EP edges; all-pairs cabling is infeasible at
+16–64 panels (deg 15–63 > 16 ports). The port map is the physical design: cabling follows
+the parallelism layout, one hop to every logical neighbour.

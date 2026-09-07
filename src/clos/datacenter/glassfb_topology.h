@@ -12,6 +12,9 @@
 #include "eventlist.h"
 #include "switch.h"
 #include <ostream>
+#include <algorithm>
+#include <map>
+#include <vector>
 
 #ifndef QT
 #define QT
@@ -65,6 +68,16 @@ public:
   // single-gateway behavior). Requires panel_degree() * _gw_parallel <= _psize
   // (clamped in set_params if violated).
   int _gw_parallel = 1;
+  // mode 3 = PORT MAP: each panel has _psize optical ports (one MTP-16 per GPU, 400 GB/s
+  // each); the map says how many ports join each panel pair. Generated from the job's
+  // (dp,tp,pp,ep) layout by scripts/gen_port_map.py so every logical neighbour (EP
+  // partner, DP replica, PP prev/next) is one hop. GLASS_PORT_MAP=<file>, lines "p q n".
+  vector<vector<int>> _pm;        // ports between panels p,q (symmetric)
+  vector<vector<int>> _pm_base;   // first local gateway slot in p reserved for q
+  vector<int> _pm_used;           // ports used per panel (<= _psize asserted)
+  uint64_t _port_bw_mbps = 400ULL * 8000;   // per port, GLASS_PORT_BW (GB/s)
+  mutable long _pm_relayed = 0;   // flows whose panel pair had no direct ports (BFS relay)
+  int ports(int p, int q) const { return _mode == 3 ? _pm[p][q] : _gw_parallel; }
   // EP-panel-aware placement: relabel logical nodes so EP-group mates land in one panel.
   bool _ep_place = false; int _tp_deg = 1, _ep_deg = 1;
   // dimension-order load-balanced (Valiant) intra-panel routing: spread each 2-hop a2a
@@ -177,6 +190,7 @@ public:
     if (p == q) return false;
     if (_mode == 0) return true;
     if (_mode == 2) { int d; return mesh_neighbor(p, q, d); }
+    if (_mode == 3) return _pm[p][q] > 0;
     return prow(p) == prow(q) || pcol(p) == pcol(q);
   }
   // local gateway index in panel p for the optical link toward panel q: the rank of
@@ -195,6 +209,11 @@ public:
   // slots (slot(p,q)*_gw_parallel .. +g); wraps if that exceeds _psize (OCS-FC /
   // forced dragonfly at large P, or _gw_parallel too large for panel_degree()).
   int gw(int p, int q, int g = 0) const {
+    if (_mode == 3) {
+      int n = _pm[p][q];
+      if (n <= 0) return p * _psize; // not connected; node_path() relays instead
+      return phys_inv(p * _psize + _pm_base[p][q] + (((g % n) + n) % n));
+    }
     if (_mode == 2) {
       int dir;
       if (!mesh_neighbor(p, q, dir)) return p * _psize; // not adjacent; caller error
@@ -208,10 +227,12 @@ public:
   // symmetric hash of their in-panel local positions so both directions of the
   // same physical flow (and its ACKs) pick the same gateway pair.
   int gw_g(int src, int dst) const {
-    return _gw_parallel > 1 ? (loc(src) + loc(dst)) % _gw_parallel : 0;
+    int n = _mode == 3 ? std::max(1, _pm[panel(src)][panel(dst)]) : _gw_parallel;
+    return n > 1 ? (loc(src) + loc(dst)) % n : 0;
   }
   // optical egress ports a panel needs = its inter-panel degree
   int panel_degree() const {
+    if (_mode == 3) { int d = 0; for (int p = 0; p < _P; p++) { int c = 0; for (int q = 0; q < _P; q++) c += _pm[p][q] > 0; d = std::max(d, c); } return d; }
     if (_mode == 2) return 4; // ceiling; corner/edge panel-grid positions have fewer
     return _mode == 0 ? (_P - 1) : ((_ppr - 1) + (_ppc - 1));
   }
@@ -220,7 +241,7 @@ public:
   bool global_link(int a, int b) const {
     int pa = panel(a), pb = panel(b);
     if (pa == pb || !panels_conn(pa, pb)) return false;
-    for (int g = 0; g < _gw_parallel; g++)
+    for (int g = 0; g < ports(pa, pb); g++)
       if (a == gw(pa, pb, g) && b == gw(pb, pa, g)) return true;
     return false;
   }
@@ -247,6 +268,8 @@ private:
 
   int find_destination(Queue* queue);
   void set_params(int no_of_nodes);
+  void load_port_map(const char *path);
+  vector<int> pm_panel_path(int p, int q) const;   // BFS over the port-map graph
   // full hop-by-hop node sequence from src to dst (consecutive nodes are directly linked)
   vector<int> node_path(int src, int dest) const;
   mem_b _queuesize;

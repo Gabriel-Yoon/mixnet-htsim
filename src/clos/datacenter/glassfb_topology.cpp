@@ -8,6 +8,8 @@
 #include <sstream>
 #include <strstream>
 #include <iostream>
+#include <fstream>
+#include <queue>
 #include "main.h"
 #include "queue.h"
 #include "switch.h"
@@ -65,6 +67,10 @@ void GlassFBTopology::set_params(int no_of_nodes)
     if (strcmp(e, "fb2") == 0) _mode = 1;
     else if (strcmp(e, "mesh") == 0) _mode = 2; // true 4-edge mesh, see panels_conn()/gw()
   }
+  // mode 3 = port map (takes precedence over GLASS_INTER when set)
+  const char *pm_file = getenv("GLASS_PORT_MAP");
+  if (pm_file && *pm_file) _mode = 3;
+  if (const char *e = getenv("GLASS_PORT_BW")) { double g = atof(e); if (g > 0) _port_bw_mbps = (uint64_t)(g * 8000.0); }
   // panel grid for 2-level FB: ppc = largest divisor of _P <= sqrt(_P).
   int ppc = (int)(sqrt((double)_P) + 0.5);
   while (ppc > 1 && _P % ppc != 0) ppc--;
@@ -79,6 +85,7 @@ void GlassFBTopology::set_params(int no_of_nodes)
   // graph at any P; gateways wrap around the panel (a GPU hosts multiple fiber ports).
   bool force_dfly = false;
   if (const char *e = getenv("GLASS_FORCE_DFLY")) force_dfly = atoi(e) != 0;
+  if (_mode == 3) load_port_map(pm_file);
   if (_mode == 0 && panel_degree() > _psize) {
     if (force_dfly) {
       cout << "GlassFB: OCS-FC forced (degree " << panel_degree() << " > panel ports "
@@ -114,7 +121,9 @@ void GlassFBTopology::set_params(int no_of_nodes)
   if (const char *e = getenv("GLASS_DIM_A2A")) _dim_route = atoi(e) != 0;
   if (const char *e = getenv("GLASS_ECN_K")) { int v = atoi(e); if (v > 0) _ecn_k_pkts = v; }
   if (const char *e = getenv("GLASS_GW_PARALLEL")) { int v = atoi(e); if (v > 0) _gw_parallel = v; }
-  if (_mode == 2) {
+  if (_mode == 3) {
+    // port map: G is per pair (ports(p,q)); _gw_parallel unused.
+  } else if (_mode == 2) {
     // mesh: each of the 4 edges is its OWN disjoint GPU pool (a full row/col of the
     // panel), independent of how many of the panel's other 3 edges are also active --
     // so G is capped by that single edge's pool size, not divided by neighbor count.
@@ -136,7 +145,9 @@ void GlassFBTopology::set_params(int no_of_nodes)
   cout << "GlassFB 2-tier: " << _P << " panels x " << _psize << " GPU"
        << " (intra " << _prows << "x" << _pcols << " FB, panel diam 2); "
        << "inter-panel = " << (_mode == 0 ? "dragonfly (all-to-all, diam 1)"
-                             : _mode == 2 ? "4-edge mesh " : "2-level FB " ) ;
+                             : _mode == 2 ? "4-edge mesh "
+                             : _mode == 3 ? "PORT MAP (layout-cabled, 1 hop to every mapped neighbour)"
+                             : "2-level FB " ) ;
   if (_mode == 1 || _mode == 2) cout << _ppr << "x" << _ppc
       << (_mode == 2 ? " (N/S/E/W neighbors only, XY routed)" : " (diam 2)");
   cout << endl;
@@ -145,6 +156,17 @@ void GlassFBTopology::set_params(int no_of_nodes)
   cout << "GlassFB distance-layered BW: elec(adj) " << (_elec_bw_mbps/8000.0)
        << " / opt(far) " << (_opt_bw_mbps/8000.0) << " / inter " << (_inter_bw_mbps/8000.0)
        << " GB/s; lat " << _elec_lat_ns << "/" << _opt_lat_ns << "/" << _inter_lat_ns << " ns" << endl;
+  if (_mode == 3) {
+    int mn = _psize, mx = 0; long pairs = 0;
+    for (int p = 0; p < _P; p++) { mn = std::min(mn, _pm_used[p]); mx = std::max(mx, _pm_used[p]);
+      for (int q = p + 1; q < _P; q++) pairs += _pm[p][q] > 0; }
+    cout << "GlassFB PORT MAP: " << _P << " panels, " << pairs << " connected pairs, ports lit per panel "
+         << mn << ".." << mx << " of " << _psize << ", " << (_port_bw_mbps / 8000.0)
+         << " GB/s per port -> per-GPU cross-panel egress " << (mn * _port_bw_mbps / 8000.0 / _psize)
+         << ".." << (mx * _port_bw_mbps / 8000.0 / _psize) << " GB/s; inter_bw env IGNORED" << endl;
+    if (_P <= 8) for (int p = 0; p < _P; p++) { cout << "  panel " << p << ":"; for (int q = 0; q < _P; q++) if (_pm[p][q] > 0) cout << " ->" << q << " x" << _pm[p][q]; cout << endl; }
+    else { cout << "  panel 0:"; for (int q = 0; q < _P; q++) if (_pm[0][q] > 0) cout << " ->" << q << " x" << _pm[0][q]; cout << " (others analogous; full map in " << pm_file << ")" << endl; }
+  }
 
   switchs.resize(_no_of_nodes, nullptr);
   pipes.resize(_no_of_nodes, vector<Pipe *>(_no_of_nodes));
@@ -218,7 +240,8 @@ void GlassFBTopology::init_network()
         bool adj = adjacent_link(j, k);
         link_bw  = adj ? _elec_bw_mbps : _opt_bw_mbps;
         link_lat = adj ? _elec_lat_ns  : _opt_lat_ns;
-      } else { link_bw = _inter_bw_mbps / _gw_parallel; link_lat = _inter_lat_ns; }
+      } else if (_mode == 3) { link_bw = _port_bw_mbps; link_lat = _inter_lat_ns; }
+      else { link_bw = _inter_bw_mbps / _gw_parallel; link_lat = _inter_lat_ns; }
       queues[j][k] = alloc_queue(queueLogger, link_bw, _queuesize);
       queues[k][j] = alloc_queue(queueLogger, link_bw, _queuesize);
       queues[j][k]->setName("L" + ntoa(j) + "->DST" + ntoa(k));
@@ -263,6 +286,49 @@ void GlassFBTopology::init_network()
     }
 }
 
+void GlassFBTopology::load_port_map(const char *path)
+{
+  _pm.assign(_P, vector<int>(_P, 0));
+  _pm_base.assign(_P, vector<int>(_P, 0));
+  _pm_used.assign(_P, 0);
+  ifstream f(path);
+  if (!f) { cerr << "GlassFB PORT MAP: cannot open " << path << endl; exit(1); }
+  string line; int nlines = 0;
+  while (getline(f, line)) {
+    size_t hash = line.find('#'); if (hash != string::npos) line = line.substr(0, hash);
+    istringstream is(line); int p, q, n;
+    if (!(is >> p >> q >> n)) continue;
+    if (p < 0 || q < 0 || p >= _P || q >= _P || p == q || n < 0) {
+      cerr << "GlassFB PORT MAP: bad line '" << line << "' (P=" << _P << ")" << endl; exit(1); }
+    _pm[p][q] = _pm[q][p] = n; nlines++;
+  }
+  for (int p = 0; p < _P; p++) {
+    int base = 0;
+    for (int q = 0; q < _P; q++) { _pm_base[p][q] = base; base += _pm[p][q]; }
+    _pm_used[p] = base;
+    if (base > _psize) {
+      cerr << "GlassFB PORT MAP: panel " << p << " needs " << base << " ports but has " << _psize
+           << " (one per GPU); fix the map" << endl; exit(1); }
+  }
+  if (nlines == 0) { cerr << "GlassFB PORT MAP: " << path << " has no entries" << endl; exit(1); }
+}
+
+vector<int> GlassFBTopology::pm_panel_path(int p, int q) const
+{
+  vector<int> prev(_P, -1); vector<char> seen(_P, 0);
+  std::queue<int> bfs; bfs.push(p); seen[p] = 1;
+  while (!bfs.empty()) {
+    int x = bfs.front(); bfs.pop();
+    if (x == q) break;
+    for (int y = 0; y < _P; y++) if (!seen[y] && _pm[x][y] > 0) { seen[y] = 1; prev[y] = x; bfs.push(y); }
+  }
+  vector<int> path;
+  if (!seen[q]) return path;
+  for (int x = q; x != -1; x = prev[x]) path.push_back(x);
+  std::reverse(path.begin(), path.end());
+  return path;
+}
+
 // ???
 void check_non_null(Route *rt)
 {
@@ -304,6 +370,17 @@ vector<int> GlassFBTopology::node_path(int src, int dest) const
   } else if (_mode == 0 || panels_conn(p, q)) {
     // dragonfly, or (2-level FB / mesh) with directly-connected/adjacent panels: one hop
     wp = {src, gw(p, q, g), gw(q, p, g), dest};
+  } else if (_mode == 3) {
+    // port map, unmapped pair: shortest path over the port-map graph (counted; the
+    // generator is expected to map every pair that carries traffic, so this is a
+    // fallback, not a design).
+    vector<int> pp = pm_panel_path(p, q);
+    if (pp.empty()) { cerr << "GlassFB PORT MAP: panels " << p << " and " << q << " are DISCONNECTED" << endl; exit(1); }
+    if (_pm_relayed++ == 0) cerr << "GlassFB PORT MAP: WARNING unmapped panel pair (" << p << "," << q << ") relayed over " << (pp.size() - 1) << " hops; counting" << endl;
+    wp.push_back(src);
+    for (size_t i = 0; i + 1 < pp.size(); i++)
+      wp.insert(wp.end(), {gw(pp[i], pp[i + 1], g), gw(pp[i + 1], pp[i], g)});
+    wp.push_back(dest);
   } else if (_mode == 2) {
     // mesh, non-adjacent panels: multi-hop XY dimension-order routing through however
     // many intermediate panels the grid distance requires. Each hop rides its own

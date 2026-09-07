@@ -104,10 +104,21 @@ def decomp():
     rows = load("decomp_critpath")
     classes = [("compute_ms", "compute", "compute"), ("expert_a2a_ms", "expert A2A", "a2a_inter"),
                ("dp_allreduce_ms", "DP all-reduce", "dp"), ("pp_p2p_ms", "PP p2p", "pp"), ("other_ms", "other", "tail")]
+    # only rows whose (system, ep, q) is a quotable cliff row (sweep rows with timeouts stay out)
+    quot = set()
+    try:
+        for c in csv.DictReader(open(os.path.join(RES, "cliff_all.csv"))):
+            if (c.get("quotable") or "").lower() == "yes":
+                quot.add((c["system"], str(int(float(c["ep"]))), str(int(float(c["q"]))) if c.get("q") else ""))
+    except Exception:
+        quot = None
     parsed = []
     for r in rows:
-        m = re.match(r"(\S+) EP=(\d+)", r["label"])
+        m = re.match(r"(\S+) EP=(\d+)(?: q=(\d+))?", r["label"])
         if not m: continue
+        key = (m.group(1), m.group(2), m.group(3) or "")
+        if quot is not None and key not in quot:
+            print(f"[decomp] skip {r['label']}: not a quotable cliff row"); continue
         parsed.append((int(m.group(2)), m.group(1), r))
     parsed.sort(key=lambda t: (t[0], 0 if t[1] == "glassfb" else 1))
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)

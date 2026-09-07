@@ -72,10 +72,10 @@ binary reproduced 46 028 299 484 ps and 6 448 818 088 ps exactly, now with
 `RTO floor: 10000 us (default)` present. The rule cost one re-run and converted
 an assumption into a record.
 
-### Six sub-classes discovered after the original six
+### Seven sub-classes discovered after the original six
 
 The six instances above are all one failure: a setting that was configured but never read.
-Six further failures have since been found that the banner rule provably **cannot** catch,
+Seven further failures have since been found that the banner rule provably **cannot** catch,
 because in each the run used exactly what it was handed and reported it accurately.
 
 | # | Sub-class | Instance | Why banners miss it |
@@ -85,6 +85,7 @@ because in each the run used exactly what it was handed and reported it accurate
 | C | **Post-processing failed silently after a successful solve** | MAPDL wrote to files literally named `%CSVTILE%.csv` because the parameter never substituted; all four expected panel CSVs were absent, and a stale output from a *different configuration* sat in their place looking current | The solve succeeded and its `.rth` is correct; only the extraction failed, and it failed without an error |
 | D | **Uncommitted code that keeps reapplying** | The flat port-cap implementation was written, built and run from a working tree and never committed; a commit referencing its `extern`s would not link from a clean checkout | `git -c rebase.autoStash=true pull --rebase` stashed and reapplied the files cleanly across many commits, so they stayed live in the tree while appearing in none of them |
 
+| H | **The schema moved under a writer that did not** | `island_ep64_qwenmoe.sh` appended rows positionally against a 36-column header. `fct_recompute.py` had since added nine columns to `cliff.csv` and the model/model_name split one more, taking the file to 46 — so 36 values were written under a 46-column header, `final` landed under a different column's name, and every field after `model` was one place out | A short CSV row is not a parse error; it is a row with empty trailing fields. Every tool read it without complaint, and the only visible symptom was a blank `status` on two rows out of eight |
 | G | **A dead artifact is indistinguishable from an unborn one** | `experiments/results/paper/cliff_pkt.csv` sat header-only for days. The job meant to fill it aborted two seconds in, every time it was submitted, on an unbound `${tag}` in a `local` line under `set -u`. The packet-level NVSwitch cliff rows were on the must-have list and had never been measured | Nothing was wrong at run time, because there was no run. An empty output file is the *same* artifact whether the job has not been submitted, is queued, or has failed on every attempt — and "not started yet" is the reading that raises no alarm |
 | F | **Partial instrumentation read as a census** | The used-pair set for regenerating the inter-panel port maps was extracted from ffapp's `flow_size:` print, which exists at **one** site — inside the all-to-all — while `set_flowsize()` is called from **nine**. The extract came out as 8 pairs, all `(2k, 2k+1)` with identical bytes: the EP pairs, with every DP and PP flow absent | Every line the log emitted was correct. Nothing was misconfigured, so no banner could report anything wrong; the log was silent about what it did not cover, and a set of 8 clean symmetric pairs looks exactly like a correct answer |
 
@@ -179,6 +180,25 @@ The helper's own first deployment failed this way in miniature: a wrong relative
 `csv_open` was never defined, and the script carried on appending rows to a file with no header. It
 was caught by checking the job's stderr rather than the CSV, which is the same rule as sub-class C —
 **check the producer, not the product.**
+
+**Sub-class H is the one that arrives through a correct change.** Nothing was wrong with adding
+the FCT columns, and nothing was wrong with the runner when it was written; the defect was created by
+the two being right at different times. It is the only failure here that no amount of care *at the
+point of writing either piece* would have prevented — which is why the fix has to be structural
+rather than a rule to remember.
+
+> **Append to a shared table by column name, never by position.** A writer that positions its fields
+> is correct only until someone adds a column, and the failure is silent when it comes.
+
+Applied: `scripts/paper_csv.sh` provides `csv_row`, which reads the file's own header, places each
+value by name, leaves unsupplied columns empty, and aborts on a key the header does not contain.
+`island_ep64_qwenmoe.sh` uses it. `island_cliff.sh` still appends positionally, so it now refuses to
+run at all when the file's header does not match its own `HDR`, and says what to use instead —
+failing loudly being the acceptable form of the same protection when a rewrite is not warranted.
+
+The two corrupted rows were **deleted and re-measured**, not repaired in place: reconstructing which
+value belonged under which name would have been a guess dressed as a recovery, and the cells cost
+sixteen minutes to run again.
 
 ### Scope limit
 

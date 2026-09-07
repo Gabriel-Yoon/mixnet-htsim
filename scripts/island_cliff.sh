@@ -29,6 +29,21 @@ CSV=$PAPER/cliff.csv
 HDR="paper_ref,workload_type,ep_source,model,topk,ep,mb,nodes,system,binary_sha,panel,elec_bw,opt_bw,inter_bw,G,island_gpus,island_bw,nic_bw,rtt_ns,q,q_over_bdp,rto_min_us,ecn_k,mtu,shortcut_banner,makespan_ms,compute_cp_ms,compute_source,rtos,flows,mean_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note"
 [ -f "$CSV" ] || echo "$HDR" > "$CSV"
 
+# HEADER GUARD. This script appends rows POSITIONALLY against $HDR. cliff.csv has
+# since grown columns from fct_recompute.py (flows_total, flows_payload, the _all
+# FCT triple, status_fct) and the model/model_name split, so appending 36 values
+# under a 46-column header silently shifts every field after `model` -- a short
+# CSV row is not a parse error. That corruption already happened once, via
+# island_ep64_qwenmoe.sh. Refuse rather than repeat it.
+if [ "$(head -1 "$CSV")" != "$HDR" ]; then
+  echo "FATAL: $CSV header does not match this script's HDR." >&2
+  echo "  file:   $(head -1 "$CSV")" >&2
+  echo "  script: $HDR" >&2
+  echo "Append by name with csv_row from scripts/paper_csv.sh, as" >&2
+  echo "scripts/island_ep64_qwenmoe.sh now does, instead of positionally." >&2
+  exit 1
+fi
+
 fct () { # logdir -> "mean p99 max"
   local f="$1/fct_util_out.txt"
   [ -f "$f" ] || { echo ",,"; return; }

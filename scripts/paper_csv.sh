@@ -58,6 +58,44 @@ csv_open() {  # csv_open <file> <header>
     trap '_csv_exit $?' EXIT
 }
 
+# Append one row to a CSV by COLUMN NAME, in the order the file's own header
+# gives. Safe when columns are added later; a positional append is not.
+#
+#   csv_row "$CSV" makespan_ms=91.367 status=final note="some text"
+#
+# Unknown keys abort the run rather than shifting every later field by one.
+# Values must not contain commas.
+csv_row() {
+    local file=$1; shift
+    local hdr; hdr=$(head -1 "$file")
+    local -A kv=()
+    local pair k v
+    for pair in "$@"; do
+        k=${pair%%=*}; v=${pair#*=}
+        kv[$k]=$v
+    done
+    # every supplied key must exist in the header
+    local col missing=""
+    for k in "${!kv[@]}"; do
+        case ",$hdr," in
+            *",$k,"*) ;;
+            *) missing="$missing $k" ;;
+        esac
+    done
+    if [ -n "$missing" ]; then
+        echo "csv_row: $file has no column(s):$missing" >&2
+        echo "csv_row: header is: $hdr" >&2
+        return 1
+    fi
+    local out="" first=1
+    local IFS=,
+    for col in $hdr; do
+        if [ "$first" = 1 ]; then first=0; else out="$out,"; fi
+        out="$out${kv[$col]-}"
+    done
+    printf '%s\n' "$out" >> "$file"
+}
+
 csv_close() {
     _CSV_DONE=1
     [ -n "$_CSV_FILE" ] && _csv_drop_sentinel

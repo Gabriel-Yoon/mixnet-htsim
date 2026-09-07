@@ -12,8 +12,9 @@
 # broken and the island result means nothing.
 set -uo pipefail
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
-_N=0
-_logdir() { _N=$((_N+1)); printf './logs/dropctl_%s_%s_%s' "${SLURM_JOB_ID:-local}" "$$" "$_N"; }
+# Unique per CALL: the old counter incremented inside $(_logdir)'s subshell and never
+# reached the parent, so every cell of a job shared one directory.
+_logdir() { printf './logs/dropctl_%s_%s_%s' "${SLURM_JOB_ID:-local}" "$$" "$(date +%s%N)"; }
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results
 T=../../../test
 BIN=./htsim_tcp_flat_drop

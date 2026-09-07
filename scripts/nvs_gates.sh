@@ -13,8 +13,9 @@ set -uo pipefail
 # Unique output directory per invocation. The binary's default is a
 # one-second timestamp, which two concurrent cells can share; see
 # scripts/logdir_collisions.py and methods_provenance.md sub-class I.
-_LOGDIR_N=0
-_logdir() { _LOGDIR_N=$((_LOGDIR_N + 1)); printf './logs/%s_%s_%s_%s' "$(basename "$0" .sh)" "${SLURM_JOB_ID:-local}" "$$" "$_LOGDIR_N"; }
+# Unique per CALL: the old counter incremented inside $(_logdir)'s subshell and never
+# reached the parent, so every cell of a job shared one directory.
+_logdir() { printf './logs/%s_%s_%s_%s' "$(basename "$0" .sh)" "${SLURM_JOB_ID:-local}" "$$" "$(date +%s%N)"; }
 source /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/scripts/paper_csv.sh
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
 R=/storage/scratch1/8/syoon351/repos/mixnet-sim/mixnet-flexflow/results

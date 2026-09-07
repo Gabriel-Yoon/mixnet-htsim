@@ -243,6 +243,17 @@ showed the reference was right and the published number short. Applied: both ste
 `TEND = 0.30 s` (~9 rise-times), and the R_int deck now prints its reference against the known value
 so the comparison is recorded rather than done in someone's head.
 
+J has a mirror image worth recording, because it arrived within the hour: **the reader started
+before the run stopped.** The critical-path decomposition, pointed at the EP=64 logs while those runs
+were still going, returned **33.547 ms** for glass — a perfectly well-formed critical path over the
+tasks that had finished so far, from a cell whose completed siblings are 52–61 ms. Nothing about the
+output looked partial; a partial task graph has a longest path just as a complete one does.
+
+> **A derived product must check itself against a quantity its source reports independently.** The
+> decomposition now compares its reconstruction with the makespan the run prints for itself, and
+> refuses a mismatch with both numbers shown. That check is also what makes the completed rows
+> trustworthy: they reproduce 75.542 and 119.397 ms exactly, so the walk is not fitting anything.
+
 Note what the first version of that reference did: at `R = 1e-9 cm²·K/W` the layer conductivity
 `k = t/R` is **10⁸ W/mK against glass's 1.2**, and the ill-conditioned solve returned a temperature
 18.8 K *below* the true one — while the three real resistance cases sat within 0.73 K of each other,

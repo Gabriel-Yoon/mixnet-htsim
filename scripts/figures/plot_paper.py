@@ -408,6 +408,15 @@ def calib():
         for ax, key in ((a1, "efficiency"), (a2, "T_us")):
             for r in pts:
                 ax.plot(r["msg_bytes"], r[key], marker="o", ms=4, color=col, markerfacecolor=col if r["_quotable"] else "white")
+    # optional third curve: SimAI (hardware-validated simulator) on its stock DGX-H100 topology
+    sp = os.path.join(RES, "simai_calib.csv")
+    if os.path.exists(sp):
+        srows = sorted(csv.DictReader(open(sp)), key=lambda r: float(r["msg_bytes"]))
+        ver = (srows[0].get("simai_version") or "").strip() if srows else ""
+        lab = "SimAI (hardware-validated" + (f", {ver}" if ver else "") + ")"
+        a1.plot([float(r["msg_bytes"]) for r in srows], [float(r["efficiency"]) for r in srows], "^--", color="#1b7f3b", lw=1.2, ms=4, label=lab)
+        a2.plot([float(r["msg_bytes"]) for r in srows], [float(r["T_us"]) for r in srows], "^--", color="#1b7f3b", lw=1.2, ms=4, label=lab)
+        print(f"[calib] SimAI overlay: {len(srows)} points")
     for ax in (a1, a2):
         ax.set_xscale("log", base=2); ax.set_xlabel("bytes per (src,dst) pair", fontsize=7); ax.tick_params(labelsize=6); ax.grid(alpha=0.3, which="both")
     a1.set_ylabel("egress / 450 GB/s line rate", fontsize=7); a1.set_ylim(0, 1.0); a1.legend(fontsize=5, frameon=False, loc="lower right")

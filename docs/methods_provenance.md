@@ -95,10 +95,10 @@ Three instances here, each caught only because the check was deliberately provok
 The cost of the rule is one deliberately broken input per check. The cost of skipping it is a green
 light over the defect itself, which is how sub-class F and the two vacuous greps above all began.
 
-### Eleven sub-classes discovered after the original six
+### Twelve sub-classes discovered after the original six
 
 The six instances above are all one failure: a setting that was configured but never read.
-Eleven further failures have since been found that the banner rule provably **cannot** catch,
+Twelve further failures have since been found that the banner rule provably **cannot** catch,
 because in each the run used exactly what it was handed and reported it accurately.
 
 | # | Sub-class | Instance | Why banners miss it |
@@ -114,6 +114,7 @@ because in each the run used exactly what it was handed and reported it accurate
 | G | **A dead artifact is indistinguishable from an unborn one** | `experiments/results/paper/cliff_pkt.csv` sat header-only for days. The job meant to fill it aborted two seconds in, every time it was submitted, on an unbound `${tag}` in a `local` line under `set -u`. The packet-level NVSwitch cliff rows were on the must-have list and had never been measured | Nothing was wrong at run time, because there was no run. An empty output file is the *same* artifact whether the job has not been submitted, is queued, or has failed on every attempt — and "not started yet" is the reading that raises no alarm |
 | F | **Partial instrumentation read as a census** | The used-pair set for regenerating the inter-panel port maps was extracted from ffapp's `flow_size:` print, which exists at **one** site — inside the all-to-all — while `set_flowsize()` is called from **nine**. The extract came out as 8 pairs, all `(2k, 2k+1)` with identical bytes: the EP pairs, with every DP and PP flow absent | Every line the log emitted was correct. Nothing was misconfigured, so no banner could report anything wrong; the log was silent about what it did not cover, and a set of 8 clean symmetric pairs looks exactly like a correct answer |
 
+| M | **A guard scoped to one producer** | `gate_quotable.py` defers to a ladder-level verdict so it will not re-judge which rung came first -- but the test was `quoted_by == "collector"`, and `build_calib.py` applies the same rule and did not stamp the field. The gate re-judged all 96 calibration rows one at a time, took 16 quotable rows to 76, and the figure's tiebreak then drew the *fastest* clean rung: **19.43%** efficiency where the rule gives **17.96%** | Every row is measured, every value is right, and the gate applied its own rule correctly. The defect is that the rule is the wrong one for that file, and the mechanism written to say so was keyed to a name rather than to a property |
 | E | **Runner script disagrees with the solve** | `run_panel_hq.sh` declares `HCP=70000` and cites Coenen for it; the solve it produced used **100000**, recovered from `panhq_glass.db` `*STATUS`. The solve has **no `.out` log** at all | Nothing at run time is inconsistent — the deck used what it was given; only the *script* claims otherwise, and scripts are read as documentation |
 
 Sub-class E's rule, which is D's rule pointed at inputs rather than code:
@@ -459,6 +460,53 @@ provenance columns: twice, a builder constructed rows with a fixed key set, drop
 `link_rate_fixed`, and let the next gate pass mark every post-fix row as pre-fix — once making the
 consolidated table disagree with the file it was built from, and once making R4 draw the pre-fix
 39.395 ms in place of 43.088.
+
+**Sub-class M is the one the guard against it had already been written for.** The gate that
+applies the vanishing-timeout rule row by row carries an explicit deferral, and its comment states
+the reason exactly: a per-row pass "cannot know which rung came first, so its per-row rule would
+mark every clean rung quotable and let a walk be quoted far above its vanishing point." That is a
+correct description of a property. The code tested a name:
+
+```python
+if (r.get("quoted_by") or "").strip() == "collector":
+```
+
+`collect_rungs.py` was the only producer stamping the field when the deferral was written. When the
+calibration table arrived it applied the same ladder rule -- first timeout-free rung per
+(variant, M) -- and stamped nothing, so the gate saw 96 unattributed rows and did what it does.
+The blast radius was one column: `quotable` went from 16 rows to 76, four to six of them per
+ladder, all of them genuinely clean.
+
+> **A guard keyed to a name protects the producer it was written against, not the property it
+> describes.** The deferral now reads `if (r.get("quoted_by") or "").strip():` -- any named
+> authority, because the field's meaning is "a ladder-level pass has already ruled here", and
+> whether that pass was the collector is not the question the gate is asking.
+
+**The figure converted the widened column into a different number.** `plot_paper.calib()` picked,
+per message size, a quotable row over a non-quotable one and broke ties on lowest `T_us`. With one
+quotable row per ladder that tiebreak never ran. With five it selected the fastest clean rung: the
+pinned 18-lane variant's large-message efficiency read **0.1943** instead of **0.1796**, and the
+selected rung moved in 8 of 16 ladders. That is the same 19.4-versus-17.96 error corrected once
+already by hand -- returning this time as a property of the pipeline, which would have reproduced
+it on every rebuild.
+
+So the figure no longer trusts the column alone. Among quotable rows it takes the **lowest k** --
+the first rung, which is what the rule names -- and prints a warning when a ladder offers more than
+one, since under the rule it cannot. A consumer that can state the rule should enforce it rather
+than infer it from an upstream flag.
+
+Two smaller holes were closed alongside. The gate's link-rate check tested
+`system.startswith("calib")`, and the consolidated calibration table has no `system` column at all,
+so the proof-of-fixed-binary requirement was a no-op on precisely the rows it names; it now also
+tests the file name. And 203 deferred rows carried `quotable=yes` with an empty `quotable_why` --
+a verdict with no reason beside it -- which now records which pass ruled.
+
+**How it was found.** Not by a check: by reading `git status` before staging and asking why a
+committed calibration file was modified. The mechanical diff was 60 rows in one column; what made
+it a defect was knowing that the rule is *first* clean rung and not *fastest*, which is a fact
+about the method and not about the file. The gate is now idempotent over two full
+build-then-gate cycles, and the regenerated table is byte-identical to the committed one in every
+column it already had.
 
 ### Scope limit
 

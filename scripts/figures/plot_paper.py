@@ -297,11 +297,23 @@ def calib():
     a2.axhspan(45, 85, color="#d95f0e", alpha=0.18, lw=0, label="published small-message floor (45-85 us)")
     for v in variants:
         sub = [r for r in rows if r["variant"] == v]
+        # Among quotable rows take the FIRST rung (lowest k), never the fastest:
+        # the rule is the vanishing point of the timeouts, and a tiebreak on T_us
+        # quietly reports the fastest clean rung instead whenever an upstream pass
+        # has marked more than one row quotable.
         best = {}
         for r in sub:
             k = r["msg_bytes"]; cur = best.get(k)
-            if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and r["T_us"] < cur["T_us"]):
+            if cur is None or (r["_quotable"] and not cur["_quotable"]) or (
+                    r["_quotable"] == cur["_quotable"] and
+                    ((int(r["k"]), r["T_us"]) < (int(cur["k"]), cur["T_us"]) if r["_quotable"]
+                     else r["T_us"] < cur["T_us"])):
                 best[k] = r
+        for k, r in best.items():
+            n = sum(1 for x in sub if x["msg_bytes"] == k and x["_quotable"])
+            if n > 1:
+                print("  WARNING calib %s M=%d: %d quotable rungs, rule allows one; "
+                      "drew the first (k=%s)" % (v, int(k), n, r["k"]))
         pts = sorted(best.values(), key=lambda r: r["msg_bytes"])
         col = VCOL.get(v, "#999"); lab = VLAB.get(v, v)
         a1.plot([r["msg_bytes"] for r in pts], [r["efficiency"] for r in pts], "-", color=col, lw=1.4, label=lab)

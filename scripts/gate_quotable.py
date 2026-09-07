@@ -79,13 +79,21 @@ for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
             fields.append(c)
     counts = {"yes": 0, "no": 0, "grid": 0, "?": 0}
     for r in rows:
-        # --- the collector's walk-level verdict is authoritative ---------------
-        # collect_rungs.py reconstructs a whole walk from its per-rung jobs and
-        # marks the FIRST timeout-free rung. This gate sees one row at a time and
-        # cannot know which rung came first, so its per-row rule would mark every
-        # clean rung quotable and let a walk be quoted far above its vanishing
-        # point. Where the collector has ruled, keep its ruling.
-        if (r.get("quoted_by") or "").strip() == "collector":
+        # --- a ladder-level verdict is authoritative ---------------------------
+        # collect_rungs.py and build_calib.py each reconstruct a whole ladder from
+        # its per-rung jobs and mark the FIRST timeout-free rung. This gate sees
+        # one row at a time and cannot know which rung came first, so its per-row
+        # rule would mark every clean rung quotable and let a ladder be quoted far
+        # above its vanishing point. Where such a pass has ruled, keep its ruling.
+        #
+        # This defers to ANY named authority, not to "collector" alone: naming one
+        # producer meant a second producer that applied the same rule -- the
+        # calibration table -- was silently overruled, 16 quotable rows becoming 76
+        # and the figure drawing 19.43% efficiency where the rule says 17.96%.
+        auth = (r.get("quoted_by") or "").strip()
+        if auth:
+            if not (r.get("quotable_why") or "").strip():
+                r["quotable_why"] = "ladder-level verdict from %s; not re-judged here" % auth
             counts[r.get("quotable", "no")] = counts.get(r.get("quotable", "no"), 0) + 1
             continue
 
@@ -94,10 +102,13 @@ for p in sorted(glob.glob(os.path.join(PAPER, "*.csv"))):
         # Absence of the proof disqualifies: there is no binary id on the older
         # rows, so a rule that passed what it could not identify would pass all
         # of them.
+        # The file name is part of the test: a consolidated table need not carry a
+        # `system` column (calib_nvswitch.csv does not), and a check that reads
+        # only that column exempts exactly the rows it was written to cover.
         sysname = (r.get("system") or "").strip()
         affected = (sysname.startswith("glassfb") or sysname.startswith("glass_")
                     or sysname == "hgx8_pkt" or sysname == "nvl64_pkt_s1"
-                    or sysname.startswith("calib"))
+                    or sysname.startswith("calib") or name.startswith("calib"))
         if affected and (r.get("link_rate_fixed") or "").strip().lower() != "yes":
             r["quotable"] = "no"
             r["quotable_why"] = ("link-rate truncation: pre-fix binary "

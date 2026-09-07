@@ -11,6 +11,11 @@ striped control. Both are 450 GB/s per GPU per direction.
 
 quotable marks the first rung with no timeouts for each (variant, M) -- the same
 vanishing-timeout rule as everywhere else. Efficiency is egress over 450 GB/s.
+
+That verdict is a LADDER-level one and every row carries quoted_by=build_calib to
+say so. Without the stamp the generic per-row gate cannot tell which rung came
+first, marks every clean rung quotable, and the figure then draws the fastest --
+19.43% where the rule says 17.96%.
 """
 import csv, glob, os, re, sys
 
@@ -41,6 +46,7 @@ for f in sorted(glob.glob(os.path.join(RUNGS, "cal*.csv"))):
             makespan_ms=r.get("makespan_ms"), wall_s=r.get("wall_s"),
             link_rate_fixed=r.get("link_rate_fixed"), binary_sha=r.get("binary_sha"),
             quotable="no", quotable_why="not the first timeout-free rung",
+            quoted_by="build_calib",
             note=r.get("note")))
 
 # the vanishing-timeout rule, per (variant, M)

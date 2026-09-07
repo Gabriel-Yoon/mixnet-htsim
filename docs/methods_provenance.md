@@ -78,7 +78,7 @@ an assumption into a record.
 > unexercised check and a passing check are indistinguishable from their output, and the failure mode
 > is the worse of the two: it reports success over exactly the condition it was built to catch.
 
-Three instances here, each caught only because the check was deliberately provoked:
+Five instances here, each caught only because the check was deliberately provoked:
 
 - **The drop counter.** `dropcount: 0` was reported by an instrument that had been added to one of
   six queue classes, so the zero meant *not counting*, not *no loss*. It became trustworthy only once
@@ -91,6 +91,28 @@ Three instances here, each caught only because the check was deliberately provok
   `$ROOT/scripts/` lines — appeared only on the third attempt.
 - **The `model_name` patch.** A fix that matched a line-start form the call site never uses. It
   changed nothing and reported no error, and looked identical to a fix that worked.
+- **Three `.gitignore` rules that were never rules.** After a `git add` over `src/clos` swept a
+  220 MB EP=128 log directory into the index, three patterns were added to keep run logs out --
+  each with its explanation after the pattern on the same line. **gitignore has no
+  trailing-comment syntax**, so every one of those rules was the path *plus the spaces plus the
+  `# ...` text*, and matched nothing. Git reports no error for this; `git status` looks the same
+  whether a directory is ignored or merely untracked, so the guard read as working for as long as
+  nobody tried to stage those paths. `git check-ignore -q` on all five log directories is now the
+  test, and it is run after the change rather than the rules being re-read.
+- **A red test that came out green, twice, because the perturbation was not one.** Validating the
+  hop dump against the real runs' hop logs, the first deliberately-wrong configuration was
+  `GLASS_DIM_A2A=0` and it produced *identical* tier bytes; so did `GLASS_EP_PLACE=0`. Neither
+  proved the check was vacuous. Dimension-ordered routing chooses between two intra-panel relays
+  that give a 2-hop path the same tier composition -- it changes which links carry the bytes, not
+  how many hops of each tier -- and placement decides which *rank* sits on which node, while the
+  dump is driven by node ids straight out of the flow log. Removing the port map moved 172 hop
+  triples and the check went red.
+
+  > **A red test that passes has told you about your perturbation, not about your check.** The
+  > temptation is to read the green as "the check is broken" or, worse, as "the check is fine, and
+  > so is everything else". Both readings skip the actual finding, which in this case was a fact
+  > about the fabric worth keeping: the tier split is a property of the topology's geometry and
+  > cabling, not of the routing policy inside a panel or of where the ranks were placed.
 
 The cost of the rule is one deliberately broken input per check. The cost of skipping it is a green
 light over the defect itself, which is how sub-class F and the two vacuous greps above all began.

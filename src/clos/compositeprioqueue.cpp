@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+extern unsigned long long GLASS_TOTAL_DROPS;
+
 CompositePrioQueue::CompositePrioQueue(linkspeed_bps bitrate, mem_b maxsize, EventList& eventlist, 
 			       QueueLogger* logger)
   : Queue(bitrate, maxsize, eventlist, logger)
@@ -164,7 +166,7 @@ CompositePrioQueue::receivePacket(Packet& pkt)
 	cout << "D[ " << _enqueued_low.size() << " " << _enqueued_high.size() << " ] DROP " 
 	     << pkt.flow().id << endl;
 	pkt.free();
-	_num_drops++;
+	_num_drops++; GLASS_TOTAL_DROPS++;
 	return;
     }
     

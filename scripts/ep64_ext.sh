@@ -60,6 +60,11 @@ run () { # k q
 echo "########## EP=64 glass, continuing the buffer walk ##########"
 run 16 4267
 run 32 8533
+# 32x reached 39.410 ms with 564 timeouts, down from 13812 at 16x and far below
+# the 52.004 at 4x -- close enough to clearing that one more doubling is worth
+# 35 minutes for a quotable EP=64 row the paper otherwise does not have.
+run 64 17067
+run 128 34133
 [ "$found" = 0 ] && echo "  NOTE: no zero-timeout point up to 32x BDP -- report as such, do not quote a timing row"
 csv_close
 echo "=== DONE ==="; column -s, -t "$CSV" | cut -c1-150

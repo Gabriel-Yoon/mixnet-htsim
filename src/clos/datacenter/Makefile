@@ -4,6 +4,10 @@ CC=g++
 # is how the build gate proves the rules still work without relinking a binary
 # a running job is executing.
 OUTDIR ?=
+# OBJS declared as a prerequisite of every link rule. They were always LINKED
+# and never DECLARED, so make would not relink an existing target when a shared
+# source changed: after editing six queue classes, the .o files rebuilt and the
+# binary did not, and the build reported success in 14 seconds.
 CXX=g++
 CFLAGS=-Wall -std=c++17 -O3
 FF_HOME?=$(PWD)/../../../../FlexFlow
@@ -35,46 +39,46 @@ OBJS=../eventlist.o ../tcppacket.o ../pipe.o ../queue.o ../queue_lossless.o ../q
 
 all: htsim_tcp_nvswitch htsim_tcp_glassfb htsim_tcp_wafer htsim_tcp_fc htsim_tcp_fattree htsim_tcp_os_fattree htsim_tcp_flat htsim_tcp_aggosft htsim_tcp_dyn_flat htsim_tcp_fattree_multijob htsim_tcp_aggos_fattree_multijob htsim_tcp_mixnet
 
-htsim_tcp_fattree_multijob: main_tcp_multijob_fattree.o firstfit.o fat_tree_topology.o
+htsim_tcp_fattree_multijob: main_tcp_multijob_fattree.o firstfit.o fat_tree_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_multijob_fattree.o fat_tree_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_fattree_multijob
 
-htsim_tcp_aggos_fattree_multijob: main_tcp_multijob_aggos_fattree.o firstfit.o agg_os_fattree.o
+htsim_tcp_aggos_fattree_multijob: main_tcp_multijob_aggos_fattree.o firstfit.o agg_os_fattree.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_multijob_aggos_fattree.o agg_os_fattree.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_aggos_fattree_multijob
 
-htsim_tcp_dyn_flat: main_tcp_dyn_flat.o firstfit.o flat_topology.o
+htsim_tcp_dyn_flat: main_tcp_dyn_flat.o firstfit.o flat_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_dyn_flat.o flat_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_dyn_flat
 
 
-htsim_tcp_mixnet: main_tcp_mixnet.o firstfit.o fat_tree_topology.o mixnet.o
+htsim_tcp_mixnet: main_tcp_mixnet.o firstfit.o fat_tree_topology.o mixnet.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_mixnet.o fat_tree_topology.o mixnet.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_mixnet
 
-htsim_tcp_fc: main_tcp_fc.o firstfit.o  fc_topology.o
+htsim_tcp_fc: main_tcp_fc.o firstfit.o  fc_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_fc.o fc_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_fc
 
-htsim_tcp_fattree: main_tcp_fattree.o firstfit.o fat_tree_topology.o
+htsim_tcp_fattree: main_tcp_fattree.o firstfit.o fat_tree_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_fattree.o fat_tree_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_fattree
 
-htsim_tcp_os_fattree: main_tcp_os_fattree.o firstfit.o os_fattree.o
+htsim_tcp_os_fattree: main_tcp_os_fattree.o firstfit.o os_fattree.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_os_fattree.o os_fattree.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_os_fattree
 
-htsim_tcp_nvswitch: main_tcp_nvswitch.o firstfit.o nvswitch_topology.o
+htsim_tcp_nvswitch: main_tcp_nvswitch.o firstfit.o nvswitch_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_nvswitch.o nvswitch_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_nvswitch
 
 # Carries GLASS_LOG_HOPS (in-domain vs NIC hop classification from the topology)
 # and GLASS_LOG_FLOWS. Separate output name so htsim_tcp_nvswitch stays untouched
 # while jobs are running it.
-htsim_tcp_nvswitch_hop: main_tcp_nvswitch.o firstfit.o nvswitch_topology.o
+htsim_tcp_nvswitch_hop: main_tcp_nvswitch.o firstfit.o nvswitch_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_nvswitch.o nvswitch_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_nvswitch_hop
 
-htsim_tcp_flat: main_tcp_flat.o firstfit.o flat_topology.o
+htsim_tcp_flat: main_tcp_flat.o firstfit.o flat_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_flat.o flat_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_flat
 
 # Same as htsim_tcp_flat plus the ECN drop counter reported at exit. Separate
 # output name so the running island jobs keep using the untouched binary.
-htsim_tcp_flat_drop: main_tcp_flat.o firstfit.o flat_topology.o
+htsim_tcp_flat_drop: main_tcp_flat.o firstfit.o flat_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_flat.o flat_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_flat_drop
 
-htsim_tcp_aggosft: main_tcp_aggosft.o firstfit.o agg_os_fattree.o
+htsim_tcp_aggosft: main_tcp_aggosft.o firstfit.o agg_os_fattree.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_aggosft.o agg_os_fattree.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_aggosft
 
 
@@ -142,7 +146,7 @@ mixnet.o: mixnet.cpp mixnet.h topology.h fat_tree_topology.cpp fat_tree_topology
 clean:	
 	rm -f *.o htsim_ndp* htsim_tcp* htsim_dctcp*
 
-htsim_tcp_glassfb_pm: main_tcp_glassfb.o firstfit.o glassfb_topology.o
+htsim_tcp_glassfb_pm: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_glassfb_pm
 
 # Identical to htsim_tcp_glassfb_pm; separate output name so it can be built
@@ -151,16 +155,16 @@ htsim_tcp_glassfb_pm: main_tcp_glassfb.o firstfit.o glassfb_topology.o
 # choke point every collective passes through -- ffapp.cpp prints flow_size
 # at ONE site, inside the all-to-all, so an ffapp-derived flow log silently
 # omits every DP and PP flow.
-htsim_tcp_glassfb_pmlog: main_tcp_glassfb.o firstfit.o glassfb_topology.o
+htsim_tcp_glassfb_pmlog: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_glassfb_pmlog
 
 # Carries GLASS_LOG_HOPS (per-tier hop classification from the topology itself)
 # alongside GLASS_LOG_FLOWS. Separate output name so it can be built while the
 # _pm and _pmlog binaries are in use by running jobs.
-htsim_tcp_glassfb_pmhop: main_tcp_glassfb.o firstfit.o glassfb_topology.o
+htsim_tcp_glassfb_pmhop: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_glassfb_pmhop
 
-htsim_tcp_glassfb: main_tcp_glassfb.o firstfit.o glassfb_topology.o
+htsim_tcp_glassfb: main_tcp_glassfb.o firstfit.o glassfb_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_glassfb.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_glassfb
 
 main_tcp_glassfb.o: main_tcp_glassfb.cpp
@@ -169,7 +173,7 @@ main_tcp_glassfb.o: main_tcp_glassfb.cpp
 glassfb_topology.o: glassfb_topology.cpp glassfb_topology.h topology.h
 	$(CC) $(INCLUDE) $(CFLAGS) -c glassfb_topology.cpp
 
-htsim_tcp_wafer: main_tcp_wafer.o firstfit.o wafer_rowcol_topology.o
+htsim_tcp_wafer: main_tcp_wafer.o firstfit.o wafer_rowcol_topology.o $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) firstfit.o main_tcp_wafer.o wafer_rowcol_topology.o glassfb_topology.o $(OBJS) $(LIB) -lhtsim -o $(OUTDIR)htsim_tcp_wafer
 
 main_tcp_wafer.o: main_tcp_wafer.cpp

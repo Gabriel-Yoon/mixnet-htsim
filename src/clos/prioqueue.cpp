@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+extern unsigned long long GLASS_TOTAL_DROPS;
+
 CtrlPrioQueue::CtrlPrioQueue(linkspeed_bps bitrate, mem_b maxsize, EventList& eventlist, 
 			       QueueLogger* logger)
   : Queue(bitrate, maxsize, eventlist, logger)
@@ -168,7 +170,7 @@ CtrlPrioQueue::receivePacket(Packet& pkt)
 	cout << "B[ " << _enqueued_low.size() << " " << enqueued->size() << " ] DROP " 
 	     << dropped_pkt->flow().id << endl;
 	dropped_pkt->free();
-	_num_drops++;
+	_num_drops++; GLASS_TOTAL_DROPS++;
     } else {
 	enqueued->push_front(&pkt);
 	*queuesize += pkt.size();

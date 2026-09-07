@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+extern unsigned long long GLASS_TOTAL_DROPS;
+
 CompositeQueue::CompositeQueue(linkspeed_bps bitrate, mem_b maxsize, EventList& eventlist, 
 			       QueueLogger* logger)
   : Queue(bitrate, maxsize, eventlist, logger)
@@ -251,7 +253,7 @@ CompositeQueue::receivePacket(Packet& pkt)
 	    cout << "B[ " << _enqueued_low.size() << " " << _enqueued_high.size() << " ] DROP " 
 	    	 << pkt.flow().id << endl;
 	    pkt.free();
-	    _num_drops++;
+	    _num_drops++; GLASS_TOTAL_DROPS++;
 	    return;
 	}
     }

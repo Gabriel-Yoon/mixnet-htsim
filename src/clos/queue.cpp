@@ -5,6 +5,8 @@
 #include "ndppacket.h"
 #include "queue_lossless.h"
 
+extern unsigned long long GLASS_TOTAL_DROPS;
+
 Queue::Queue(linkspeed_bps bitrate, mem_b maxsize, EventList &eventlist,
              QueueLogger *logger)
     : EventSource(eventlist, "queue"),
@@ -61,7 +63,7 @@ void Queue::receivePacket(Packet &pkt)
             _logger->logQueue(*this, QueueLogger::PKT_DROP, pkt);
         pkt.flow().logTraffic(pkt, *this, TrafficLogger::PKT_DROP);
         pkt.free();
-        _num_drops++;
+        _num_drops++; GLASS_TOTAL_DROPS++;
         return;
     }
     pkt.flow().logTraffic(pkt, *this, TrafficLogger::PKT_ARRIVE);

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+extern unsigned long long GLASS_TOTAL_DROPS;
+
 CutPayloadQueue::CutPayloadQueue(linkspeed_bps bitrate, mem_b maxsize, EventList& eventlist, 
 			       QueueLogger* logger)
   : Queue(bitrate, maxsize, eventlist, logger)
@@ -59,7 +61,7 @@ CutPayloadQueue::receivePacket(Packet& pkt)
 	if (_logger) _logger->logQueue(*this, QueueLogger::PKT_DROP, pkt);
 	pkt.flow().logTraffic(pkt,*this,TrafficLogger::PKT_DROP);
 	pkt.free();
-	_num_drops++;
+	_num_drops++; GLASS_TOTAL_DROPS++;
 	return;
     }
 

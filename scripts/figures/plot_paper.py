@@ -43,6 +43,12 @@ def load(ref):
     print(f"[{ref}] {len(rows)} final rows:", ", ".join(sorted({f"{r['system']}@EP{r.get('ep')}" for r in rows})))
     return rows
 
+def mname(r):
+    """Workload name. cliff.csv used to call this `model`; that column now
+    carries the family (island|pkt|glass), matching cliff_pkt.csv. The
+    fallback keeps un-migrated CSVs plotting correctly."""
+    return r.get("model_name") or r.get("model")
+
 def f(name):
     return os.path.join(OUT, name)
 
@@ -83,10 +89,10 @@ def decomp():
 def beyond():
     rows = load("beyond")
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    groups = sorted({(r["workload_type"], r["ep"], r.get("model")) for r in rows})
+    groups = sorted({(r["workload_type"], r["ep"], mname(r)) for r in rows})
     x = 0; ticks = []; labels = []
     for wt, ep, model in groups:
-        sub = [r for r in rows if (r["workload_type"], r["ep"], r.get("model")) == (wt, ep, model)]
+        sub = [r for r in rows if (r["workload_type"], r["ep"], mname(r)) == (wt, ep, model)]
         g = next((r["makespan_ms"] for r in sub if r["system"] == "glassfb"), None)
         for r in sorted(sub, key=lambda r: list(SYS_LABEL).index(r["system"]) if r["system"] in SYS_LABEL else 99):
             ax.bar(x, r["makespan_ms"] / g if g else r["makespan_ms"], color=SYS_COLOR.get(r["system"], "#999"), width=0.8)
@@ -102,7 +108,7 @@ def mb():
     rows = load("mb") + [r for r in (load("load") if os.path.exists(os.path.join(RES, "load.csv")) else [])]
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
     for (sysname, model), style in {("glassfb", "llamaMoE"): "o-", ("nvl64", "llamaMoE"): "s--", ("glassfb", "dbrx"): "o:", ("nvl64", "dbrx"): "s-."}.items():
-        pts = sorted([(r["mb"], r["makespan_ms"]) for r in rows if r["system"] == sysname and r.get("model") == model])
+        pts = sorted([(r["mb"], r["makespan_ms"]) for r in rows if r["system"] == sysname and mname(r) == model])
         if pts: ax.plot([p[0] for p in pts], [p[1] for p in pts], style, color=SYS_COLOR[sysname], label=f"{SYS_LABEL[sysname]} {model}", lw=1.3, ms=4)
     ax.set_xscale("log", base=2); ax.set_xticks([4, 8, 16, 32]); ax.set_xticklabels([4, 8, 16, 32])
     ax.set_xlabel("microbatch (EP=16)", fontsize=7); ax.set_ylabel("iteration (ms)", fontsize=7); ax.tick_params(labelsize=6)

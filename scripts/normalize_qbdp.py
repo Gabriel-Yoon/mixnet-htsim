@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Put q_over_bdp on the canonical BDP = link_bw * 4 * one-way-latency.
+"""Put q_over_bdp on the canonical BDP = link_bw * RTT of the link it sits on.
 
 Three conventions were in use at once:
 
@@ -27,6 +27,7 @@ ROOT = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly
 PAPER = os.path.join(ROOT, "experiments/results/paper")
 MTU = 1500
 GLASS_INTER_LAT_S = 500e-9   # from the run banner: lat 100/300/500 ns
+GLASS_HOPS_EACH_WAY = 1      # banner: "1 hop to every mapped neighbour"
 
 
 def per_link_gbs(row, fname):
@@ -52,7 +53,11 @@ def main(paths):
             bw = per_link_gbs(r, os.path.basename(p))
             if bw is None:
                 continue
-            bdp = bw * 4 * GLASS_INTER_LAT_S
+            # BDP = link_bw * RTT, matching nvswitch_topology.cpp:39 ("BDP over one
+            # NVLink port for the round trip ... two hops each way"), where RTT is
+            # 4*hop only because that path is 2 hops each way. The glass inter-panel
+            # edge is 1 hop each way, so its RTT is 2*500 ns, not 4*500.
+            bdp = bw * 2 * GLASS_HOPS_EACH_WAY * GLASS_INTER_LAT_S
             new = "%.1f" % (float(r["q"]) * MTU / bdp)
             if r.get("q_over_bdp") != new:
                 r["q_over_bdp"] = new
@@ -61,7 +66,7 @@ def main(paths):
             w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
             w.writeheader()
             w.writerows(rows)
-        print("%-30s %d row(s) set to the 4*lat convention" % (os.path.basename(p), changed))
+        print("%-30s %d row(s) set to BDP = link_bw * RTT" % (os.path.basename(p), changed))
 
 
 if __name__ == "__main__":

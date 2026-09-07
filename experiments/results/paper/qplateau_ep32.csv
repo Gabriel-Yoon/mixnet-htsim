@@ -1,2 +1,4 @@
 paper_ref,cabling,ep,nodes,q,q_over_bdp,q_pct_vs_2133,relayed_pairs,completed,makespan_ms,pct_vs_2133,rtos,wall_s,status,note,quotable,quotable_why
-,,,,,,,,,,,,,submitted,job=12896745 host=atl1-1-01-004-26-1 start=2026-09-06T22:55:17,no,no completed iteration
+plateau,portmap_ground_truth,32,256,2100,7.88,-1.55,0,COMPLETE,75.520,-0.029,0,701,sensitivity,plateau perturbation; is the q-chaos confined to the timeout regime,,
+plateau,portmap_ground_truth,32,256,2133,8.00,+0.00,0,COMPLETE,75.542,+0.000,0,720,sensitivity,plateau perturbation; is the q-chaos confined to the timeout regime,,
+plateau,portmap_ground_truth,32,256,2166,8.12,+1.55,0,COMPLETE,75.522,-0.026,0,687,sensitivity,plateau perturbation; is the q-chaos confined to the timeout regime,,

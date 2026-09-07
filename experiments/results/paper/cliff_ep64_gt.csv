@@ -1,3 +1,4 @@
 paper_ref,model,cabling,workload_type,model_name,topk,ep,mb,nodes,panels,system,ports_lit,opt_bw,elec_bw,k,q,q_over_bdp,rto_min_us,mtu,placement,dim_a2a,relayed_pairs,completed,makespan_ms,rtos,wall_s,status,note,status_fct,flows_total,flows_one_mss,flows_payload,p50_fct_ms,mean_fct_ms_all,p50_fct_ms_all,p99_fct_ms_all,max_fct_ms_all,fct_logdir,quotable,quotable_why
-,,,,,,,,,,,,,,,,,,,,,,,,,,submitted,job=12895950 host=atl1-1-01-003-14-1 start=2026-09-06T22:26:34,UNMATCHED,,,,,,,,,,no,no completed iteration
 cliff,pkt_glass,portmap_ground_truth,training,qwenMoE,4,64,8,512,32,glassfb,14..16,384,1800,4,1064,3.99,100,1500,on,on,0,COMPLETE,52.004,102601,1790,final,map from GLASS_LOG_FLOWS 96/96 pairs direct,,,,,,,,,,,no,timeouts present: 102601 (vanishing-timeout rule)
+cliff,pkt_glass,portmap_ground_truth,training,qwenMoE,4,64,8,512,32,glassfb,14..16,384,1800,2,533,2.00,100,1500,on,on,0,COMPLETE,54.182,128415,1981,final,map from GLASS_LOG_FLOWS 96/96 pairs direct
+cliff,pkt_glass,portmap_ground_truth,training,qwenMoE,4,64,8,512,32,glassfb,14..16,384,1800,8,2133,8.00,100,1500,on,on,0,COMPLETE,60.998,64804,1899,final,map from GLASS_LOG_FLOWS 96/96 pairs direct

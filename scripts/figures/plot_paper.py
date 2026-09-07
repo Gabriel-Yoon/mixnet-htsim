@@ -34,7 +34,9 @@ def load(ref):
         sys.exit(f"missing {p} (paper_ref={ref} rows have not landed)")
     rows = [r for r in csv.DictReader(open(p)) if r.get("status", "final") == "final"]
     # quotable=yes -> drawn solid; quotable=no/grid -> kept only as hollow sensitivity points
-    for r in rows: r["_quotable"] = (r.get("quotable", "yes") or "yes").lower() == "yes"
+    for r in rows:
+        qf = (r.get("quotable") or "").lower()
+        r["_quotable"] = qf == "yes" or (qf == "" and str(r.get("rtos", "")) in ("0", "0.0"))
     if not rows:
         sys.exit(f"{p}: no rows with status=final")
     for r in rows:
@@ -84,8 +86,9 @@ def cliff():
                 ax.annotate(f"{r['rtos']:,} RTO", (ep, y), fontsize=5, textcoords="offset points", xytext=(3, 3))
     # model per point
     models = {}
-    for r in rows: models.setdefault(r["ep"], set()).add(f"{r.get('model_name') or r.get('model')} top-{r.get('topk') or '?'}")
-    ax.set_xscale("log", base=2); ax.set_xticks(sorted(models)); ax.set_xticklabels([f"{ep}\n{'/'.join(sorted(models[ep]))}" for ep in sorted(models)], fontsize=5.5)
+    for r in sorted(rows, key=lambda r: 0 if r["system"] == "glassfb" else 1):   # label each EP by the glass row's model
+        models.setdefault(r["ep"], (r.get("model_name") or "") + (f" top-{r['topk']}" if r.get("topk") else ""))
+    ax.set_xscale("log", base=2); ax.set_xticks(sorted(models)); ax.set_xticklabels([f"{ep}\n{models[ep]}" for ep in sorted(models)], fontsize=5.5)
     ax.set_yscale("log"); ax.set_ylabel("iteration (ms)", fontsize=7); ax.set_xlabel("EP degree (model per point)", fontsize=7)
     ax.axvline(16, color="#1f6f8b", ls=":", lw=0.8); ax.axvline(8, color="#d95f0e", ls=":", lw=0.8); ax.axvline(64, color="#7a0177", ls=":", lw=0.8)
     ax.tick_params(labelsize=6); ax.legend(fontsize=5.5, frameon=False); ax.grid(alpha=0.3, which="both")

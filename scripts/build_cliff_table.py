@@ -47,6 +47,7 @@ SOURCES = {
     "cliff.csv":                (None,      None),
     "cliff_pkt.csv":            (None,      None),
     "cliff_pkt_ep128.csv":      (None,      None),
+    "cliff_pkt_stripe.csv":     (None,      None),   # NVSwitch striping control: S=1, L=900 (system nvl64_pkt_s1)
     "cliff_ep32_gt.csv":        ("glassfb", "llamaMoE"),
     "cliff_ep32_gt_ksweep.csv": ("glassfb", "llamaMoE"),
     "cliff_ep64_gt.csv":        ("glassfb", "qwenMoE"),

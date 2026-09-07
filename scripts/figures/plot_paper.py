@@ -28,8 +28,9 @@ OUT = os.environ.get("OUT", ".")
 SYS_LABEL = {"glassfb": "Glass-FB", "hgx8": "HGX-8", "nvl64": "NVL-64", "flat900_capped": "900 GB/s no-boundary bound",
              "flat900_uncapped": "900 GB/s uncapped", "copperfb": "Copper-FB @100",
              "glass_A": "A: as submitted", "glass_B": "B: +placement", "glass_C": "C: +16-port cabling",
-             "glassfb_mesh": "Glass-FB (4-edge mesh)", "glassfb_hier": "Glass-FB (hier. A2A)", "nvl64_pkt": "NVL-64 (packet-level)", "hgx8_pkt": "HGX-8 (packet-level)"}
-SYS_COLOR = {"glassfb": "#1f6f8b", "glassfb_mesh": "#7fb3c8", "glassfb_hier": "#0b3d4f", "hgx8": "#d95f0e", "hgx8_pkt": "#d95f0e", "nvl64": "#7a0177", "nvl64_pkt": "#7a0177", "flat900_capped": "#7a0177",
+             "glassfb_mesh": "Glass-FB (4-edge mesh)", "glassfb_hier": "Glass-FB (hier. A2A)", "nvl64_pkt": "NVL-64 (packet-level)", "hgx8_pkt": "HGX-8 (packet-level)",
+             "nvl64_pkt_s1": "NVL-64 (packet-level, striped: 1x900)"}
+SYS_COLOR = {"glassfb": "#1f6f8b", "glassfb_mesh": "#7fb3c8", "glassfb_hier": "#0b3d4f", "hgx8": "#d95f0e", "hgx8_pkt": "#d95f0e", "nvl64": "#7a0177", "nvl64_pkt": "#7a0177", "nvl64_pkt_s1": "#b06fc0", "flat900_capped": "#7a0177",
              "flat900_uncapped": "#b8a0c8", "copperfb": "#8c6d31"}
 
 def load(ref):
@@ -74,13 +75,13 @@ def cliff():
             best[k] = r
     rows = list(best.values())
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "glassfb_mesh", "glassfb", "glassfb_hier"):
+    for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "nvl64_pkt_s1", "glassfb_mesh", "glassfb", "glassfb_hier"):
         pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and r["_quotable"]])
         sens = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and not r["_quotable"]])
         if not pts and not sens: continue
         dashed = sysname in ("hgx8", "nvl64")  # analytic island = vendor-claim upper bound
         if pts:
-            ax.plot([p[0] for p in pts], [p[1] for p in pts], "--" if dashed else "o-", color=SYS_COLOR[sysname],
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], "--" if dashed else ("s-." if sysname == "nvl64_pkt_s1" else "o-"), color=SYS_COLOR[sysname],
                     label=SYS_LABEL[sysname] + (" (vendor-claim bound)" if dashed else ""), lw=1.2 if dashed else 1.5, ms=4, alpha=0.8 if dashed else 1)
         if sens:  # not at its zero-timeout buffer (or a grid cell): hollow, unconnected
             ax.plot([p[0] for p in sens], [p[1] for p in sens], linestyle="none", marker="o", markerfacecolor="white",
@@ -153,7 +154,7 @@ def beyond():
         cur = best.get(r["system"])
         if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and r["makespan_ms"] < cur["makespan_ms"]):
             best[r["system"]] = r
-    order = [s_ for s_ in ("glassfb", "nvl64_pkt", "hgx8_pkt") if s_ in best]
+    order = [s_ for s_ in ("glassfb", "nvl64_pkt", "nvl64_pkt_s1", "hgx8_pkt") if s_ in best]
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
     g = best.get("glassfb")
     for x, s_ in enumerate(order):

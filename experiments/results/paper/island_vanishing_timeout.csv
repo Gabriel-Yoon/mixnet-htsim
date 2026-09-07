@@ -1,2 +1,2 @@
-paper_ref,model,system,model_name,topk,ep,mb,nodes,island_gpus,island_bw,nic_bw,rtt_ns,q,q_over_bdp,feeder_pkts,rto_min_us,mtu,makespan_ms,rtos,wall_s,quoted,status,note
-,,,,,,,,,,,,,,,,,,,,,submitted,job=12898130 host=atl1-1-01-003-17-1 start=2026-09-07T00:13:05
+paper_ref,model,system,model_name,topk,ep,mb,nodes,island_gpus,island_bw,nic_bw,rtt_ns,q,q_over_bdp,feeder_pkts,rto_min_us,mtu,makespan_ms,rtos,wall_s,quoted,status,note,quotable,quotable_why
+,,,,,,,,,,,,,,,,,,,,,submitted,job=12898130 host=atl1-1-01-003-17-1 start=2026-09-07T00:13:05,no,no completed iteration

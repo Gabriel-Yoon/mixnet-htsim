@@ -18,7 +18,20 @@ Rows that are not quotable are kept, not dropped -- the sweeps are the evidence
 that the quoted point is the right one, and a figure that wants only headline
 rows can filter `quotable == yes`.
 """
-import csv, glob, os
+import csv, glob, os, runpy, sys
+
+# Apply the vanishing-timeout rule BEFORE reading. The sweep scripts write their
+# own `quoted` column; the `quotable` column this table carries is applied by
+# gate_quotable.py afterwards. Running them in the wrong order silently produced
+# a table missing the quotable NVL-64 EP=32 row -- the file was among the inputs,
+# the flag simply had not been computed for it yet. A two-step pipeline whose
+# steps must be run in order is a trap; this removes the order from the caller.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+try:
+    runpy.run_path(os.path.join(_HERE, "gate_quotable.py"), run_name="__gated__")
+except Exception as e:                      # never let the gate stop the table
+    print("WARNING: gate_quotable.py did not run (%s); `quotable` may be stale" % e,
+          file=sys.stderr)
 
 PAPER = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper"
 OUT = os.path.join(PAPER, "cliff_all.csv")

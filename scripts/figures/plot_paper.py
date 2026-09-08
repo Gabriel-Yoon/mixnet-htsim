@@ -666,9 +666,80 @@ def boundary():
         print("  %-12s EP=%3d share=%5.1f%%  tier=%7.2f ms  a2a=%s" % (NAMES[sname], ep, v["share"], v["tier_ms"], v["a2a"]))
     fig.tight_layout(pad=0.3, h_pad=1.0); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
 
+def loadfig():
+    """Load and buffers (Sec. dse). (a) EP=16 iteration vs microbatch, Glass-FB (200G/lane) and NVL72,
+    stacked dark = expert A2A / light = compute from decomp_critpath.csv at the quoted mb rows; the 100G/lane
+    totals as a dashed line. (b) buffer ladders, makespan normalised to the quoted rung, for Glass-FB EP=64
+    and NVL72 EP=16 (cliff_all walks g64b800 / s1_16), timeouts annotated. (c) Glass-FB EP=128 ladder (g128b800)."""
+    rows = load("cliff_all")
+    dec = list(csv.DictReader(open(os.path.join(RES, "decomp_critpath.csv"))))
+    def decrow(prefix, mk):
+        c = [x for x in dec if x["label"].startswith(prefix) and abs(float(x["makespan_ms"]) - mk) < 0.05 and int(float(x.get("path_tasks") or 0)) >= 100]
+        return c[0] if c else None
+    def quoted_mb(sysname, mb):
+        c = [r for r in rows if r["system"] == sysname and r.get("ep") == 16 and r.get("mb") == mb and r["_quotable"] and r.get("link_rate_fixed") == "yes"]
+        return min((r["makespan_ms"] for r in c), default=None)
+    DARK = {"glassfb_800": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f"}; LIGHT = {"glassfb_800": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8"}
+    NAME = {"glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72"}
+    fig, (a1, a2, a3) = plt.subplots(1, 3, figsize=(7.0, 2.15), dpi=200, gridspec_kw=dict(width_ratios=[1.15, 1, 1]))
+    # (a) microbatch
+    mbs = [4, 8, 16, 32]; w = 0.36
+    for j, sysname in enumerate(("glassfb_800", "nvl64_pkt_s1")):
+        for i, mb in enumerate(mbs):
+            mk = quoted_mb(sysname, mb)
+            if mk is None: continue
+            pre = f"{sysname} EP=16 mb={mb}" if not (sysname == "nvl64_pkt_s1" and mb == 8) else "nvl64_pkt_s1 EP=16 mb=-"
+            d = decrow(pre, mk)
+            comp = float(d["compute_ms"]) if d else 0; a2a = float(d["expert_a2a_ms"]) if d else mk
+            x = i + (j - 0.5) * w
+            a1.bar(x, comp, w * 0.9, color=LIGHT[sysname], zorder=3)
+            a1.bar(x, a2a, w * 0.9, bottom=comp, color=DARK[sysname], zorder=3, label=NAME[sysname] if i == 0 else None)
+            a1.text(x, comp + a2a + 1.5, "%.0f" % mk, ha="center", va="bottom", fontsize=5.4, color="#333")
+    g400 = [quoted_mb("glassfb", mb) for mb in mbs]
+    if all(v is not None for v in g400):
+        a1.plot([i - 0.5 * w for i in range(len(mbs))], g400, ls=(0, (2, 1.5)), lw=0.9, color="#2b6f7f", marker="_", ms=6, label="Glass-FB, 100G/lane", zorder=4)
+    a1.set_xticks(range(len(mbs))); a1.set_xticklabels(["mb=%d" % m for m in mbs]); a1.set_ylim(0, 125)
+    a1.set_ylabel("iteration time (ms)"); a1.set_title("(a) load: EP=16, LLaMA-MoE", fontsize=7.5, loc="left")
+    from matplotlib.patches import Patch
+    h, l = a1.get_legend_handles_labels()
+    h += [Patch(facecolor="#4a4a4a", label="expert A2A (dark)"), Patch(facecolor="#d9d9d9", label="compute (light)")]
+    a1.legend(handles=h, frameon=False, fontsize=5.4, loc="upper left", handlelength=1.2, ncol=1, labelspacing=0.3)
+    a1.set_ylim(0, 135)
+    # (b) + (c) ladders
+    BDP_PKTS = {"glassfb_800": 533.0, "nvl64_pkt_s1": 600.0}   # q at 1x the port round-trip BDP (MTU 1500): 800 GB/s port / 900 GB/s link
+    def ladder(ax, sysname, walk, ep, col, name, norm, dy=5):
+        c = [r for r in rows if r["system"] == sysname and r.get("walk") == walk and r.get("ep") == ep and r.get("link_rate_fixed") == "yes"]
+        best = {}
+        for r in c:
+            q = int(float(r["q"]))
+            if q not in best or (r["_quotable"] and not best[q]["_quotable"]): best[q] = r
+        pts = sorted(best.items())
+        xs = [q / BDP_PKTS[sysname] for q, _ in pts]; ys = [r["makespan_ms"] for _, r in pts]
+        ref = next((r["makespan_ms"] for _, r in pts if r["_quotable"]), ys[-1])
+        yy = [y / ref for y in ys] if norm else ys
+        ax.plot(xs, yy, "-", color=col, lw=1.0, zorder=3, label=name)
+        for x, y, (_, r) in zip(xs, yy, pts):
+            ax.scatter([x], [y], s=22, color=col if r["_quotable"] else "white", edgecolor=col, lw=0.9, zorder=4)
+            ax.annotate(("%d" % r["rtos"]) if r["rtos"] else "0", (x, y), textcoords="offset points", xytext=(0, dy), ha="center", va="bottom" if dy > 0 else "top", fontsize=4.8, color="#555")
+        return xs
+    ladder(a2, "glassfb_800", "g64b800", 64, "#2b6f7f", "Glass-FB EP=64", True, dy=-6)
+    ladder(a2, "nvl64_pkt_s1", "s1_16", 16, "#4b3f8f", "NVL72 EP=16", True, dy=5)
+    a2.set_xscale("log", base=2); a2.set_xlabel("queue depth (× port BDP)"); a2.set_ylabel("iteration / quoted rung")
+    a2.set_xticks([1, 2, 4, 8, 16, 32, 64]); a2.set_xticklabels(["1", "2", "4", "8", "16", "32", "64"])
+    a2.set_title("(b) buffers: the same signature", fontsize=7.5, loc="left"); a2.legend(frameon=False, fontsize=5.8, loc="upper right")
+    a2.set_ylim(0.85, 2.4)
+    ladder(a3, "glassfb_800", "g128b800", 128, "#2b6f7f", "Glass-FB EP=128", False)
+    a3.set_xscale("log", base=2); a3.set_xlabel("queue depth (× port BDP)"); a3.set_ylabel("iteration time (ms)")
+    a3.set_xticks([2, 4, 8, 16, 32, 64]); a3.set_xticklabels(["2", "4", "8", "16", "32", "64"])
+    a3.set_title("(c) EP=128: clean only at the last rung", fontsize=7.5, loc="left"); a3.set_ylim(0, 950)
+    for ax in (a1, a2, a3):
+        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.tick_params(labelsize=6); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
+    a2.text(0.03, 0.97, "filled = quoted rung\nlabels = timeouts", transform=a2.transAxes, fontsize=4.8, color="#666", ha="left", va="top")
+    fig.tight_layout(pad=0.3, w_pad=1.0); fig.savefig(f("fig_load.png")); fig.savefig(f("fig_load.pdf")); print("wrote fig_load.png")
+
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]
-    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary}
+    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary, "load": loadfig}
     for w in (fns if "all" in which else which):
         try: fns[w]()
         except SystemExit as e: print("skip:", e)

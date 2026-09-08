@@ -664,30 +664,22 @@ def boundary():
     fig.tight_layout(pad=0.3, h_pad=1.0); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
 
 def loadfig():
-    """Load (Sec. dse): EP=16 iteration time against microbatch, absolute on a log axis, one line per fabric
-    (Glass-FB at 200G/lane, NVL72 striped, HGX-8); each point is the quotable row at that microbatch, read
-    from cliff_all.csv and, for walks the collector has not yet synced into it, from cliff_postfix.csv
-    (batch 11: h16m4 / h16m16 / h16m32)."""
-    rows = load("cliff_all")
-    post = [r for r in csv.DictReader(open(os.path.join(RES, "cliff_postfix.csv"))) if (r.get("quotable") or "").lower() == "yes"]
-    def quoted_mb(sysname, mb):
-        c = [r for r in rows if r["system"] == sysname and r.get("ep") == 16 and (r.get("mb") == mb or (mb == 8 and not r.get("mb"))) and r["_quotable"] and r.get("link_rate_fixed") == "yes"]
-        if c: return min(r["makespan_ms"] for r in c)
-        c = [r for r in post if r["system"] == sysname and int(float(r["ep"])) == 16 and (str(r.get("mb")) == str(mb) or (mb == 8 and not r.get("mb"))) and r.get("link_rate_fixed") == "yes"]
-        return min((float(r["makespan_ms"]) for r in c), default=None)
-    STY = {"glassfb_800": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
-           "nvl64_pkt_s1": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
-           "hgx8_pkt": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
+    """Load (Sec. dse): EP=16 iteration time against microbatch from load_panel.csv (peer-derived from
+    cliff_postfix.csv: the quoted rung per (system, mb) with its drop count), absolute on a log axis."""
+    rows = list(csv.DictReader(open(os.path.join(RES, "load_panel.csv"))))
+    STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
+           "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
+           "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
     fig, ax = plt.subplots(figsize=(3.45, 2.3), dpi=200)
     mbs = [4, 8, 16, 32]
     for sysname, st in STY.items():
-        pts = [(mb, quoted_mb(sysname, mb)) for mb in mbs if quoted_mb(sysname, mb) is not None]
+        pts = sorted([(int(r["mb"]), float(r["makespan_ms"]), int(float(r["drops"] or 0))) for r in rows if r["system"] == sysname])
         if not pts: continue
-        ax.plot([p for p, _ in pts], [v for _, v in pts], **st)
-        for mb, v in pts:
-            dy = {"glassfb_800": -11, "nvl64_pkt_s1": 6, "hgx8_pkt": 6}[sysname]
+        ax.plot([p[0] for p in pts], [p[1] for p in pts], **st)
+        dy = {"glass_200G": -11, "nvl64_striped": 6, "hgx8": 6}[sysname]
+        for mb, v, d in pts:
             ax.annotate("%.0f" % v, (mb, v), textcoords="offset points", xytext=(0, dy), ha="center", fontsize=6.5, color=st["color"])
-        print("  %-12s" % sysname, " ".join("mb%d=%.1f" % p for p in pts))
+        print("  %-13s" % sysname, " ".join("mb%d=%.1f(%dd)" % p for p in pts))
     ax.set_xscale("log", base=2); ax.set_xticks(mbs); ax.set_xticklabels([str(m) for m in mbs]); ax.minorticks_off()
     ax.set_yscale("log"); ax.set_yticks([80, 100, 150, 200, 300, 400]); ax.set_yticklabels(["80", "100", "150", "200", "300", "400"])
     ax.set_ylim(75, 480)
@@ -737,61 +729,49 @@ def calibfig():
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_calib.png")); fig.savefig(f("fig_calib.pdf")); print("wrote fig_calib.png")
 
 def dsefig():
-    """Panel-size / substrate DSE: 8x8 flattened butterfly (optical links thinned to 128 GB/s by the
-    waveguide budget) and 8x8 electrical mesh (1800 GB/s neighbour links only, the wafer-scale proxy),
-    every buffer rung of both walks (cliff_postfix.csv: systems glassfb_8x8 / glassfb_mesh8x8), against
-    the 4x4 Glass-FB quoted row (cliff_all.csv glassfb_800) as a reference line. One panel per EP,
-    x = queue depth in multiples of the 800 GB/s port BDP (q / 533 packets), y = iteration (log).
-    Filled markers: zero timeouts; hollow: rungs with timeouts (annotated with their drop count)."""
-    import math
-    post = list(csv.DictReader(open(os.path.join(RES, "cliff_postfix.csv"))))
-    allr = load("cliff_all")
-    ref = {}
-    for r in allr:
-        if r["system"] == "glassfb_800" and r["_quotable"] and r.get("link_rate_fixed") == "yes" and r.get("walk") in ("g16b800", "g32b800", "g64b800", "g128b800"):
-            ref[r["ep"]] = r["makespan_ms"]
-    ARMS = [("glassfb_8x8", "8x8 flattened butterfly (128 GB/s optical)", "#c46a4a", "s"),
-            ("glassfb_mesh8x8", "8x8 electrical mesh (1800 GB/s, wafer proxy)", "#4b3f8f", "^")]
+    """Panel-size / substrate DSE from panel_dse.csv (derived by scripts/build_panel_dse.py from cliff_postfix.csv):
+    every buffer rung of the 4x4 Glass-FB design point, the 8x8 flattened butterfly (optical links thinned to
+    128 GB/s by the waveguide budget) and the 8x8 electrical mesh (1800 GB/s neighbour links, the wafer proxy).
+    One panel per EP, x = q / port BDP, y = iteration (linear; points above a panel's range are clipped and
+    labelled). Filled markers = the quoted rung (quotable == yes); hollow = the others."""
+    rows = [r for r in csv.DictReader(open(os.path.join(RES, "panel_dse.csv"))) if r.get("makespan_ms")]
+    ARMS = [("4x4", "4x4 Glass-FB (this work)", "#2b6f7f", "o"),
+            ("fb", "8x8 flattened butterfly (128 GB/s optical)", "#c46a4a", "s"),
+            ("mesh", "8x8 electrical mesh (1800 GB/s, wafer proxy)", "#4b3f8f", "^")]
     MODEL = {16: "LLaMA-MoE", 32: "LLaMA-MoE", 64: "Qwen-MoE", 128: "Arctic"}
-    eps = sorted({int(r["ep"]) for r in post if r["system"] in dict((a[0], 1) for a in ARMS) and r.get("makespan_ms")})
+    eps = sorted({int(r["ep"]) for r in rows if r["arm"] in ("fb", "mesh")})
     eps = [e for e in eps if e <= int(os.environ.get("DSE_EP_MAX", "64"))]   # EP=128 held back until its rows land (user 2026-09-08)
     fig, axes = plt.subplots(1, len(eps), figsize=(7.0, 2.4), dpi=200)
     if len(eps) == 1: axes = [axes]
     for ax, ep in zip(axes, eps):
-        series = {}
-        for sysname, name, col, mk in ARMS:
-            rows = sorted([r for r in post if r["system"] == sysname and int(r["ep"]) == ep and r.get("makespan_ms")], key=lambda r: int(float(r["q"])))
-            if rows: series[sysname] = rows
-        base = [float(r["makespan_ms"]) for rows in series.values() for r in rows] + ([ref[ep]] if ep in ref else [])
+        series = {a: sorted([r for r in rows if r["arm"] == a and int(r["ep"]) == ep], key=lambda r: float(r["q_over_bdp"])) for a, _, _, _ in ARMS}
+        base = [float(r["makespan_ms"]) for rr in series.values() for r in rr]
         floor = min(base); typical = sorted(base)[int(0.75 * (len(base) - 1))]
-        top = min(max(base), typical * 1.5) * 1.06   # linear axis; points above it are drawn clipped at the top with their value
+        top = min(max(base), typical * 1.5) * 1.06
         ax.set_ylim(floor * 0.85, top)
-        for sysname, name, col, mk in ARMS:
-            rows = series.get(sysname)
-            if not rows: continue
-            xs = [int(float(r["q"])) / 533.0 for r in rows]; ys = [float(r["makespan_ms"]) for r in rows]
+        for arm, name, col, mk in ARMS:
+            rr = series[arm]
+            if not rr: continue
+            xs = [float(r["q_over_bdp"]) for r in rr]; ys = [float(r["makespan_ms"]) for r in rr]
             yc = [min(y, top * 0.985) for y in ys]
             ax.plot(xs, yc, "-", color=col, lw=1.1, zorder=3, label=name)
-            for x, y, y2, r in zip(xs, ys, yc, rows):
-                clean = int(float(r["rtos"] or 0)) == 0
-                ax.scatter([x], [y2], s=26, marker=mk, color=col if clean else "white", edgecolor=col, lw=0.9, zorder=4)
-                d = int(float(r["drops"] or 0))
+            for x, y, y2, r in zip(xs, ys, yc, rr):
+                quoted = (r.get("quotable") or "").lower() == "yes"
+                ax.scatter([x], [y2], s=28 if quoted else 20, marker=mk, color=col if quoted else "white", edgecolor=col, lw=0.9, zorder=4)
+                d = int(float(r["drops"] or 0)); rt = int(float(r["rtos"] or 0))
                 if y > top * 0.985:
                     ax.annotate("%.0f ms, %.1fM drops" % (y, d / 1e6), (x, y2), textcoords="offset points", xytext=(5, -3), fontsize=5.2, color=col, va="top")
-                elif not clean and d >= 1e5:
+                elif rt and d >= 1e5:
                     ax.annotate("%.1fM drops" % (d / 1e6) if d >= 1e6 else "%dk drops" % (d // 1000), (x, y2), textcoords="offset points", xytext=(4, 4) if mk == "^" else (4, -9), fontsize=5.2, color=col)
-        if ep in ref:
-            ax.axhline(ref[ep], color="#2b6f7f", lw=1.3, ls=(0, (4, 2)), zorder=2, label="4x4 Glass-FB, quoted (this work)")
-            ax.text(0.98, ref[ep], "%.0f ms" % ref[ep], transform=ax.get_yaxis_transform(), ha="right", va="bottom", fontsize=6, color="#2b6f7f")
         ax.set_xscale("log", base=2)
-        ax.set_xticks([2, 4, 8, 16, 32, 64]); ax.set_xticklabels(["2", "4", "8", "16", "32", "64"]); ax.minorticks_off()
+        ax.set_xticks([1, 2, 4, 8, 16, 32, 64]); ax.set_xticklabels(["1", "2", "4", "8", "16", "32", "64"]); ax.minorticks_off()
         ax.set_title("EP=%d  (%s)" % (ep, MODEL.get(ep, "")), fontsize=8.5, color="#4a5560")
         ax.set_xlabel("queue depth (x port BDP)", fontsize=8); ax.tick_params(labelsize=7)
         ax.grid(alpha=0.3, lw=0.4, which="major"); ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     axes[0].set_ylabel("iteration time (ms)", fontsize=8.5)
     h, l = axes[0].get_legend_handles_labels()
     from matplotlib.lines import Line2D
-    h += [Line2D([], [], marker="o", color="#777", ls="", ms=4, label="filled: zero timeouts; hollow: timeouts")]
+    h += [Line2D([], [], marker="o", color="#777", ls="", ms=4, label="filled: quoted rung (first with zero timeouts)")]
     fig.legend(handles=h, fontsize=6.5, frameon=False, loc="lower center", ncol=2, bbox_to_anchor=(0.5, -0.01), handlelength=1.8, columnspacing=1.5)
     fig.tight_layout(pad=0.3, rect=(0, 0.12, 1, 1)); fig.savefig(f("fig_dse.png")); fig.savefig(f("fig_dse.pdf")); print("wrote fig_dse.png")
 

@@ -152,7 +152,7 @@ def cliff():
     rows = list(best.values())
     SHORTLAB = {"hgx8": "HGX-8 bound", "hgx8_pkt": "HGX-8", "nvl64": "NVL72 bound", "nvl64_pkt": "NVL72 pinned",
                 "nvl64_pkt_s1": "NVL72 striped", "glassfb": "Glass-FB", "glassfb_800": "Glass-FB, 200G/lane ports"}
-    fig, ax = plt.subplots(figsize=(3.6, 2.9), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.4, 2.7), dpi=200)
     # HGX-8's island and packet-level rows coincide, so its bound line is not drawn
     for sysname in ("hgx8_pkt", "nvl64", "nvl64_pkt", "nvl64_pkt_s1", "glassfb", "glassfb_800"):
         pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and r["_quotable"]])
@@ -197,10 +197,11 @@ def cliff():
     ax.set_xscale("log", base=2); ax.set_xticks(sorted(models)); ax.set_xticklabels([f"{ep}\n{models[ep]}" for ep in sorted(models)], fontsize=5.5)
     ax.set_yscale("log"); ax.set_ylabel("iteration (ms)", fontsize=7); ax.set_xlabel("EP degree (model per point)", fontsize=7)
     ax.axvline(16, color="#1f6f8b", ls=":", lw=0.8); ax.axvline(64, color="#7a0177", ls=":", lw=0.8)
-    ax.text(16, ax.get_ylim()[1], " panel", color="#1f6f8b", fontsize=5, va="top", ha="left")
-    ax.text(64, ax.get_ylim()[1], " NVL72", color="#7a0177", fontsize=5, va="top", ha="left")
+    ax.text(16, ax.get_ylim()[0], " panel", color="#1f6f8b", fontsize=5, va="bottom", ha="left")
+    ax.text(64, ax.get_ylim()[0], " NVL72", color="#7a0177", fontsize=5, va="bottom", ha="left")
     ax.tick_params(labelsize=6); ax.grid(alpha=0.25, which="both")
-    ax.legend(fontsize=5.2, frameon=False, ncol=2, loc="upper center", bbox_to_anchor=(0.5, -0.30), handlelength=2.2, columnspacing=1.0)
+    ax.set_ylim(ax.get_ylim()[0], ax.get_ylim()[1] * 2.2)   # headroom for the legend
+    ax.legend(fontsize=4.6, frameon=False, ncol=2, loc="upper left", handlelength=2.0, columnspacing=0.8, borderaxespad=0.3)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_cliff.png")); print("wrote fig_cliff.png")
 
 def decomp():
@@ -285,7 +286,7 @@ def beyond():
             print("  WARNING beyond %s: %d quotable rows, the walk rule allows one; "
                   "drew the first rung (q=%s)" % (s_, n, best[s_].get("q")))
     order = [s_ for s_ in ("glassfb", "glassfb_800", "nvl64_pkt", "nvl64_pkt_s1", "hgx8_pkt") if s_ in best]
-    fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
+    fig, ax = plt.subplots(figsize=(2.6, 2.7), dpi=200)
     g = best.get("glassfb")
     for x, s_ in enumerate(order):
         r = best[s_]; y = r["makespan_ms"]

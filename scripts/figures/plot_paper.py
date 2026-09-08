@@ -670,7 +670,7 @@ def loadfig():
     STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
            "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
            "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
-    fig, ax = plt.subplots(figsize=(3.45, 2.3), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 2.05), dpi=200)
     mbs = [4, 8, 16, 32]
     for sysname, st in STY.items():
         pts = sorted([(int(r["mb"]), float(r["makespan_ms"]), int(float(r["drops"] or 0))) for r in rows if r["system"] == sysname])
@@ -711,7 +711,7 @@ def calibfig():
     sim.sort(key=lambda r: float(r["msg_bytes"]))
     import numpy as np
     M = np.array([2**21, 2**26], dtype=float)
-    fig, ax = plt.subplots(figsize=(3.45, 2.1), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.9), dpi=200)
     # (DeepEP efficiency band removed at the user's request, 2026-09-08; the number stays in the text)
     ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
     if sim:

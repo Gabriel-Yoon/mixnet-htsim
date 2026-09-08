@@ -242,32 +242,34 @@ def decomp():
     eps_with_primary = {ep for ep, sysn, _ in parsed if sysn == PRIMARY_GLASS}
     parsed = [t for t in parsed if not (t[1] in ("glassfb", "glassfb_800") and t[1] != PRIMARY_GLASS and t[0] in eps_with_primary)]
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
-    fig, ax = plt.subplots(figsize=(7.0, 2.7), dpi=200)
     SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
     DARK = {"glassfb_800": "#2b6f7f", "glassfb": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     LIGHT = {"glassfb_800": "#c9dfe4", "glassfb": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8", "hgx8_pkt": "#efd3c6"}
-    xs, labels = [], []; x = 0; groups = {}
-    for ep, sysname, r in parsed:
-        comp = float(r.get("compute_ms") or 0); a2a = float(r.get("expert_a2a_ms") or 0)
-        other = sum(float(r.get(c) or 0) for c in ("dp_allreduce_ms", "pp_p2p_ms", "other_ms"))
-        hol = r.get("_hollow")
-        ax.bar(x, comp, width=0.72, color=LIGHT[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
-        ax.bar(x, a2a + other, bottom=comp, width=0.72, color=DARK[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
-        tot = comp + a2a + other
-        ax.text(x, tot * 1.015, f"{tot:.0f}" + ("*" if hol else ""), ha="center", va="bottom", fontsize=7)
-        xs.append(x); labels.append(SHORT.get(sysname, sysname)); groups.setdefault(ep, []).append(x); x += 1
-        if sysname == "hgx8_pkt": x += 0.9
-    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=8, rotation=30, ha="right")
-    ymax = ax.get_ylim()[1] * 1.08
-    for ep, gx in groups.items():   # EP group label above each group
-        ax.text(sum(gx) / len(gx), ymax * 0.985, f"EP={ep}", ha="center", va="top", fontsize=9, fontweight="bold", color="#4a5560")
-    ax.set_ylim(0, ymax)
-    ax.set_ylabel("iteration time (ms)", fontsize=9); ax.tick_params(labelsize=8)
+    MODEL = {16: "LLaMA-MoE", 32: "LLaMA-MoE", 64: "Qwen-MoE", 128: "Arctic"}
+    eps = sorted({ep for ep, _, _ in parsed})
+    # one panel per EP with its own y scale: the model (and so the compute floor) changes with EP,
+    # so the fabrics compare within a panel and a shared axis would waste most of the height
+    fig, axes = plt.subplots(1, len(eps), figsize=(7.0, 2.35), dpi=200)
+    for ax, ep in zip(axes, eps):
+        grp = [t for t in parsed if t[0] == ep]
+        for x, (_, sysname, r) in enumerate(grp):
+            comp = float(r.get("compute_ms") or 0); a2a = float(r.get("expert_a2a_ms") or 0)
+            other = sum(float(r.get(c) or 0) for c in ("dp_allreduce_ms", "pp_p2p_ms", "other_ms"))
+            hol = r.get("_hollow")
+            ax.bar(x, comp, width=0.68, color=LIGHT[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
+            ax.bar(x, a2a + other, bottom=comp, width=0.68, color=DARK[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
+            tot = comp + a2a + other
+            ax.text(x, tot * 1.02, f"{tot:.0f}" + ("*" if hol else ""), ha="center", va="bottom", fontsize=7.5)
+        ax.set_xticks(range(len(grp))); ax.set_xticklabels([SHORT.get(t[1], t[1]) for t in grp], fontsize=8, rotation=25, ha="right")
+        ax.set_ylim(0, ax.get_ylim()[1] * 1.12); ax.set_xlim(-0.6, len(grp) - 0.4)
+        ax.set_title(f"EP={ep}  ({MODEL.get(ep, '')})", fontsize=8.5, color="#4a5560")
+        ax.tick_params(labelsize=7.5); ax.grid(alpha=0.25, axis="y")
+        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+    axes[0].set_ylabel("iteration time (ms)", fontsize=9)
     import matplotlib.patches as mpatches_
     h = [mpatches_.Patch(facecolor="#5c6b74", label="expert all-to-all (dark)"), mpatches_.Patch(facecolor="#dfe4e7", edgecolor="#5c6b74", label="compute (light)")]
-    ax.legend(handles=h, fontsize=8, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.92))
-    ax.grid(alpha=0.25, axis="y")
-    fig.tight_layout(pad=0.3); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
+    fig.legend(handles=h, fontsize=8, frameon=False, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 1.01))
+    fig.tight_layout(pad=0.3, w_pad=0.8, rect=(0, 0, 1, 0.9)); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
 
 def beyond():
     """R-beyond (Fig 6c): every fabric past the NVL boundary, EP=128 (Arctic top-2) from cliff_all.
@@ -417,8 +419,8 @@ def energy():
         if not r: return None, None
         nlo, nhi = float(r["nvlink_pj_bit_lo"]), float(r["nvlink_pj_bit_hi"]); nic = float(r["nic_pj_bit"])
         bd, bn = float(r["bytes_in_domain"]), float(r["bytes_nic"])
-        hd, hc = float(r.get("hops_in_domain") or 1), float(r.get("hops_cross") or 1)
-        tiers = [("nvlink", bd * hd * 8 * nlo * 1e-12, bd * hd * 8 * nhi * 1e-12), ("nic", bn * hc * 8 * nic * 1e-12, bn * hc * 8 * nic * 1e-12)]
+        # bytes_in_domain / bytes_nic are already hop-bytes (tier_energy_pkt.py multiplies by hops); no second factor
+        tiers = [("nvlink", bd * 8 * nlo * 1e-12, bd * 8 * nhi * 1e-12), ("nic", bn * 8 * nic * 1e-12, bn * 8 * nic * 1e-12)]
         lo_sum = sum(t[1] for t in tiers); hi_sum = sum(t[2] for t in tiers)
         L_lo, L_hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
         tiers = [(k, a * L_lo / lo_sum, b * L_hi / hi_sum) for k, a, b in tiers]
@@ -667,32 +669,82 @@ def boundary():
     fig.tight_layout(pad=0.3, h_pad=1.0); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
 
 def loadfig():
-    """Load (Sec. dse): EP=16 iteration against microbatch as lines (MixNet Fig. 12a style), Glass-FB
-    (200G/lane) and NVL72, each normalised to that fabric's own mb=4 quoted row (user 2026-09-08:
-    lines, no compute/A2A split, normalised y)."""
+    """Load (Sec. dse): EP=16 iteration time against microbatch, absolute, lines per fabric (MixNet
+    Fig. 12a style): Glass-FB at 200G/lane (design point), Glass-FB at 100G/lane (thin, dashed) and
+    NVL72, each point the quotable cliff_all row at that microbatch (user 2026-09-08: a microbatch
+    sweep with absolute times, no compute/A2A split)."""
     rows = load("cliff_all")
     def quoted_mb(sysname, mb):
-        c = [r for r in rows if r["system"] == sysname and r.get("ep") == 16 and r.get("mb") == mb and r["_quotable"] and r.get("link_rate_fixed") == "yes"]
+        # the mb=8 row of a system is its plain EP=16 walk, whose mb field may be blank
+        c = [r for r in rows if r["system"] == sysname and r.get("ep") == 16 and (r.get("mb") == mb or (mb == 8 and not r.get("mb"))) and r["_quotable"] and r.get("link_rate_fixed") == "yes"]
         return min((r["makespan_ms"] for r in c), default=None)
-    STY = {"glassfb_800": dict(color="#2b6f7f", marker="o", label="Glass-FB"), "nvl64_pkt_s1": dict(color="#4b3f8f", marker="s", label="NVL72")}
+    STY = {"glassfb_800": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB, 200G/lane"),
+           "glassfb": dict(color="#2b6f7f", marker="o", lw=0.9, ms=3.5, ls=(0, (3, 2)), label="Glass-FB, 100G/lane", alpha=0.7),
+           "nvl64_pkt_s1": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72")}
     fig, ax = plt.subplots(figsize=(3.45, 2.3), dpi=200)
     mbs = [4, 8, 16, 32]
     for sysname, st in STY.items():
-        ref = quoted_mb(sysname, 4)
-        pts = [(mb, quoted_mb(sysname, mb) / ref) for mb in mbs if ref and quoted_mb(sysname, mb) is not None]
-        ax.plot([p for p, _ in pts], [v for _, v in pts], "-", lw=1.3, ms=4.5, **st)
-        for mb, v in pts:
-            ax.annotate("%.2f" % v, (mb, v), textcoords="offset points", xytext=(0, 5 if sysname == "nvl64_pkt_s1" else -10), ha="center", fontsize=6.5, color=st["color"])
+        pts = [(mb, quoted_mb(sysname, mb)) for mb in mbs if quoted_mb(sysname, mb) is not None]
+        if not pts: continue
+        ax.plot([p for p, _ in pts], [v for _, v in pts], **st)
+        if sysname != "glassfb":
+            for mb, v in pts:
+                ax.annotate("%.0f" % v, (mb, v), textcoords="offset points", xytext=(0, 6 if sysname == "nvl64_pkt_s1" else -11), ha="center", fontsize=6.5, color=st["color"])
     ax.set_xscale("log", base=2); ax.set_xticks(mbs); ax.set_xticklabels([str(m) for m in mbs]); ax.minorticks_off()
-    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("normalized iteration time", fontsize=8.5)
-    ax.set_ylim(0.95, 1.36); ax.tick_params(labelsize=7.5)
-    ax.legend(frameon=False, fontsize=7.5, loc="upper left"); ax.grid(lw=0.4, alpha=0.4)
+    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("iteration time (ms)", fontsize=8.5)
+    ax.set_ylim(80, 118); ax.tick_params(labelsize=7.5)
+    ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.grid(lw=0.4, alpha=0.4)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_load.png")); fig.savefig(f("fig_load.pdf")); print("wrote fig_load.png")
 
+def calibfig():
+    """Paper Fig (methodology): the NVSwitch model as an 8-GPU HGX H100 under a synthetic all-to-all
+    (calib_nvswitch.csv, quoted rung per message size), against SimAI's stock DGX-H100 model
+    (simai_calib.csv) and the published hardware references: the 45-85 us small-message floor
+    (li-tpds20) and DeepEP's 71-82% large-message efficiency. Top: completion time; bottom: efficiency.
+    The per-lane-hashed variant (s18) is drawn faint as the rejected alternative."""
+    rows = load("calib_nvswitch")
+    for r in rows:
+        r["msg_bytes"] = float(r["msg_bytes"]); r["T_us"] = float(r["T_us"]); r["efficiency"] = float(r["efficiency"])
+    def quoted(v):
+        best = {}
+        for r in rows:
+            if r["variant"] != v: continue
+            k = r["msg_bytes"]; cur = best.get(k)
+            if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and int(r["k"]) < int(cur["k"])):
+                best[k] = r
+        return sorted(best.values(), key=lambda r: r["msg_bytes"])
+    s1 = quoted("s1"); s18 = quoted("s18")
+    sp = os.path.join(RES, "simai_calib.csv")
+    sim = sorted(csv.DictReader(open(sp)), key=lambda r: float(r["msg_bytes"])) if os.path.exists(sp) else []
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.45, 3.4), dpi=200, sharex=True)
+    # top: completion time
+    a1.axhspan(45, 85, color="#c46a4a", alpha=0.15, lw=0)
+    a1.text(8500, 105, "measured 8xH100 floor, 45-85 us", fontsize=5.8, color="#8a4a30", va="bottom", ha="left")
+    a1.plot([r["msg_bytes"] for r in s18], [r["T_us"] for r in s18], "-", color="#b7c5cc", lw=1.0, label="per-lane hashed (rejected)")
+    a1.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.4, ms=3.5, label="this work (NVSwitch model)")
+    if sim:
+        a1.plot([float(r["msg_bytes"]) for r in sim], [float(r["T_us"]) for r in sim], "--^", color="#4b3f8f", lw=1.0, ms=3.5, label="SimAI (stock DGX-H100)")
+    a1.set_yscale("log"); a1.set_ylabel("all-to-all time (us)", fontsize=8)
+    a1.legend(fontsize=6.2, frameon=False, loc="upper left", handlelength=1.8)
+    # bottom: efficiency
+    a2.axhspan(0.71, 0.82, color="#c46a4a", alpha=0.15, lw=0)
+    a2.text(6.0e7, 0.765, "DeepEP intra-node dispatch, 71-82%", fontsize=5.8, color="#8a4a30", va="center", ha="right")
+    a2.plot([r["msg_bytes"] for r in s18], [r["efficiency"] for r in s18], "-", color="#b7c5cc", lw=1.0)
+    a2.plot([r["msg_bytes"] for r in s1], [r["efficiency"] for r in s1], "-o", color="#2b6f7f", lw=1.4, ms=3.5)
+    if sim:
+        a2.plot([float(r["msg_bytes"]) for r in sim], [float(r["efficiency"]) for r in sim], "--^", color="#4b3f8f", lw=1.0, ms=3.5)
+    a2.set_ylim(0, 1.08); a2.set_ylabel("egress / 450 GB/s line rate", fontsize=8)
+    a2.set_xscale("log", base=2); a2.set_xlabel("bytes per (src, dst) pair", fontsize=8)
+    a2.set_xticks([2**13, 2**15, 2**17, 2**19, 2**21, 2**23, 2**25]); a2.set_xticklabels(["8 kB", "32 kB", "128 kB", "512 kB", "2 MB", "8 MB", "32 MB"], fontsize=6.5); a2.minorticks_off()
+    for ax in (a1, a2):
+        ax.tick_params(labelsize=7); ax.grid(alpha=0.3, which="major", lw=0.4)
+        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+    fig.tight_layout(pad=0.3, h_pad=0.6); fig.savefig(f("fig_calib.png")); fig.savefig(f("fig_calib.pdf")); print("wrote fig_calib.png")
+
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]
-    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary, "load": loadfig}
+    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary, "load": loadfig, "calibfig": calibfig}
     for w in (fns if "all" in which else which):
         try: fns[w]()
         except SystemExit as e: print("skip:", e)

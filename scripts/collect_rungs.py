@@ -67,6 +67,11 @@ LADDERS = {
     # runs exist: without an entry submitted_q() falls back to the files on disk,
     # which for a NEW system prefix finds nothing at all, and a gap check with an
     # empty expectation passes on the first rung that lands.
+    # Each EP keeps its own 400 GB/s BDP multiples, doubled in packets because the
+    # 800 GB/s BDP is twice the 400 GB/s one -- so an 800 rung compares to the 400
+    # rung at the SAME BDP multiple rather than the same absolute buffer.
+    ("glassfb_800", "16"):  [266, 533, 1066, 2133, 4267, 8533],
+    ("glassfb_800", "32"):  [533, 1066, 2133, 4267, 8533, 17067],
     ("glassfb_800", "64"):  [1066, 2133, 4267, 8533, 17067, 34133],
     ("glassfb_800", "128"): [1066, 2133, 4267, 8533, 17067, 34133],
 }

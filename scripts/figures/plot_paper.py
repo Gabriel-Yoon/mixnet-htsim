@@ -426,7 +426,10 @@ def energy():
     tp = os.path.join(RES, "tokens_per_iter.csv")
     if os.path.exists(tp):
         for t in csv.DictReader(open(tp)):
-            if str(t.get("mb") or "8") == "8": tok[int(t["ep"])] = float(t["tokens"])
+            v = t.get("tokens_per_iter") or t.get("tokens") or ""
+            if str(t.get("mb") or "8") == "8" and v.strip():   # rows without a sourced count stay blank
+                tok[int(t["ep"])] = float(v)
+    if len(tok) < 2: tok = {}   # a per-token row with one EP sourced is not a panel; the number goes in the text
     ncol = len(eps); nrow = 2 if tok else 1
     fig, axes = plt.subplots(nrow, ncol, figsize=(4.6 if ncol > 3 else 3.4, 2.7 * nrow), dpi=200, sharey=False, squeeze=False)
     drawn = set()
@@ -449,9 +452,9 @@ def energy():
             ax.text(x, tot_hi * 1.01, f"{tot_lo:.0f}–{tot_hi:.0f}", ha="center", va="bottom", fontsize=4.6)
             if tok.get(ep):
                 a2 = axes[1][j]
-                pj_lo = tot_lo / tok[ep] * 1e12; pj_hi = tot_hi / tok[ep] * 1e12
-                a2.bar(x, pj_hi, width=0.64, color="#9aa5ad", alpha=0.5); a2.bar(x, pj_lo, width=0.64, color=SYS_COLOR.get(sysname if sysname != "glass" else "glassfb", "#999"))
-                a2.text(x, pj_hi * 1.01, f"{pj_lo:.0f}–{pj_hi:.0f}", ha="center", va="bottom", fontsize=4.6)
+                mj_lo = tot_lo / tok[ep] * 1e3; mj_hi = tot_hi / tok[ep] * 1e3
+                a2.bar(x, mj_hi, width=0.64, color="#9aa5ad", alpha=0.5); a2.bar(x, mj_lo, width=0.64, color=SYS_COLOR.get(sysname if sysname != "glass" else "glassfb", "#999"))
+                a2.text(x, mj_hi * 1.01, f"{mj_lo:.2f}–{mj_hi:.2f}", ha="center", va="bottom", fontsize=4.6)
         ax.set_title(f"EP={ep}", fontsize=7); ax.tick_params(labelsize=5.5)
         ax.set_xticks(range(len(systems))); ax.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=5.2, rotation=35, ha="right")
         ax.set_ylim(0, ax.get_ylim()[1] * 1.12)
@@ -459,7 +462,7 @@ def energy():
             a2 = axes[1][j]; a2.set_xticks(range(len(systems))); a2.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=5.2, rotation=35, ha="right")
             a2.tick_params(labelsize=5.5); a2.set_ylim(0, a2.get_ylim()[1] * 1.12)
     axes[0][0].set_ylabel("interconnect energy per iteration (J)", fontsize=6.5)
-    if tok: axes[1][0].set_ylabel("interconnect energy per token (pJ)", fontsize=6.5)
+    if tok: axes[1][0].set_ylabel("interconnect energy per token (mJ)", fontsize=6.5)
     h_, l_ = axes[0][0].get_legend_handles_labels()
     fig.legend(h_, l_, fontsize=5, frameon=False, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.01), handlelength=1.6, columnspacing=1.2)
     fig.tight_layout(pad=0.3, rect=(0, 0.10 if not tok else 0.06, 1, 1)); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")

@@ -678,9 +678,9 @@ def loadfig():
         pts = sorted([(int(r["mb"]), float(r["makespan_ms"]) / ref[int(r["mb"])], int(float(r["drops"] or 0))) for r in rows if r["system"] == sysname and int(r["mb"]) in ref])
         if not pts: continue
         ax.plot([p[0] for p in pts], [p[1] for p in pts], **st)
-        dy = {"glass_200G": -11, "nvl64_striped": -11, "hgx8": 6}[sysname]
+        dy = {"glass_200G": None, "nvl64_striped": 7, "hgx8": 7}[sysname]   # Glass-FB is the unit line; no labels
         for mb, v, d in pts:
-            ax.annotate("%.2f" % v, (mb, v), textcoords="offset points", xytext=(0, dy), ha="center", fontsize=6.5, color=st["color"])
+            if dy is not None: ax.annotate("%.2f" % v, (mb, v), textcoords="offset points", xytext=(0, dy), ha="center", fontsize=6.5, color=st["color"])
         print("  %-13s" % sysname, " ".join("mb%d=%.2f(%dd)" % p for p in pts))
     ax.set_xscale("log", base=2); ax.set_xticks(mbs); ax.set_xticklabels([str(m) for m in mbs]); ax.minorticks_off()
     ax.set_ylim(0.8, 4.6); ax.axhline(1.0, color="#999", lw=0.5, ls=(0, (3, 2)), zorder=1)

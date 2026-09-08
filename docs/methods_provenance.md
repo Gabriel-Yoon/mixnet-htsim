@@ -764,6 +764,47 @@ labelled as the paper's own two system points, validated against its own publish
 numbers; the laser and ring-tuning inputs are labelled as budget assumptions. Both
 statements are true and neither is a citation.
 
+**Sub-class Q is the one there is no excuse for: a known defect, re-encountered.**
+Every other entry here is something learned. This is something already written down in
+this document and then walked into.
+
+The Mixtral ablation was invalidated earlier the same day by an uncabled inter-panel
+pair — `status=blocked`, `relayed_pairs=1`, uncabled pair **(12,14)**. That was
+recorded. Batch 10's EP=128 arm was then submitted against `p64_ep128.txt` **without
+checking that the map covers the traffic**, and all twelve jobs — both arms, six rungs
+each — came back blocked on the same pair (12,14), after about five hours of compute
+apiece. Nothing quotable was produced.
+
+The map is not marginally short. The EP=128 workload uses **36 panel pairs; the map
+cables 28**, and the eight it omits are
+
+    (0,2) (1,3) (4,6) (5,7) (8,10) (9,11) (12,14) (13,15)
+
+— every pair differing by two within groups of four, which is a systematic omission by
+`gen_port_map.py` and not a random gap. Every cabled pair *is* used, so the map is a
+strict subset of what the traffic needs. It is not a capacity limit either: only 15–16
+of 64 ports per panel are in use. The map was generated with `used_pairs=None`, so it
+laid down the generic `ep->[1] dp->[3] pp->[4]` pattern rather than cabling what the
+workload actually exercises.
+
+> **The check cost seconds and the omission cost twelve jobs.** Comparing the panel
+> pairs a workload uses against the pairs a port map cables is one set difference over
+> two files already on disk — no simulation, no binary. It was not run because the map
+> had a plausible name and a header that looked authoritative.
+
+Two consequences beyond the lost compute, both worse than the compute. **A blocked row
+is not a slow row — it is a different fabric**, because a relayed flow did not use the
+inter-panel link the topology claims to have. And one of those blocked EP=128 rungs
+reads **19 934.507 ms**, a number which, had it reached a buffer-axis figure, would
+have looked like a dramatic finding rather than an invalid run. `build_panel_dse.py`
+now drops any row with `status != "sweep"` or `relayed_pairs > 0` and says on stderr
+how many it dropped and at which EP, so the exclusion is loud rather than silent.
+
+EP=128 is therefore **absent from the panel DSE by decision, not by omission**: it was
+attempted, it was invalidated, and it is reported as attempted-and-invalidated. The
+EP 16/32/64 arms are unaffected — they reported `relayed_pairs=0`, which is precisely
+why they were quotable and these were not.
+
 ### Scope limit
 
 This rule establishes that a parameter was *read*. It says nothing about whether

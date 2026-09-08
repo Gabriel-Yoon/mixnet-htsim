@@ -42,7 +42,7 @@ FIELDS = ["paper_ref", "arm", "grid", "topo", "opt_bw_GBps", "port_bw_GBps", "ma
           "binary_sha", "source", "note"]
 
 rows = list(csv.DictReader(open(SRC)))
-out, seen_ep = [], set()
+out, seen_ep, dropped = [], set(), []
 for r in rows:
     sysname = (r.get("system") or "").strip()
     g = GEOM.get(sysname)
@@ -52,6 +52,18 @@ for r in rows:
     if sysname == "glassfb_800" and walk not in DESIGN_WALK:
         continue                       # the mb sweep is not the design point
     if not (r.get("makespan_ms") or "").strip():
+        continue
+    # A BLOCKED row is not a slow row, it is a DIFFERENT FABRIC. status=blocked
+    # with relayed_pairs>0 means a flow could not use a cabled inter-panel link
+    # and was relayed instead, so the run did not measure the topology it names.
+    # Every EP=128 rung of both arms is in this state -- p64_ep128.txt cables 28
+    # panel pairs and the workload needs 36 -- and one of those rows reads
+    # 19934.507 ms, which is exactly the kind of number that ends up on an axis
+    # if the file merely omits to mention it is invalid. They are dropped here
+    # and counted out loud.
+    if (r.get("status") or "").strip() != "sweep" or (r.get("relayed_pairs") or "0").strip() not in ("", "0"):
+        dropped.append((r.get("system", ""), r.get("ep", ""), r.get("q", ""),
+                        (r.get("status") or "").strip(), (r.get("relayed_pairs") or "").strip()))
         continue
     out.append({
         "paper_ref": "panel_dse", "arm": g["arm"], "grid": g["grid"], "topo": g["topo"],
@@ -86,8 +98,13 @@ for ep in sorted(want, key=int):
     print("  EP=%-4s arms present: %-14s quoted: %s"
           % (ep, ",".join(sorted(arms)) or "none",
              ", ".join("%s %s ms @ %sx BDP" % (r["arm"], r["makespan_ms"], r["q_over_bdp"]) for r in q) or "none"))
+if dropped:
+    eps = sorted({d[1] for d in dropped}, key=int)
+    print("  EXCLUDED %d row(s) with status!=sweep or relayed_pairs>0, at EP %s -- "
+          "these did not measure the topology they name and are NOT plottable"
+          % (len(dropped), ", ".join(eps)), file=sys.stderr)
 if missing:
-    print("  INCOMPLETE: no 8x8 rows yet at EP %s -- the file is a partial DSE"
+    print("  NOT IN THIS FILE: EP %s -- attempted and excluded, see the note column"
           % ", ".join(missing), file=sys.stderr)
 
 # ---- the EP=16 load panel, three fabrics x four microbatches -------------------

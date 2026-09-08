@@ -419,8 +419,8 @@ def energy():
         if not r: return None, None
         nlo, nhi = float(r["nvlink_pj_bit_lo"]), float(r["nvlink_pj_bit_hi"]); nic = float(r["nic_pj_bit"])
         bd, bn = float(r["bytes_in_domain"]), float(r["bytes_nic"])
-        hd, hc = float(r.get("hops_in_domain") or 1), float(r.get("hops_cross") or 1)
-        tiers = [("nvlink", bd * hd * 8 * nlo * 1e-12, bd * hd * 8 * nhi * 1e-12), ("nic", bn * hc * 8 * nic * 1e-12, bn * hc * 8 * nic * 1e-12)]
+        # bytes_in_domain / bytes_nic are already hop-bytes (tier_energy_pkt.py multiplies by hops); no second factor
+        tiers = [("nvlink", bd * 8 * nlo * 1e-12, bd * 8 * nhi * 1e-12), ("nic", bn * 8 * nic * 1e-12, bn * 8 * nic * 1e-12)]
         lo_sum = sum(t[1] for t in tiers); hi_sum = sum(t[2] for t in tiers)
         L_lo, L_hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
         tiers = [(k, a * L_lo / lo_sum, b * L_hi / hi_sum) for k, a, b in tiers]
@@ -669,26 +669,31 @@ def boundary():
     fig.tight_layout(pad=0.3, h_pad=1.0); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
 
 def loadfig():
-    """Load (Sec. dse): EP=16 iteration against microbatch as lines (MixNet Fig. 12a style), Glass-FB
-    (200G/lane) and NVL72, each normalised to that fabric's own mb=4 quoted row (user 2026-09-08:
-    lines, no compute/A2A split, normalised y)."""
+    """Load (Sec. dse): EP=16 iteration time against microbatch, absolute, lines per fabric (MixNet
+    Fig. 12a style): Glass-FB at 200G/lane (design point), Glass-FB at 100G/lane (thin, dashed) and
+    NVL72, each point the quotable cliff_all row at that microbatch (user 2026-09-08: a microbatch
+    sweep with absolute times, no compute/A2A split)."""
     rows = load("cliff_all")
     def quoted_mb(sysname, mb):
-        c = [r for r in rows if r["system"] == sysname and r.get("ep") == 16 and r.get("mb") == mb and r["_quotable"] and r.get("link_rate_fixed") == "yes"]
+        # the mb=8 row of a system is its plain EP=16 walk, whose mb field may be blank
+        c = [r for r in rows if r["system"] == sysname and r.get("ep") == 16 and (r.get("mb") == mb or (mb == 8 and not r.get("mb"))) and r["_quotable"] and r.get("link_rate_fixed") == "yes"]
         return min((r["makespan_ms"] for r in c), default=None)
-    STY = {"glassfb_800": dict(color="#2b6f7f", marker="o", label="Glass-FB"), "nvl64_pkt_s1": dict(color="#4b3f8f", marker="s", label="NVL72")}
+    STY = {"glassfb_800": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB, 200G/lane"),
+           "glassfb": dict(color="#2b6f7f", marker="o", lw=0.9, ms=3.5, ls=(0, (3, 2)), label="Glass-FB, 100G/lane", alpha=0.7),
+           "nvl64_pkt_s1": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72")}
     fig, ax = plt.subplots(figsize=(3.45, 2.3), dpi=200)
     mbs = [4, 8, 16, 32]
     for sysname, st in STY.items():
-        ref = quoted_mb(sysname, 4)
-        pts = [(mb, quoted_mb(sysname, mb) / ref) for mb in mbs if ref and quoted_mb(sysname, mb) is not None]
-        ax.plot([p for p, _ in pts], [v for _, v in pts], "-", lw=1.3, ms=4.5, **st)
-        for mb, v in pts:
-            ax.annotate("%.2f" % v, (mb, v), textcoords="offset points", xytext=(0, 5 if sysname == "nvl64_pkt_s1" else -10), ha="center", fontsize=6.5, color=st["color"])
+        pts = [(mb, quoted_mb(sysname, mb)) for mb in mbs if quoted_mb(sysname, mb) is not None]
+        if not pts: continue
+        ax.plot([p for p, _ in pts], [v for _, v in pts], **st)
+        if sysname != "glassfb":
+            for mb, v in pts:
+                ax.annotate("%.0f" % v, (mb, v), textcoords="offset points", xytext=(0, 6 if sysname == "nvl64_pkt_s1" else -11), ha="center", fontsize=6.5, color=st["color"])
     ax.set_xscale("log", base=2); ax.set_xticks(mbs); ax.set_xticklabels([str(m) for m in mbs]); ax.minorticks_off()
-    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("normalized iteration time", fontsize=8.5)
-    ax.set_ylim(0.95, 1.36); ax.tick_params(labelsize=7.5)
-    ax.legend(frameon=False, fontsize=7.5, loc="upper left"); ax.grid(lw=0.4, alpha=0.4)
+    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("iteration time (ms)", fontsize=8.5)
+    ax.set_ylim(80, 118); ax.tick_params(labelsize=7.5)
+    ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.grid(lw=0.4, alpha=0.4)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_load.png")); fig.savefig(f("fig_load.pdf")); print("wrote fig_load.png")
 

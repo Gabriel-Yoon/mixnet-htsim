@@ -720,7 +720,7 @@ def calibfig():
     import numpy as np
     M = np.array([2**21, 2**26], dtype=float)
     fig, ax = plt.subplots(figsize=(3.45, 2.1), dpi=200)
-    ax.fill_between(M, 7 * M / (0.82 * 450e9) * 1e6, 7 * M / (0.71 * 450e9) * 1e6, color="#c46a4a", alpha=0.18, lw=0, label="DeepEP measured efficiency, 71-82%")
+    # (DeepEP efficiency band removed at the user's request, 2026-09-08; the number stays in the text)
     ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
     if sim:
         ax.plot([float(r["msg_bytes"]) for r in sim], [float(r["T_us"]) for r in sim], "--^", color="#4b3f8f", lw=1.1, ms=4.5, label="SimAI (stock DGX-H100)")

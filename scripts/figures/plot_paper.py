@@ -426,7 +426,9 @@ def energy():
     tp = os.path.join(RES, "tokens_per_iter.csv")
     if os.path.exists(tp):
         for t in csv.DictReader(open(tp)):
-            if str(t.get("mb") or "8") == "8": tok[int(t["ep"])] = float(t["tokens"])
+            v = t.get("tokens_per_iter") or t.get("tokens") or ""
+            if str(t.get("mb") or "8") == "8" and v.strip():   # rows without a sourced count stay blank
+                tok[int(t["ep"])] = float(v)
     ncol = len(eps); nrow = 2 if tok else 1
     fig, axes = plt.subplots(nrow, ncol, figsize=(4.6 if ncol > 3 else 3.4, 2.7 * nrow), dpi=200, sharey=False, squeeze=False)
     drawn = set()

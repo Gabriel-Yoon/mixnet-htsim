@@ -50,7 +50,9 @@ CLASS_OF = {
     "comm": "other", "nominal_comm": "other", "barrier": "other",
 }
 
-RE_FIN = re.compile(r"finished task:(\d+),.*?type (\d+) now (\d+)")
+RE_FIN = re.compile(r"finished task:(\d+),.*?name: (\S+) type (\d+) now (\d+)")
+# the op name without FlexFlow's trailing instance id: Dense_5000255 -> Dense
+RE_OPNAME = re.compile(r"^(.*?)_\d+$")
 RE_EDGE = re.compile(r"^(\d+) -> Task (\d+) counter at")
 # The run's OWN reported makespan. A still-running log yields a perfectly
 # well-formed but partial critical path -- glass EP=64 read 33.547 ms from a
@@ -62,18 +64,24 @@ RE_ITER = re.compile(r"finished one iter.*?now (\d+)")
 
 def parse(path):
     finish, ttype, preds = {}, {}, collections.defaultdict(set)
+    tname = {}
     with open(path, errors="replace") as fh:
         for line in fh:
             m = RE_FIN.search(line)
             if m:
                 tid = int(m.group(1))
-                finish[tid] = int(m.group(3))
-                ttype[tid] = int(m.group(2))
+                finish[tid] = int(m.group(4))
+                ttype[tid] = int(m.group(3))
+                nm = m.group(2)
+                # rsplit rather than a regex: the id suffix is the last _<digits>
+                # and nothing else about the name is assumed
+                base = nm.rsplit("_", 1)
+                tname[tid] = base[0] if len(base) == 2 and base[1].isdigit() else nm
                 continue
             m = RE_EDGE.match(line)
             if m:
                 preds[int(m.group(2))].add(int(m.group(1)))
-    return finish, ttype, preds
+    return finish, ttype, preds, tname
 
 
 def critical_path(finish, preds):
@@ -121,14 +129,18 @@ def run(label, log, flowlog=None):
     if reported is None:
         print("%-26s SKIPPED: no completed iteration in the log (still running?)" % label)
         return None
-    finish, ttype, preds = parse(log)
+    finish, ttype, preds, tname = parse(log)
     path = critical_path(finish, preds)
     if not path:
         print("%-16s no task records in %s" % (label, log)); return None
     per = collections.Counter()
+    per_op = collections.Counter()
     for tid, contrib in path:
         cls = CLASS_OF.get(TYPE_NAMES.get(ttype.get(tid, -1), "?"), "other")
         per[cls] += contrib
+        # the compute split, by op name, along the path that was actually walked
+        if cls == "compute":
+            per_op[tname.get(tid, "?")] += contrib
     total = sum(per.values())
     if total != reported:
         print("%-26s SKIPPED: critical path sums to %.3f ms but the run reports %.3f ms"
@@ -139,6 +151,11 @@ def run(label, log, flowlog=None):
           % (len(path), len(finish), total / 1e9))
     for cls, v in sorted(per.items(), key=lambda kv: -kv[1]):
         print("    %-16s %9.3f ms  (%5.1f%%)" % (cls, v / 1e9, 100.0 * v / total))
+    if per_op:
+        print("    compute by op along the walked path:")
+        for nm, v in sorted(per_op.items(), key=lambda kv: -kv[1]):
+            print("      %-24s %9.3f ms  (%5.1f%% of compute)"
+                  % (nm, v / 1e9, 100.0 * v / per["compute"] if per["compute"] else 0))
     bs = bytes_split(flowlog)
     if bs:
         intra, cross = bs

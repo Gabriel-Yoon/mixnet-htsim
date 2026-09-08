@@ -1,0 +1,13 @@
+paper_ref,system,ep,mb,walk,q,q_over_bdp,makespan_ms,rtos,drops,quotable_why,link_rate_fixed,binary_sha,source
+load_panel,glass_200G,16,4,g16b800m4,533,1.00,85.663,0,0,first zero-timeout rung (post-fix binary),yes,fcdc6e7,cliff_postfix.csv
+load_panel,glass_200G,16,8,g16b800,533,1.00,87.700,0,0,first zero-timeout rung (post-fix binary),yes,8ca3c1c,cliff_postfix.csv
+load_panel,glass_200G,16,16,g16b800m16,533,1.00,91.617,0,0,first zero-timeout rung (post-fix binary),yes,fcdc6e7,cliff_postfix.csv
+load_panel,glass_200G,16,32,g16b800m32,533,1.00,99.668,0,0,first zero-timeout rung (post-fix binary),yes,fcdc6e7,cliff_postfix.csv
+load_panel,hgx8,16,4,h16m4,,8.16,107.634,0,23,first zero-timeout rung (post-fix binary),yes,68851bb,cliff_postfix.csv
+load_panel,hgx8,16,8,h16,,8.16,145.497,0,0,first zero-timeout rung (post-fix binary),yes,9ac4f76,cliff_postfix.csv
+load_panel,hgx8,16,16,h16m16,,8.16,234.925,0,303,first zero-timeout rung (post-fix binary),yes,68851bb,cliff_postfix.csv
+load_panel,hgx8,16,32,h16m32,,8.16,405.193,0,425,first zero-timeout rung (post-fix binary),yes,68851bb,cliff_postfix.csv
+load_panel,nvl64_striped,16,4,s1m4,,4.00,86.435,0,0,first zero-timeout rung (post-fix binary),yes,1b1cc47,cliff_postfix.csv
+load_panel,nvl64_striped,16,8,s1_16,,4.00,89.430,0,0,first zero-timeout rung (post-fix binary),yes,9ac4f76,cliff_postfix.csv
+load_panel,nvl64_striped,16,16,s1m16,,4.00,95.115,0,0,first zero-timeout rung (post-fix binary),yes,1b1cc47,cliff_postfix.csv
+load_panel,nvl64_striped,16,32,s1m32,,4.00,111.027,0,0,first zero-timeout rung (post-fix binary),yes,1b1cc47,cliff_postfix.csv

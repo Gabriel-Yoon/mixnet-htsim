@@ -315,7 +315,7 @@ def beyond():
 def mb():
     """R6: iteration vs microbatch at EP=16, glass vs the queued NVL72 domain (quotable rows of cliff_all)."""
     rows = [r for r in load("cliff_all") if r["_quotable"] and str(r.get("ep")) == "16" and r.get("mb")]
-    fig, ax = plt.subplots(figsize=(3.4, 2.4), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.4, 2.8), dpi=200)
     for sysname in ("nvl64_pkt", "nvl64_pkt_s1", "glassfb"):
         best = {}
         for r in rows:
@@ -340,7 +340,7 @@ def ladder():
     at its zero-timeout buffer, with the queued NVL72 and the bound as reference lines."""
     rows = load("dse_cabling_2x2")
     cells = {(r["cabling"], str(r["dim_a2a"])): r for r in rows}
-    fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.4, 3.6), dpi=200)
     order = [("mesh", "0", "mesh\nrelay off"), ("mesh", "1", "mesh\nrelay on"), ("portmap", "0", "port map\nrelay off"), ("portmap", "1", "port map\nrelay on")]
     xs, labs = [], []
     for x, (cab, dim, lab) in enumerate(order):
@@ -379,7 +379,7 @@ def energy():
     g = load("power_tiers"); n = load("power_tiers_pkt")
     eps = sorted({int(r["ep"]) for r in g} | {int(r["ep"]) for r in n})
     systems = ["glassfb", "nvl64_pkt", "hgx8_pkt"]
-    fig, axes = plt.subplots(1, len(eps), figsize=(3.4 if len(eps) <= 3 else 4.2, 2.4), dpi=200, sharey=False)   # per-panel scale: EP=128 is 4x the EP=64 column
+    fig, axes = plt.subplots(1, len(eps), figsize=(3.4 if len(eps) <= 3 else 7.0, 2.6), dpi=200, sharey=False)   # per-panel scale: EP=128 is 4x the EP=64 column
     axes = list(axes) if len(eps) > 1 else [axes]
     for ax, ep in zip(axes, eps):
         for x, sysname in enumerate(systems):
@@ -410,7 +410,7 @@ def calib():
     variants = sorted({r["variant"] for r in rows})
     VLAB = {"s18": "pinned (18 x 25 GB/s, paper rows)", "s1": "striped (1 x 450 GB/s)"}
     VCOL = {"s18": "#7a0177", "s1": "#b06fc0"}
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.6), dpi=200)
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 3.2), dpi=200)
     a1.axhspan(0.71, 0.82, color="#d95f0e", alpha=0.18, lw=0, label="DeepEP, measured (71-82%)")
     a2.axhspan(45, 85, color="#d95f0e", alpha=0.18, lw=0, label="measured floor (45-85 us)")
     for v in variants:
@@ -490,7 +490,7 @@ def tail():
         want = [(t.split(":")[0], int(t.split(":")[1])) for t in only.split(",")]
     panels = [(k, sorted(groups[k])) for k in want if k in groups and len(groups[k]) >= 2]
     if not panels: sys.exit("buffer_sweeps: no multi-point sweeps")
-    fig, axes = plt.subplots(1, len(panels), figsize=((7.16 if len(panels) > 2 else 3.6), 2.2), dpi=200)
+    fig, axes = plt.subplots(1, len(panels), figsize=((7.16 if len(panels) > 2 else 3.6), (2.2 if len(panels) > 2 else 3.2)), dpi=200)
     axes = list(axes) if len(panels) > 1 else [axes]
     for ax, ((sysname, ep), pts) in zip(axes, panels):
         xs = list(range(len(pts))); c = SYS_COLOR.get(sysname, "#333")

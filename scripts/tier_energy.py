@@ -130,6 +130,18 @@ if __name__ == "__main__":
     main([("tier_ep16", 16, 128, 87.613, "", "glassfb"),
           ("tier_ep32", 32, 256, 77.918, "", "glassfb"),
           ("tier_ep64", 64, 512, 43.088, "", "glassfb"),
+          # 200G/lane at EP=16 and EP=32, on the design point's own maps and hop
+          # logs for the same reason as EP=64: the cabling is unchanged and
+          # 1.15 pJ/bit is dynamic, so bytes x hops and therefore link J cannot
+          # move. Only the static integral shortens.
+          ("tier_ep16", 16, 128, 87.700,
+           "200G/lane quoted rung q=533, 2x BDP, 0 timeouts; bytes and hops are the "
+           "design point's; STATIC LASER+TUNE NOT RE-BUDGETED for 200G/lane",
+           "glassfb_800"),
+          ("tier_ep32", 32, 256, 75.253,
+           "200G/lane quoted rung q=2133, 4x BDP, 0 timeouts; bytes and hops are the "
+           "design point's; STATIC LASER+TUNE NOT RE-BUDGETED for 200G/lane",
+           "glassfb_800"),
           # 200G/lane, EP=64. The SAME tier_ep64 hop log and the SAME flow log:
           # g64b800 runs ep64_gt.txt, the design point's cabling, so bytes x hops
           # are identical and the link term cannot move -- 1.15 pJ/bit is dynamic,

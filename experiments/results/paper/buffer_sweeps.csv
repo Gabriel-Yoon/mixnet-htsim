@@ -1,7 +1,12 @@
 system,ep,model_name,q,q_over_bdp,q_over_bdp_source,makespan_ms,rtos,drops,max_fct_ms,fct_status,quotable,link_rate_fixed,binary_sha,quoted_by,source,quotable_why
-glassfb,8,,533,2.00,2.00,235.751,4486,769417,21.0088,clean,no,yes,d1c3da2,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
-glassfb,8,,1066,4.00,4.00,231.752,2997,688395,12.8393,clean,no,yes,d1c3da2,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
-glassfb,8,,2133,8.00,8.00,240.332,1579,508172,18.7713,clean,no,yes,d1c3da2,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,8,,533,2.00,2.00,235.751,4486,769417,21.0088,clean,no,yes,41de4ad,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,8,,533,2.00,2.00,300.853,0,40328,3.9491,clean,no,yes,41de4ad,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,8,,1066,4.00,4.00,231.752,2997,688395,12.8393,clean,no,yes,41de4ad,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,8,,1066,4.00,4.00,309.841,0,13656,4.7747,clean,no,yes,41de4ad,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,8,,2133,8.00,8.00,240.332,1579,508172,18.7713,clean,no,yes,41de4ad,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,8,,2133,8.00,8.00,309.085,0,0,4.7490,clean,no,yes,41de4ad,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,8,,4267,16.00,16.00,231.289,386,204184,12.8321,clean,no,yes,41de4ad,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb,8,,4267,16.00,16.00,309.085,0,0,4.7490,clean,no,yes,41de4ad,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb,16,llamaMoE,133,0.50,0.50,132.714,2042,,21.3705,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb,16,llamaMoE,133,0.50,0.50,135.127,2156,,27.4203,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb,16,llamaMoE,133,0.50,0.50,115.035,2085,,9.7980,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
@@ -61,6 +66,18 @@ glassfb,128,arctic,2133,8.00,8.00,274.510,238854,56969388,44.0207,clean,no,yes,9
 glassfb,128,arctic,4267,16.00,16.00,266.337,107670,,63.7266,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb,128,arctic,8533,32.00,32.00,754.319,42830,,338.6120,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb,128,arctic,17067,64.00,64.00,1175.319,6883,,627.3230,clean,no,yes,9ac4f76,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,16,llamaMoE,266,,,87.712,13,99989,2.1049,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,16,llamaMoE,533,,,87.700,0,0,2.0737,clean,yes,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,16,llamaMoE,1066,,,87.700,0,0,2.0737,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,16,llamaMoE,2133,,,87.700,0,0,2.0737,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,16,llamaMoE,4267,,,87.700,0,0,2.0737,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,16,llamaMoE,8533,,,87.700,0,0,2.0737,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,32,llamaMoE,533,,,109.849,1993,1140788,20.3891,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,32,llamaMoE,1066,,,75.330,2,18827,3.5742,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,32,llamaMoE,2133,,,75.253,0,0,3.6031,clean,yes,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,32,llamaMoE,4267,,,75.253,0,0,3.6031,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,32,llamaMoE,8533,,,75.253,0,0,3.6031,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
+glassfb_800,32,llamaMoE,17067,,,75.253,0,0,3.6031,clean,no,yes,8ca3c1c,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb_800,64,qwenMoE,1066,,,51.212,17777,8211523,7.3939,clean,no,yes,2128410,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb_800,64,qwenMoE,2133,,,45.037,3095,4324577,3.9167,clean,no,yes,2128410,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here
 glassfb_800,64,qwenMoE,4267,,,39.386,80,94274,2.5904,clean,no,yes,2128410,collector,cliff_postfix.csv,ladder-level verdict from collector; not re-judged here

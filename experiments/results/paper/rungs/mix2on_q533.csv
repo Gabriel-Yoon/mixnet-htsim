@@ -1,0 +1,2 @@
+paper_ref,system,cabling,ep,nodes,mb,q,relayed_pairs,completed,makespan_ms,rtos,drops,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,fct_logdir,fct_status,wall_s,status,note,link_rate_fixed,binary_sha
+cliff,glassfb,mix_dp2tp4pp4ep8.txt,8,256,8,533,1,COMPLETE,300.853,0,40328,115200,66816,0.1939,0.0208,1.8265,3.9491,./logs/rung_12937288_740515_1788830696030587553,clean,841,blocked,post-fix rung (glass); dim_a2a=1; portmap=mix_dp2tp4pp4ep8.txt; hier=0; port_bw=400; ep_place=1; tp=4; ep=8,yes,41de4ad

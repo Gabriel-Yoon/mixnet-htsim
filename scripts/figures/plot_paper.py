@@ -722,8 +722,8 @@ def loadfig():
             ax.scatter([x], [y], s=22, color=col if r["_quotable"] else "white", edgecolor=col, lw=0.9, zorder=4)
             ax.annotate(("%d" % r["rtos"]) if r["rtos"] else "0", (x, y), textcoords="offset points", xytext=(0, dy), ha="center", va="bottom" if dy > 0 else "top", fontsize=4.8, color="#555")
         return xs
-    ladder(a2, "glassfb_800", "g64b800", 64, "#2b6f7f", "Glass-FB EP=64", True, dy=-6)
     ladder(a2, "nvl64_pkt_s1", "s1_16", 16, "#4b3f8f", "NVL72 EP=16", True, dy=5)
+    ladder(a2, "glassfb_800", "g64b800", 64, "#2b6f7f", "Glass-FB EP=64", True, dy=-6)   # drawn last: its quoted (filled) rung at 16x sits under NVL72's hollow one otherwise
     a2.set_xscale("log", base=2); a2.set_xlabel("queue depth (× port BDP)"); a2.set_ylabel("iteration / quoted rung")
     a2.set_xticks([1, 2, 4, 8, 16, 32, 64]); a2.set_xticklabels(["1", "2", "4", "8", "16", "32", "64"])
     a2.set_title("(b) buffers: the same signature", fontsize=7.5, loc="left"); a2.legend(frameon=False, fontsize=5.8, loc="upper right")
@@ -734,7 +734,7 @@ def loadfig():
     a3.set_title("(c) EP=128: clean only at the last rung", fontsize=7.5, loc="left"); a3.set_ylim(0, 950)
     for ax in (a1, a2, a3):
         ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.tick_params(labelsize=6); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
-    a2.text(0.03, 0.97, "filled = quoted rung\nlabels = timeouts", transform=a2.transAxes, fontsize=4.8, color="#666", ha="left", va="top")
+    a2.text(0.03, 0.04, "filled = quoted rung; labels = timeouts", transform=a2.transAxes, fontsize=4.8, color="#666", ha="left", va="bottom")
     fig.tight_layout(pad=0.3, w_pad=1.0); fig.savefig(f("fig_load.png")); fig.savefig(f("fig_load.pdf")); print("wrote fig_load.png")
 
 if __name__ == "__main__":

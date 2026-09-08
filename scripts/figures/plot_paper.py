@@ -248,7 +248,7 @@ def decomp():
     eps = sorted({ep for ep, _, _ in parsed})
     # user 2026-09-08: no A2A/compute split; normalized iteration time (MixNet style), Glass-FB = 1 per EP
     order = [s_ for s_ in HEAD if s_ != "glassfb"]
-    fig, ax = plt.subplots(figsize=(3.45, 2.1), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.95), dpi=200)
     w = 0.26
     for i, ep in enumerate(eps):
         grp = {sysname: float(r["makespan_ms"]) for _, sysname, r in parsed if _ == ep}

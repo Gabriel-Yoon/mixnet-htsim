@@ -665,25 +665,26 @@ def boundary():
 
 def loadfig():
     """Load (Sec. dse): EP=16 iteration time against microbatch from load_panel.csv (peer-derived from
-    cliff_postfix.csv: the quoted rung per (system, mb) with its drop count), absolute on a log axis."""
+    cliff_postfix.csv: the quoted rung per (system, mb) with its drop count), normalized to Glass-FB at
+    the same microbatch (Glass-FB = 1, the convention of the EP figure; user 2026-09-08)."""
     rows = list(csv.DictReader(open(os.path.join(RES, "load_panel.csv"))))
     STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
            "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
            "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
     fig, ax = plt.subplots(figsize=(3.45, 2.05), dpi=200)
     mbs = [4, 8, 16, 32]
+    ref = {int(r["mb"]): float(r["makespan_ms"]) for r in rows if r["system"] == "glass_200G"}
     for sysname, st in STY.items():
-        pts = sorted([(int(r["mb"]), float(r["makespan_ms"]), int(float(r["drops"] or 0))) for r in rows if r["system"] == sysname])
+        pts = sorted([(int(r["mb"]), float(r["makespan_ms"]) / ref[int(r["mb"])], int(float(r["drops"] or 0))) for r in rows if r["system"] == sysname and int(r["mb"]) in ref])
         if not pts: continue
         ax.plot([p[0] for p in pts], [p[1] for p in pts], **st)
-        dy = {"glass_200G": -11, "nvl64_striped": 6, "hgx8": 6}[sysname]
+        dy = {"glass_200G": -11, "nvl64_striped": -11, "hgx8": 6}[sysname]
         for mb, v, d in pts:
-            ax.annotate("%.0f" % v, (mb, v), textcoords="offset points", xytext=(0, dy), ha="center", fontsize=6.5, color=st["color"])
-        print("  %-13s" % sysname, " ".join("mb%d=%.1f(%dd)" % p for p in pts))
+            ax.annotate("%.2f" % v, (mb, v), textcoords="offset points", xytext=(0, dy), ha="center", fontsize=6.5, color=st["color"])
+        print("  %-13s" % sysname, " ".join("mb%d=%.2f(%dd)" % p for p in pts))
     ax.set_xscale("log", base=2); ax.set_xticks(mbs); ax.set_xticklabels([str(m) for m in mbs]); ax.minorticks_off()
-    ax.set_yscale("log"); ax.set_yticks([80, 100, 150, 200, 300, 400]); ax.set_yticklabels(["80", "100", "150", "200", "300", "400"])
-    ax.set_ylim(75, 480)
-    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("iteration time (ms)", fontsize=8.5)
+    ax.set_ylim(0.8, 4.6); ax.axhline(1.0, color="#999", lw=0.5, ls=(0, (3, 2)), zorder=1)
+    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("normalized iteration time", fontsize=8.5)
     ax.tick_params(labelsize=7.5)
     ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.grid(lw=0.4, alpha=0.4, which="major")
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)

@@ -628,7 +628,7 @@ def boundary():
                 cross = float(r["bytes_nic"]); tot = float(r["bytes_in_domain"]) + cross
             gpus = int(float(r["nodes"]))
             pts[(sname, ep)] = dict(share=100 * cross / tot, tier_ms=cross / (gpus * XBW[sname]) / 1e6, a2a=a2a(sname, ep))
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7.0, 2.35), dpi=200, gridspec_kw=dict(width_ratios=[1.15, 1]))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(3.45, 4.3), dpi=200, gridspec_kw=dict(height_ratios=[0.85, 1]))
     # (a) share bars
     w = 0.26; xs = list(range(len(eps)))
     for j, sname in enumerate(XBW):
@@ -639,7 +639,7 @@ def boundary():
             ax1.text(i + (j - 1) * w, v + 1.2, "%.0f" % v, ha="center", va="bottom", fontsize=5.6, color="#333")
     ax1.set_xticks(xs); ax1.set_xticklabels(["EP=%d" % e for e in eps]); ax1.set_ylim(0, 100)
     ax1.set_ylabel("hop-bytes crossing a domain (%)"); ax1.legend(frameon=False, fontsize=6.5, loc="upper left")
-    ax1.set_title("(a) how much of the traffic leaves the domain", fontsize=7.5, loc="left")
+    ax1.set_title("(a) how much traffic leaves the domain", fontsize=7.5, loc="left")
     ax1.axvline(2.5, color="#999", lw=0.6, ls=(0, (3, 2)))
     ax1.text(2.52, 96, "NVL boundary", fontsize=5.8, color="#666", ha="left", va="top")
     # (b) a2a on the critical path vs the cross-domain tier's own transfer time
@@ -654,17 +654,17 @@ def boundary():
         ax2.scatter([], [], marker=MK[ep], s=18, color="#555", label="EP=%d" % ep)
     lim = [0.3, 300]
     ax2.plot(lim, lim, color="#bbb", lw=0.7, ls=(0, (3, 2)), zorder=1)
-    ax2.text(lim[1] * 0.9, 2.6, "A2A = cross-domain transfer time\n(lower bound)", fontsize=5.4, color="#888", ha="right", va="bottom")
+    ax2.text(lim[1] * 0.9, 2.4, "A2A = cross-domain transfer\ntime (lower bound)", fontsize=5.4, color="#888", ha="right", va="bottom")
     ax2.set_xscale("log"); ax2.set_yscale("log"); ax2.set_xlim(*lim); ax2.set_ylim(2, 300)
     ax2.set_xlabel("cross-domain bytes / cross-domain bandwidth (ms)")
     ax2.set_ylabel("expert A2A on critical path (ms)")
-    ax2.legend(frameon=False, fontsize=6, loc="upper left", handletextpad=0.2)
+    ax2.legend(frameon=False, fontsize=6, loc="upper left", handletextpad=0.2, ncol=2, columnspacing=0.8)
     ax2.set_title("(b) what that traffic costs", fontsize=7.5, loc="left")
     for ax in (ax1, ax2):
         ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.tick_params(labelsize=6.5)
     for (sname, ep), v in sorted(pts.items()):
         print("  %-12s EP=%3d share=%5.1f%%  tier=%7.2f ms  a2a=%s" % (NAMES[sname], ep, v["share"], v["tier_ms"], v["a2a"]))
-    fig.tight_layout(pad=0.3); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
+    fig.tight_layout(pad=0.3, h_pad=1.0); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
 
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]

@@ -120,6 +120,7 @@ void GlassFBTopology::set_params(int no_of_nodes)
   if (const char *e = getenv("GLASS_TP")) _tp_deg = atoi(e);
   if (const char *e = getenv("GLASS_EP")) _ep_deg = atoi(e);
   if (const char *e = getenv("GLASS_DIM_A2A")) _dim_route = atoi(e) != 0;
+  if (const char *e = getenv("GLASS_MAXDIST")) { int v = atoi(e); if (v > 0) _maxdist = v; }
   if (const char *e = getenv("GLASS_ECN_K")) { int v = atoi(e); if (v > 0) _ecn_k_pkts = v; }
   if (const char *e = getenv("GLASS_GW_PARALLEL")) { int v = atoi(e); if (v > 0) _gw_parallel = v; }
   if (_mode == 3) {
@@ -404,8 +405,16 @@ vector<int> GlassFBTopology::node_path(int src, int dest) const
   for (size_t i = 1; i < wp.size(); i++) {
     int a = path.back(), b = wp[i];
     if (a == b) continue;
-    if (same_panel(a, b) && !intra_link(a, b))
-      path.push_back(relay_for(a, b)); // 2-hop intra-panel FB (dim-order balanced if enabled)
+    if (same_panel(a, b) && !intra_link(a, b)) {
+      if (_maxdist == 1) {
+        // mesh: every consecutive pair on the path must be a real link, so emit
+        // the whole XY walk rather than one relay
+        vector<int> mid = xy_path(a, b);
+        for (size_t m = 0; m < mid.size(); m++) path.push_back(mid[m]);
+      } else {
+        path.push_back(relay_for(a, b)); // 2-hop intra-panel FB (dim-order balanced if enabled)
+      }
+    }
     path.push_back(b);
   }
 

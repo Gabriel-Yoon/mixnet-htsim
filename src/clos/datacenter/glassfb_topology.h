@@ -110,7 +110,31 @@ public:
   bool same_panel(int a, int b) const { return panel(a) == panel(b); }
   // intra-panel direct (FB) link: same panel and (same panel-row or same panel-col)
   bool intra_link(int a, int b) const {
-    return same_panel(a, b) && (lrow(a) == lrow(b) || lcol(a) == lcol(b));
+    if (!same_panel(a, b)) return false;
+    if (lrow(a) != lrow(b) && lcol(a) != lcol(b)) return false;
+    // _maxdist 0 = unbounded (the flattened butterfly: every row/col peer is one
+    // hop). _maxdist 1 = grid-adjacent only, i.e. a mesh. This gates the links
+    // init_network BUILDS as well as the links node_path may USE, because both
+    // ask this one predicate.
+    return _maxdist <= 0 || intra_dist(a, b) <= _maxdist;
+  }
+  // The intermediate nodes of a hop-by-hop XY walk from a to b inside one panel,
+  // excluding both ends. Row first then column, the same order intra_relay uses.
+  // Only meaningful when the direct link does not exist.
+  vector<int> xy_path(int a, int b) const {
+    vector<int> mid;
+    int pa = panel(a), r = lrow(a), c = lcol(a), rb = lrow(b), cb = lcol(b);
+    int step = (cb > c) ? 1 : -1;
+    for (; c != cb; c += step) {
+      int nxt = phys_inv(pa * _psize + r * _pcols + (c + step));
+      if (nxt != b) mid.push_back(nxt);
+    }
+    step = (rb > r) ? 1 : -1;
+    for (; r != rb; r += step) {
+      int nxt = phys_inv(pa * _psize + (r + step) * _pcols + cb);
+      if (nxt != b) mid.push_back(nxt);
+    }
+    return mid;
   }
   // grid distance along the shared row/col of an intra_link (1 = adjacent electrical RDL)
   int intra_dist(int a, int b) const {
@@ -273,6 +297,9 @@ private:
   // full hop-by-hop node sequence from src to dst (consecutive nodes are directly linked)
   vector<int> node_path(int src, int dest) const;
   mem_b _queuesize;
+  // 0 = unbounded intra-panel degree (flattened butterfly); 1 = grid-adjacent
+  // only (mesh). GLASS_MAXDIST.
+  int _maxdist = 0;
 };
 
 // class UtilMonitor : public EventSource {

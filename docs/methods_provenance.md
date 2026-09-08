@@ -690,6 +690,42 @@ the agreement is real at the ceiling and the disagreement at the floor is eviden
 this model rather than against it — which is the opposite of how a bare "cross-checked
 against SimAI" would read.
 
+**Sub-class O is the one where the check fails and the thing being checked is
+fine.** Every sub-class above is a wrong number that looked right. This is the mirror:
+a right artifact that a guard declared wrong, for a reason that has nothing to do with
+what the guard measures.
+
+`submit_batch10.sh` refuses to launch the panel DSE unless the run binary carries the
+`GLASS_MAXDIST` gate — without it the mesh arm would silently be a second flattened
+butterfly, so the check earns its place. It was written as
+
+```sh
+strings "$BIN" | grep -q GLASS_MAXDIST || { echo "REFUSING: ..."; exit 1; }
+```
+
+under the `set -uo pipefail` at the top of the script. `grep -q` exits at the first
+match; `strings` is then killed by SIGPIPE; `pipefail` propagates its 141 as the
+pipeline's status; and the script refuses **precisely when the string is present**. A
+binary with no gate at all makes `grep` read to EOF and exit 1 with `strings` exiting
+0 — no SIGPIPE, no failure — so the guard passes the case it exists to catch and
+fails the case it exists to permit. It is inverted, not merely broken.
+
+This is the same mechanism as the `head -8` that killed a python interpreter before it
+could write `decomp_ops.csv`, and the fix is the same: **read the whole stream.**
+`grep -c` with a numeric test costs one full scan of a 776 kB binary and cannot be
+short-circuited.
+
+> **A guard whose failure mode is a false refusal is not the safe direction.** It is
+> tempting to treat "it only ever over-refuses" as harmless. It is not: for three
+> hours the refusal was read as evidence about the *binary*, and the search went to
+> the toolchain, the ODR violation and the protobuf ABI — every one of which was a
+> real hazard, none of which was this. A check must be able to fail for exactly one
+> reason or its output is not information.
+
+Both copies were fixed — the launcher and the install script that stages the binary —
+and the two verdicts they now print were confirmed against a binary known to carry the
+gate and against the pre-rebuild binary known not to.
+
 ### Scope limit
 
 This rule establishes that a parameter was *read*. It says nothing about whether

@@ -152,8 +152,9 @@ def cliff():
     rows = list(best.values())
     SHORTLAB = {"hgx8": "HGX-8 bound", "hgx8_pkt": "HGX-8", "nvl64": "NVL72 bound", "nvl64_pkt": "NVL72 pinned",
                 "nvl64_pkt_s1": "NVL72 striped", "glassfb": "Glass-FB", "glassfb_800": "Glass-FB, 200G/lane ports"}
-    fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
-    for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "nvl64_pkt_s1", "glassfb_mesh", "glassfb", "glassfb_800", "glassfb_hier"):
+    fig, ax = plt.subplots(figsize=(3.6, 2.9), dpi=200)
+    # HGX-8's island and packet-level rows coincide, so its bound line is not drawn
+    for sysname in ("hgx8_pkt", "nvl64", "nvl64_pkt", "nvl64_pkt_s1", "glassfb", "glassfb_800"):
         pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and r["_quotable"]])
         sens = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and not r["_quotable"]])
         if not pts and not sens: continue
@@ -180,9 +181,9 @@ def cliff():
             if mm and not re.search(r"hier|sk\d|mix|npl|mb=(4|16|32)\b", d["label"]):
                 floor.setdefault(int(mm.group(1)), float(d["compute_ms"]))
         for ep_, c_ in floor.items():
-            ax.plot([ep_ / 1.12, ep_ * 1.12], [c_, c_], color="#9aa5ad", lw=1.0, ls=(0, (1.5, 1.5)), zorder=1)
+            ax.plot([ep_ / 1.10, ep_ * 1.10], [c_, c_], color="#8a949b", lw=1.1, zorder=1)
         if floor:
-            ax.plot([], [], color="#9aa5ad", lw=1.0, ls=(0, (1.5, 1.5)), label="compute floor (model per EP)")
+            ax.plot([], [], color="#8a949b", lw=1.1, label="compute floor of the model at that EP")
     except Exception as e:
         print("[cliff] no compute floor:", e)
     # model per point
@@ -195,8 +196,11 @@ def cliff():
             models[r["ep"]] = (r.get("model_name") or "") + (f" top-{r['topk']}" if r.get("topk") else "")
     ax.set_xscale("log", base=2); ax.set_xticks(sorted(models)); ax.set_xticklabels([f"{ep}\n{models[ep]}" for ep in sorted(models)], fontsize=5.5)
     ax.set_yscale("log"); ax.set_ylabel("iteration (ms)", fontsize=7); ax.set_xlabel("EP degree (model per point)", fontsize=7)
-    ax.axvline(16, color="#1f6f8b", ls=":", lw=0.8); ax.axvline(8, color="#d95f0e", ls=":", lw=0.8); ax.axvline(64, color="#7a0177", ls=":", lw=0.8)
-    ax.tick_params(labelsize=6); ax.legend(fontsize=5.5, frameon=False); ax.grid(alpha=0.3, which="both")
+    ax.axvline(16, color="#1f6f8b", ls=":", lw=0.8); ax.axvline(64, color="#7a0177", ls=":", lw=0.8)
+    ax.text(16, ax.get_ylim()[1], " panel", color="#1f6f8b", fontsize=5, va="top", ha="left")
+    ax.text(64, ax.get_ylim()[1], " NVL72", color="#7a0177", fontsize=5, va="top", ha="left")
+    ax.tick_params(labelsize=6); ax.grid(alpha=0.25, which="both")
+    ax.legend(fontsize=5.2, frameon=False, ncol=2, loc="upper center", bbox_to_anchor=(0.5, -0.30), handlelength=2.2, columnspacing=1.0)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_cliff.png")); print("wrote fig_cliff.png")
 
 def decomp():
@@ -233,7 +237,7 @@ def decomp():
         seen.add(key); parsed.append((int(m.group(2)), m.group(1), r))
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
     fig, ax = plt.subplots(figsize=(4.0, 2.7), dpi=200)
-    SHORT = {"glassfb": "Glass", "glassfb_800": "Glass\n200G", "nvl64_pkt_s1": "NVL\nstr.", "nvl64_pkt": "NVL\npin.", "hgx8_pkt": "HGX-8"}
+    SHORT = {"glassfb": "Glass-FB", "glassfb_800": "Glass-FB 200G/lane", "nvl64_pkt_s1": "NVL72 striped", "nvl64_pkt": "NVL72 pinned", "hgx8_pkt": "HGX-8"}
     xs, labels = [], []; x = 0; groups = {}
     for ep, sysname, r in parsed:
         bottom = 0.0
@@ -248,13 +252,15 @@ def decomp():
         ax.text(x, bottom * 1.02, f"{bottom:.1f}" + ("*" if r.get("_hollow") else ""), ha="center", fontsize=5)
         xs.append(x); labels.append(SHORT.get(sysname, sysname)); groups.setdefault(ep, []).append(x); x += 1
         if sysname == "hgx8_pkt": x += 0.8
-    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=4.8)
+    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=4.6, rotation=90)
     ymax = ax.get_ylim()[1]
-    for ep, gx in groups.items():   # EP group label under each quartet
-        ax.text(sum(gx) / len(gx), -0.16 * ymax, f"EP={ep}", ha="center", va="top", fontsize=6, fontweight="bold")
+    for ep, gx in groups.items():   # EP group label above each group
+        ax.text(sum(gx) / len(gx), ymax * 0.985, f"EP={ep}", ha="center", va="top", fontsize=6.5, fontweight="bold", color="#4a5560")
     ax.set_ylim(0, ymax)
     ax.set_ylabel("critical-path time (ms)", fontsize=7); ax.tick_params(labelsize=6)
-    ax.legend(fontsize=5.5, frameon=False, loc="upper left")
+    h_, l_ = ax.get_legend_handles_labels()
+    keep = [(h, l) for h, l in zip(h_, l_) if l in ("compute", "expert A2A")]
+    ax.legend([h for h, _ in keep], [l for _, l in keep], fontsize=5.5, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.90))
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
 
 def beyond():
@@ -381,14 +387,14 @@ def energy():
             lo, hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
             slo = float(r.get("static_J_iter_lo") or r.get("static_J_iter") or 0); shi = float(r.get("static_J_iter_hi") or r.get("static_J_iter") or slo)
             c = SYS_COLOR.get(sysname, "#999")
-            ax.bar(x, hi, color=c, alpha=0.35, width=0.6); ax.bar(x, lo, color=c, width=0.6)               # link: dark = favourable end
-            ax.bar(x, shi, bottom=hi, color="none", edgecolor=c, hatch="////", width=0.6, lw=0.6)          # static (assumed), hatched
-            ax.bar(x, slo, bottom=hi, color="none", edgecolor=c, width=0.6, lw=0.6)
-            ax.text(x, hi + shi + 3, f"{lo:.0f}–{hi:.0f}\n+{slo:.0f}–{shi:.0f}", ha="center", fontsize=4.8, linespacing=0.9)
-        ax.set_xticks(range(len(systems))); ax.set_xticklabels([SYS_LABEL[s].split(" (")[0] for s in systems], fontsize=5.5, rotation=20)
+            ax.bar(x, hi, color=c, alpha=0.35, width=0.62); ax.bar(x, lo, color=c, width=0.62)             # link: dark = favourable pJ/bit end
+            ax.bar(x, shi, bottom=hi, color="none", edgecolor=c, hatch="////", width=0.62, lw=0.6)         # static (assumed), hatched
+            ax.plot([x - 0.31, x + 0.31], [hi + slo, hi + slo], color=c, lw=0.8)                         # static's favourable end
+            ax.text(x, hi + shi + 2, f"{lo + slo:.0f}–{hi + shi:.0f}", ha="center", va="bottom", fontsize=4.8)
+        ax.set_xticks(range(len(systems))); ax.set_xticklabels(["Glass-FB", "NVL72", "HGX-8"][:len(systems)], fontsize=5.2, rotation=35, ha="right")
         ax.set_title(f"EP={ep}", fontsize=7); ax.tick_params(labelsize=5.5)
         ax.set_ylim(0, ax.get_ylim()[1] * 1.12)
-    axes[0].set_ylabel("J per iteration (solid: link, bytes moved;\nhatched: static, assumed)", fontsize=6)
+    axes[0].set_ylabel("interconnect energy per iteration (J)", fontsize=6.5)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
 def calib():
@@ -401,11 +407,11 @@ def calib():
     for r in rows:
         r["msg_bytes"] = float(r["msg_bytes"]); r["T_us"] = float(r["T_us"]); r["efficiency"] = float(r["efficiency"])
     variants = sorted({r["variant"] for r in rows})
-    VLAB = {"s18": "18 x 25 GB/s (per-flow ECMP, paper rows)", "s1": "1 x 450 GB/s (striped)"}
+    VLAB = {"s18": "pinned (18 x 25 GB/s, paper rows)", "s1": "striped (1 x 450 GB/s)"}
     VCOL = {"s18": "#7a0177", "s1": "#b06fc0"}
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.0, 2.6), dpi=200)
-    a1.axhspan(0.71, 0.82, color="#d95f0e", alpha=0.18, lw=0, label="DeepEP intra-node EP=8 (71-82%)")
-    a2.axhspan(45, 85, color="#d95f0e", alpha=0.18, lw=0, label="published small-message floor (45-85 us)")
+    a1.axhspan(0.71, 0.82, color="#d95f0e", alpha=0.18, lw=0, label="DeepEP, measured (71-82%)")
+    a2.axhspan(45, 85, color="#d95f0e", alpha=0.18, lw=0, label="measured floor (45-85 us)")
     for v in variants:
         sub = [r for r in rows if r["variant"] == v]
         # Among quotable rows take the FIRST rung (lowest k), never the fastest:
@@ -443,8 +449,8 @@ def calib():
         print(f"[calib] SimAI overlay: {len(srows)} points")
     for ax in (a1, a2):
         ax.set_xscale("log", base=2); ax.set_xlabel("bytes per (src,dst) pair", fontsize=7); ax.tick_params(labelsize=6); ax.grid(alpha=0.3, which="both")
-    a1.set_ylabel("egress / 450 GB/s line rate", fontsize=7); a1.set_ylim(0, 1.0); a1.legend(fontsize=5, frameon=False, loc="lower right")
-    a2.set_yscale("log"); a2.set_ylabel("all-to-all completion (us)", fontsize=7); a2.legend(fontsize=5, frameon=False, loc="upper left")
+    a1.set_ylabel("egress / 450 GB/s line rate", fontsize=7); a1.set_ylim(0, 1.05); a1.legend(fontsize=5.5, frameon=False, loc="upper left")
+    a2.set_yscale("log"); a2.set_ylabel("all-to-all completion (us)", fontsize=7); a2.legend(fontsize=5.5, frameon=False, loc="upper left")
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_calib.png")); print("wrote fig_calib.png")
 
 def tail():

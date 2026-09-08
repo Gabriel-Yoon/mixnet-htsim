@@ -35,7 +35,7 @@ SRC = (0, 3)              # (col, row) of the highlighted GPU: bottom-left corne
 def center(c, r):
     return (c * PITCH, (N - 1 - r) * PITCH)
 
-fig, ax = plt.subplots(figsize=(3.6, 3.9), dpi=300)
+fig, ax = plt.subplots(figsize=(3.6, 4.3), dpi=300)
 ax.set_aspect("equal"); ax.axis("off")
 
 # faint lattice: every row/column FB link of every GPU (all pairs in a row, all pairs in a column)
@@ -84,14 +84,14 @@ for r in range(N):
                                     facecolor=C_SRC if is_src else C_TILE,
                                     edgecolor=C_SRC_EDGE if is_src else C_TILE_EDGE,
                                     lw=1.8 if is_src else 1.0, zorder=5))
-        ax.text(x, y + 0.06, "GPU", ha="center", va="center", fontsize=6.5,
+        ax.text(x, y + 0.07, "GPU", ha="center", va="center", fontsize=9,
                 color="#1f2a30" if is_src else "#5a6670", fontweight="bold" if is_src else "normal", zorder=6)
-        ax.text(x, y - 0.14, "PIC", ha="center", va="center", fontsize=4.6, color="#7a8790", zorder=6)
+        ax.text(x, y - 0.16, "PIC", ha="center", va="center", fontsize=6.2, color="#7a8790", zorder=6)
 
 # 16 MTP-16 ports on the panel boundary, one per GPU, four per edge: the top row feeds the
 # north edge, the bottom row the south edge, and the two middle rows feed west (columns 0-1)
 # and east (columns 2-3). A thin lead runs from each tile to its port.
-PAD = 0.95
+PAD = 0.75
 port_w, port_h = 0.26, 0.09
 def port(c, r):
     x, y = center(c, r)
@@ -109,38 +109,33 @@ def port(c, r):
         x0 = x - TILE / 2 if side == "W" else x + TILE / 2
         ax.plot([x0, px], [py, py], **lead)
         ax.add_patch(Rectangle((px - port_h / 2, py - port_w / 2), port_h, port_w, facecolor=C_PORT_FACE, edgecolor=C_PORT, lw=0.6, zorder=4))
-for r in range(N):
-    for c in range(N):
-        port(c, r)
 
 # external laser source at the south-west corner, feeding the panel's distribution waveguide
-lx, ly = -1.05, -1.25
+lx, ly = -0.98, -1.02
 ax.add_patch(FancyBboxPatch((lx - 0.22, ly - 0.14), 0.44, 0.28, boxstyle="round,pad=0,rounding_size=0.05",
                             facecolor=C_ELS, edgecolor="none", zorder=5))
-ax.text(lx, ly, "ELS", ha="center", va="center", fontsize=6, color="white", fontweight="bold", zorder=6)
-ax.plot([lx + 0.16, -TILE / 2 - 0.02], [ly + 0.12, -TILE / 2 + 0.02], color=C_ELS, lw=1.2, ls=(0, (2, 1.5)), zorder=2)
+ax.text(lx, ly, "ELS", ha="center", va="center", fontsize=8, color="white", fontweight="bold", zorder=6)
+ax.plot([lx + 0.2, -TILE / 2 - 0.02], [ly + 0.1, -TILE / 2 + 0.04], color=C_ELS, lw=1.4, ls=(0, (2, 1.5)), zorder=2)
 
-# labels on the source's links: the row shows all three classes side by side below the bottom row
-ax.text(0.5, 0.0 + 0.10, "d1", ha="center", va="bottom", fontsize=5.8, color=C_D1, fontweight="bold", zorder=7)
-ax.text(1.0, 0.0 - 0.27, "d2 / L1", ha="center", va="top", fontsize=5.4, color=C_D2, fontweight="bold", zorder=7)
-ax.text(1.5, 0.0 - 0.52, "d3 / L2", ha="center", va="top", fontsize=5.4, color=C_D3, fontweight="bold", zorder=7)
+# labels on the source's links: d1 above the straight copper link, d2 / d3 under their arcs
+ax.text(0.5, 0.0 + 0.12, "d1", ha="center", va="bottom", fontsize=8, color=C_D1, fontweight="bold", zorder=7)
+ax.text(0.72, 0.0 - 0.34, "d2 / L1", ha="center", va="top", fontsize=7.5, color=C_D2, fontweight="bold", zorder=7)
+ax.text(2.05, 0.0 - 0.36, "d3 / L2", ha="center", va="top", fontsize=7.5, color=C_D3, fontweight="bold", zorder=7)
 # panel outline
 pad = PAD
 ax.add_patch(Rectangle((-pad, -pad), (N - 1) * PITCH + 2 * pad, (N - 1) * PITCH + 2 * pad,
                        facecolor="none", edgecolor="#9aa5ad", lw=0.8, ls=(0, (3, 2)), zorder=0))
-ax.text((N - 1) * PITCH / 2, (N - 1) * PITCH + pad + 0.14, "16 MTP-16 ports, four per edge, 400 GB/s each",
-        ha="center", va="bottom", fontsize=5.6, color=C_PORT)
+
 
 # legend
 h = [mpatches.Patch(color=C_D1, label="distance-1: electrical RDL, 1800 GB/s"),
      mpatches.Patch(color=C_D2, label="distance-2: glass waveguide L1, 384 GB/s"),
      mpatches.Patch(color=C_D3, label="distance-3: glass waveguide L2, 384 GB/s"),
-     mpatches.Patch(color=C_LATTICE, label="the other GPUs' row/column links"),
-     mpatches.Patch(color=C_PORT_FACE, label="MTP-16 port (one per GPU)")]
-ax.legend(handles=h, loc="upper center", bbox_to_anchor=(0.5, -0.06), fontsize=5.2, frameon=False, ncol=1, handlelength=1.6, borderaxespad=0)
+     mpatches.Patch(color=C_LATTICE, label="the other GPUs' row/column links")]
+ax.legend(handles=h, loc="upper center", bbox_to_anchor=(0.5, -0.01), fontsize=7.2, frameon=False, ncol=1, handlelength=1.6, borderaxespad=0)
 
-ax.set_xlim(-1.35, (N - 1) * PITCH + 1.15)
-ax.set_ylim(-1.5, (N - 1) * PITCH + 1.45)
+ax.set_xlim(-1.3, (N - 1) * PITCH + 0.75)
+ax.set_ylim(-1.3, (N - 1) * PITCH + 0.75)
 fig.tight_layout(pad=0.2)
 for ext in ("png", "pdf"):
     fig.savefig(os.path.join(OUT, f"fig_panel.{ext}"), bbox_inches="tight", pad_inches=0.02)

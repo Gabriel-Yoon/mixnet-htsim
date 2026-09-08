@@ -150,6 +150,8 @@ def cliff():
             print("  WARNING cliff %s ep=%s: %d quotable rows, the walk rule allows one; "
                   "drew the first rung (q=%s)" % (k[0], k[1], n, best[k].get("q")))
     rows = list(best.values())
+    SHORTLAB = {"hgx8": "HGX-8 bound", "hgx8_pkt": "HGX-8", "nvl64": "NVL72 bound", "nvl64_pkt": "NVL72 pinned",
+                "nvl64_pkt_s1": "NVL72 striped", "glassfb": "Glass-FB", "glassfb_800": "Glass-FB, 200G/lane ports"}
     fig, ax = plt.subplots(figsize=(3.4, 2.6), dpi=200)
     for sysname in ("hgx8", "hgx8_pkt", "nvl64", "nvl64_pkt", "nvl64_pkt_s1", "glassfb_mesh", "glassfb", "glassfb_800", "glassfb_hier"):
         pts = sorted([(r["ep"], r["makespan_ms"], r) for r in rows if r["system"] == sysname and r["_quotable"]])
@@ -158,13 +160,17 @@ def cliff():
         dashed = sysname in ("hgx8", "nvl64")  # analytic island = vendor-claim upper bound
         if pts:
             ax.plot([p[0] for p in pts], [p[1] for p in pts], "--" if dashed else ("s-." if sysname == "nvl64_pkt_s1" else ("D:" if sysname == "glassfb_800" else "o-")), color=SYS_COLOR[sysname],
-                    label=SYS_LABEL[sysname] + (" (vendor-claim bound)" if dashed else ""), lw=1.2 if dashed else 1.5, ms=4, alpha=0.8 if dashed else 1)
+                    label=SHORTLAB.get(sysname, SYS_LABEL[sysname]), lw=1.2 if dashed else 1.5, ms=4, alpha=0.8 if dashed else 1)
+            if sysname == "nvl64_pkt_s1":   # calibrated estimate of the machine: striped x 1.25-1.4 (large-message optimism)
+                xs_ = [p[0] for p in pts]; ys_ = [p[1] for p in pts]
+                ax.fill_between(xs_, [y * 1.25 for y in ys_], [y * 1.40 for y in ys_], color=SYS_COLOR[sysname], alpha=0.18, lw=0,
+                                label="NVL72 calibrated estimate (striped x 1.25-1.4)")
         if sens:  # not at its zero-timeout buffer (or a grid cell): hollow, unconnected
             ax.plot([p[0] for p in sens], [p[1] for p in sens], linestyle="none", marker="o", markerfacecolor="white",
                     color=SYS_COLOR[sysname], ms=4, alpha=0.9)
-        for ep, y, r in pts:
-            if r.get("rtos") and r["rtos"] > 0:
-                ax.annotate(f"{r['rtos']:,} RTO", (ep, y), fontsize=5, textcoords="offset points", xytext=(3, 3))
+        for ep, y, r in sens:   # hollow packet-level points carry their timeout count; quoted rows passed the measured-loss gate
+            if r.get("rtos") and r["rtos"] > 0 and not dashed:
+                ax.annotate(f"{r['rtos']:,} RTO", (ep, y), fontsize=4.6, textcoords="offset points", xytext=(3, 3))
     # model per point
     models = {}
     # label each EP by the glass row's model; a row with a blank model_name (collector rows) defers to
@@ -191,7 +197,7 @@ def decomp():
     # headline rows only: the quotable cliff row of each (system, ep) at the default microbatch
     # (mb 8 or unset); variant cells (mb sweep, skew, hier) share system/ep and are excluded by
     # label, and duplicate decomp rows of one quoted makespan collapse to the first
-    HEAD = ("glassfb", "nvl64_pkt_s1", "nvl64_pkt", "hgx8_pkt")
+    HEAD = ("glassfb", "glassfb_800", "nvl64_pkt_s1", "nvl64_pkt", "hgx8_pkt")
     quot = set()
     try:
         for c in csv.DictReader(open(os.path.join(RES, "cliff_all.csv"))):
@@ -203,15 +209,17 @@ def decomp():
     for r in rows:
         m = re.match(r"(\S+) EP=(\d+)", r["label"])
         if not m: continue
-        if re.search(r"hier|sk\d|mb=(4|16|32)\b", r["label"]): continue
+        if re.search(r"hier|sk\d|mix|npl|mb=(4|16|32)\b", r["label"]): continue
+        if int(m.group(2)) < 16: continue   # placement-ablation configurations are not headline groups
         key = (m.group(1), m.group(2), round(float(r["makespan_ms"]), 3))
-        if quot is not None and key not in quot:
+        r["_hollow"] = "BEST-RUNG-NOT-QUOTED" in r["label"]   # a walk with no zero-timeout rung: drawn hollow
+        if quot is not None and key not in quot and not r["_hollow"]:
             print(f"[decomp] skip {r['label']}: not a quotable cliff row"); continue
         if key in seen: continue
         seen.add(key); parsed.append((int(m.group(2)), m.group(1), r))
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
-    fig, ax = plt.subplots(figsize=(3.6, 2.7), dpi=200)
-    SHORT = {"glassfb": "Glass", "nvl64_pkt_s1": "NVL\nstr.", "nvl64_pkt": "NVL\npin.", "hgx8_pkt": "HGX-8"}
+    fig, ax = plt.subplots(figsize=(4.0, 2.7), dpi=200)
+    SHORT = {"glassfb": "Glass", "glassfb_800": "Glass\n200G", "nvl64_pkt_s1": "NVL\nstr.", "nvl64_pkt": "NVL\npin.", "hgx8_pkt": "HGX-8"}
     xs, labels = [], []; x = 0; groups = {}
     for ep, sysname, r in parsed:
         bottom = 0.0
@@ -219,9 +227,11 @@ def decomp():
             v = float(r.get(col) or 0)
             if v <= 0: continue
             ax.bar(x, v, bottom=bottom, width=0.7, color=_ps.COL.get(ckey, "#999") if _ps else None,
-                   edgecolor=SYS_COLOR.get(sysname, "#333"), linewidth=0.8, label=lab if x == 0 else None)
+                   edgecolor=SYS_COLOR.get(sysname, "#333"), linewidth=0.8,
+                   label=lab if (x == 0 and not r.get("_hollow")) else None,
+                   alpha=0.45 if r.get("_hollow") else 1.0, hatch="//" if r.get("_hollow") else None)
             bottom += v
-        ax.text(x, bottom * 1.02, f"{bottom:.1f}", ha="center", fontsize=5)
+        ax.text(x, bottom * 1.02, f"{bottom:.1f}" + ("*" if r.get("_hollow") else ""), ha="center", fontsize=5)
         xs.append(x); labels.append(SHORT.get(sysname, sysname)); groups.setdefault(ep, []).append(x); x += 1
         if sysname == "hgx8_pkt": x += 0.8
     ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=4.8)

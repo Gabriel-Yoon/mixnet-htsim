@@ -30,7 +30,9 @@ rise_s = float(step[0]["rise_10_90_s"]) if step else None
 
 series = {}
 for r in sched:
-    series.setdefault(int(float(r["p_lo_W"])), []).append((float(r["period_s"]), float(r["delta_pp_K"])))
+    plo = int(float(r["p_lo_W"]))
+    if plo not in (0, 210): continue          # 350 W rows exist (tile_schedule.csv) but are not drawn
+    series.setdefault(plo, []).append((float(r["period_s"]), float(r["delta_pp_K"])))
 STYLE = {210: dict(color="#2b6f7f", marker="o", lw=1.2, label="GPU 700 / 210 W (30% floor)", zorder=4),
          0: dict(color="#8a97a3", marker="s", lw=0.9, ls=(0, (3, 2)), label="GPU 700 / 0 W (bound)", zorder=3),
          350: dict(color="#b7c5cc", marker="^", lw=0.9, ls=(0, (1, 1.5)), label="GPU 700 / 350 W", zorder=2)}
@@ -46,16 +48,13 @@ fig, ax = plt.subplots(figsize=(3.45, 2.3), dpi=200)
 for plo, pts in sorted(series.items(), key=lambda kv: -kv[0]):
     pts.sort()
     st = STYLE.get(plo, dict(color="#999", marker="x", label=f"P_lo={plo} W"))
-    if tau and step_K and plo == 210:
-        model = step_K * (700.0 - plo) / 700.0 * np.tanh(T / (4 * tau))
-        ax.plot(T, model, ls=(0, (1, 1.5)), lw=0.9, color="#9aa5ad", zorder=2, label="first-order reference (tau from the step)")
     if len(pts) > 2:
         ax.plot([p for p, _ in pts], [d for _, d in pts], ls=st.get("ls", "-"), lw=st.get("lw", 1.0), color=st["color"], zorder=st.get("zorder", 3), label=st["label"])
     else:
         ax.scatter([], [], marker=st["marker"], color=st["color"], label=st["label"])
     ax.scatter([p for p, _ in pts], [d for _, d in pts], s=24, marker=st["marker"], color=st["color"], edgecolor="white", lw=0.5, zorder=5)
     last = max(pts)
-    ax.annotate("%.1f K" % last[1], last, textcoords="offset points", xytext=(6, -1) if len(pts) > 2 else (7, 0), ha="left", va="center", fontsize=6, color=st["color"])
+    ax.annotate("%.1f K" % last[1], last, textcoords="offset points", xytext=(0, 6), ha="center", va="bottom", fontsize=6.5, color=st["color"])
     if tau and step_K:
         for p, d in pts:
             m = step_K * (700.0 - plo) / 700.0 * np.tanh(p / (4 * tau)); print("  model check P_lo=%d T=%.4g s: ANSYS %.1f K, model %.1f K" % (plo, p, d, m))
@@ -63,19 +62,17 @@ for T0, name in ((0.01084, "microbatch"), (0.08675, "iteration")):
     ax.axvline(T0, color="#bbb", lw=0.6, ls=(0, (1, 2)), zorder=1)
     ax.text(T0 * 1.08, 7.6, name, fontsize=5.6, color="#888", ha="left", va="center")
 # (no in-figure title: the caption carries it)
-if step_K:
-    ax.axhline(step_K, color="#c46a4a", lw=0.9, ls=(0, (4, 2)), zorder=1)
-    ax.text(0.02, step_K + 0.6, "idle-to-TDP step: %.1f K (10-90%% rise %.0f ms)" % (step_K, 1e3 * rise_s), transform=ax.get_yaxis_transform(), ha="left", va="bottom", fontsize=6, color="#c46a4a")
+# (the idle-to-TDP step solve, 28.8 K at 0.3 s, is the 0 W series' own plateau; not drawn separately)
 chan_K = CHANNEL_PM / PM_PER_K
 ax.axhline(chan_K, color="#999", lw=0.7, zorder=1)
 ax.text(0.02, chan_K + 0.5, "one 100 GHz channel (0.8 nm)", transform=ax.get_yaxis_transform(), ha="left", va="bottom", fontsize=6, color="#666")
 ax.set_xscale("log"); ax.set_xlabel("GPU power fluctuation period", fontsize=8.5)
 ax.set_xlim(0.001, 6.0); ax.set_xticks([0.001, 0.01, 0.1, 1.0]); ax.set_xticklabels(["1 ms", "10 ms", "100 ms", "1 s"]); ax.minorticks_off()
 ax.set_ylabel("PIC swing, peak-to-peak (K)", fontsize=8.5)
-ax.set_ylim(0, (step_K or 30) * 1.15); ax.tick_params(labelsize=7.5)
+ax.set_ylim(0, 33); ax.tick_params(labelsize=7.5)
 ax2 = ax.twinx(); ax2.set_ylim(0, ax.get_ylim()[1] * PM_PER_K / 1000.0); ax2.set_ylabel("microring drift (nm) at 80 pm/K", fontsize=8.5); ax2.tick_params(labelsize=7.5)
 ax2.spines["top"].set_visible(False); ax.spines["top"].set_visible(False)
-ax.legend(frameon=False, fontsize=6.0, loc="center left", bbox_to_anchor=(0.0, 0.60), handlelength=1.8)
+ax.legend(frameon=False, fontsize=6.8, loc="upper left", handlelength=2.0)
 ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
 fig.tight_layout(pad=0.3)
 for ext in ("png", "pdf"):

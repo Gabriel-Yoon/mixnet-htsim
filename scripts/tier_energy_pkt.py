@@ -28,7 +28,15 @@ DC = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/s
 OUT = "/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper/power_tiers_pkt.csv"
 
 NVLINK = (1.55, 5.00)          # pJ/bit, bracket
-NIC_PJ_BIT = 15.0              # scale-out NIC+switch port, per the tier_power accounting
+# Scale-out NIC + switch port. 16.0, the LOW end of the 16-20 pJ/bit scale-out
+# class in docs/interconnect_parameters.md (HotI'25 Tab. I, total incl.
+# retimers) -- the same range scripts/tier_power.py (PJ_SCALEOUT) and
+# scripts/whole_power2.py (PJ_NIC) already use. It was 15.0, attributed to
+# "the tier_power accounting", which carries no such value; 15.0 was below
+# every documented figure and had no source. The low end is also the
+# conservative end: this is charged to the INCUMBENT's cross-domain bytes,
+# so a larger number would flatter us.
+NIC_PJ_BIT = 16.0
 NVS_STATIC_W_PER_GPU = (7.5, 12.5)
 
 HOPS_IN_DOMAIN = 2             # GPU -> switch -> GPU
@@ -249,7 +257,11 @@ for sysname, domain in (("nvl64_pkt", 64), ("nvl64_pkt_s1", 64), ("hgx8_pkt", 8)
                   "NVSwitchTopology::get_paths routes cross-domain flows straight onto the NIC "
                   "(nic_feeder->nic_q->nic_p), so they cross NO NVLink hop, while in-domain flows "
                   "cross two (GPU->switch->GPU); flow set is workload-determined and verified "
-                  "equal to the glass run (78592 flows at EP=16); brackets not collapsed"
+                  "equal to the glass run (78592 flows at EP=16); NIC 16.0 pJ/bit is the LOW "
+                  "(conservative) end of the 16-20 pJ/bit scale-out class, HotI'25 "
+                  "Tab. I, total incl. retimers -- it was an unsourced 15.0, below "
+                  "every documented figure, until this re-emission; "
+                  "brackets not collapsed"
                   + (" | EP=128 bytes from the glass port-map byte pass "
                      "fl_logs/fl_ep128_arc.flowlog: the flow set is topology-independent "
                      "(EP 16/32/64 logs from glass, NVL-64 and HGX-8 are the same multiset) "

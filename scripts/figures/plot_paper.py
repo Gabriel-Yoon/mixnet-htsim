@@ -698,49 +698,43 @@ def loadfig():
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_load.png")); fig.savefig(f("fig_load.pdf")); print("wrote fig_load.png")
 
 def calibfig():
-    """Paper Fig (methodology): the NVSwitch model as an 8-GPU HGX H100 under a synthetic all-to-all
-    (calib_nvswitch.csv, quoted rung per message size), against SimAI's stock DGX-H100 model
-    (simai_calib.csv) and the published hardware references: the 45-85 us small-message floor
-    (li-tpds20) and DeepEP's 71-82% large-message efficiency. Top: completion time; bottom: efficiency.
-    The per-lane-hashed variant (s18) is drawn faint as the rejected alternative."""
+    """Paper Fig (methodology): completion time of a synthetic 8-GPU HGX H100 all-to-all against
+    message size, 2 MB to 64 MB (the range the expert A2A payloads occupy), for this work's NVSwitch
+    model (calib_nvswitch.csv, striped variant s1, quoted rung) and SimAI's stock DGX-H100 model
+    (simai_calib.csv), with the time DeepEP's measured 71-82% large-message efficiency implies
+    (7 peers x M bytes / (eff x 450 GB/s)) as the hardware band. (user 2026-09-08: time panel only,
+    >= 2 MB, no per-lane variant.)"""
     rows = load("calib_nvswitch")
     for r in rows:
-        r["msg_bytes"] = float(r["msg_bytes"]); r["T_us"] = float(r["T_us"]); r["efficiency"] = float(r["efficiency"])
-    def quoted(v):
-        best = {}
-        for r in rows:
-            if r["variant"] != v: continue
-            k = r["msg_bytes"]; cur = best.get(k)
-            if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and int(r["k"]) < int(cur["k"])):
-                best[k] = r
-        return sorted(best.values(), key=lambda r: r["msg_bytes"])
-    s1 = quoted("s1"); s18 = quoted("s18")
+        r["msg_bytes"] = float(r["msg_bytes"]); r["T_us"] = float(r["T_us"])
+    best = {}
+    for r in rows:
+        if r["variant"] != "s1" or r["msg_bytes"] < 2 * 2**20: continue
+        k = r["msg_bytes"]; cur = best.get(k)
+        if cur is None or (r["_quotable"] and not cur["_quotable"]) or (r["_quotable"] == cur["_quotable"] and int(r["k"]) < int(cur["k"])):
+            best[k] = r
+    s1 = sorted(best.values(), key=lambda r: r["msg_bytes"])
     sp = os.path.join(RES, "simai_calib.csv")
-    sim = sorted(csv.DictReader(open(sp)), key=lambda r: float(r["msg_bytes"])) if os.path.exists(sp) else []
-    fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.45, 3.4), dpi=200, sharex=True)
-    # top: completion time
-    a1.axhspan(45, 85, color="#c46a4a", alpha=0.15, lw=0)
-    a1.text(8500, 105, "measured 8xH100 floor, 45-85 us", fontsize=5.8, color="#8a4a30", va="bottom", ha="left")
-    a1.plot([r["msg_bytes"] for r in s18], [r["T_us"] for r in s18], "-", color="#b7c5cc", lw=1.0, label="per-lane hashed (rejected)")
-    a1.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.4, ms=3.5, label="this work (NVSwitch model)")
+    sim = [r for r in csv.DictReader(open(sp)) if float(r["msg_bytes"]) >= 2 * 2**20] if os.path.exists(sp) else []
+    sim.sort(key=lambda r: float(r["msg_bytes"]))
+    import numpy as np
+    M = np.array([2**21, 2**26], dtype=float)
+    fig, ax = plt.subplots(figsize=(3.45, 2.1), dpi=200)
+    ax.fill_between(M, 7 * M / (0.82 * 450e9) * 1e6, 7 * M / (0.71 * 450e9) * 1e6, color="#c46a4a", alpha=0.18, lw=0, label="DeepEP measured efficiency, 71-82%")
+    ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
     if sim:
-        a1.plot([float(r["msg_bytes"]) for r in sim], [float(r["T_us"]) for r in sim], "--^", color="#4b3f8f", lw=1.0, ms=3.5, label="SimAI (stock DGX-H100)")
-    a1.set_yscale("log"); a1.set_ylabel("all-to-all time (us)", fontsize=8)
-    a1.legend(fontsize=6.2, frameon=False, loc="upper left", handlelength=1.8)
-    # bottom: efficiency
-    a2.axhspan(0.71, 0.82, color="#c46a4a", alpha=0.15, lw=0)
-    a2.text(6.0e7, 0.765, "DeepEP intra-node dispatch, 71-82%", fontsize=5.8, color="#8a4a30", va="center", ha="right")
-    a2.plot([r["msg_bytes"] for r in s18], [r["efficiency"] for r in s18], "-", color="#b7c5cc", lw=1.0)
-    a2.plot([r["msg_bytes"] for r in s1], [r["efficiency"] for r in s1], "-o", color="#2b6f7f", lw=1.4, ms=3.5)
-    if sim:
-        a2.plot([float(r["msg_bytes"]) for r in sim], [float(r["efficiency"]) for r in sim], "--^", color="#4b3f8f", lw=1.0, ms=3.5)
-    a2.set_ylim(0, 1.08); a2.set_ylabel("egress / 450 GB/s line rate", fontsize=8)
-    a2.set_xscale("log", base=2); a2.set_xlabel("bytes per (src, dst) pair", fontsize=8)
-    a2.set_xticks([2**13, 2**15, 2**17, 2**19, 2**21, 2**23, 2**25]); a2.set_xticklabels(["8 kB", "32 kB", "128 kB", "512 kB", "2 MB", "8 MB", "32 MB"], fontsize=6.5); a2.minorticks_off()
-    for ax in (a1, a2):
-        ax.tick_params(labelsize=7); ax.grid(alpha=0.3, which="major", lw=0.4)
-        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
-    fig.tight_layout(pad=0.3, h_pad=0.6); fig.savefig(f("fig_calib.png")); fig.savefig(f("fig_calib.pdf")); print("wrote fig_calib.png")
+        ax.plot([float(r["msg_bytes"]) for r in sim], [float(r["T_us"]) for r in sim], "--^", color="#4b3f8f", lw=1.1, ms=4.5, label="SimAI (stock DGX-H100)")
+    for r in s1:
+        ax.annotate("%.0f" % r["T_us"], (r["msg_bytes"], r["T_us"]), textcoords="offset points", xytext=(0, -11), ha="center", fontsize=6.2, color="#2b6f7f")
+    ax.set_xscale("log", base=2); ax.set_yscale("log")
+    ax.set_xticks([2**21, 2**23, 2**25, 2**26]); ax.set_xticklabels(["2 MB", "8 MB", "32 MB", "64 MB"]); ax.minorticks_off()
+    ax.set_xlabel("bytes per (src, dst) pair", fontsize=8.5); ax.set_ylabel("all-to-all time (us)", fontsize=8.5)
+    ax.tick_params(labelsize=7.5); ax.grid(alpha=0.3, lw=0.4)
+    ax.legend(fontsize=6.5, frameon=False, loc="upper left", handlelength=1.8)
+    ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+    for r, q in zip(s1, sim):
+        print("  M=%d MB  ours %.1f us  SimAI %.1f us  ratio %.3f" % (r["msg_bytes"] / 2**20, r["T_us"], float(q["T_us"]), r["T_us"] / float(q["T_us"])))
+    fig.tight_layout(pad=0.3); fig.savefig(f("fig_calib.png")); fig.savefig(f("fig_calib.pdf")); print("wrote fig_calib.png")
 
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]

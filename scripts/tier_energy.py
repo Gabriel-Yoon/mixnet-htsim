@@ -31,6 +31,13 @@ RDL_PJ = 1.0            # electrical RDL adder, per bit, on the electrical tier
 NVLINK = (1.55, 5.00)
 
 LASER_TUNE_W_PER_PANEL = 5.3
+# The same term if the laser scales with the doubled baud and the thermal tuning
+# does not: 2 x 3.84 + 1.44. The 3.84/1.44 split is asserted by the manuscript and
+# is not derivable from this repo, which carries only the 5.3 total -- see the
+# module note. Reported beside the budgeted figure, never instead of it.
+LASER_W_PER_PANEL_100G = 3.84
+TUNE_W_PER_PANEL = 1.44
+LASER_TUNE_W_PER_PANEL_200G = 2 * LASER_W_PER_PANEL_100G + TUNE_W_PER_PANEL
 
 
 # Tags whose flow log is not a tier_logs run. EP=128 has no NVSwitch-style tier
@@ -92,6 +99,7 @@ def main(rows):
             return e_opt + e_ele
         e_lo, e_hi = energy(GLASS_WG[0]), energy(GLASS_WG[1])
         static_j = LASER_TUNE_W_PER_PANEL * panels * it_s
+        static_j_200g = LASER_TUNE_W_PER_PANEL_200G * panels * it_s
         tot_b = sum(tiers.values())
         print("%-12s ep=%-4s panels=%-3s flows=%-8s unmatched=%-6s (%.3f TB)" %
               (tag, ep, panels, flows, unm, unm_b / 1e12))
@@ -110,9 +118,15 @@ def main(rows):
             link_J_iter_lo="%.4f" % e_lo, link_J_iter_hi="%.4f" % e_hi,
             static_laser_tune_W_per_panel=LASER_TUNE_W_PER_PANEL,
             static_J_iter="%.4f" % static_j,
+            static_laser_tune_W_per_panel_200G=LASER_TUNE_W_PER_PANEL_200G,
+            static_J_iter_200G="%.4f" % static_j_200g,
             note=("bytes x hops from GLASS_LOG_FLOWS and the topology's own GLASS_LOG_HOPS "
                   "classification; electrical tier carries +1 pJ/bit RDL; brackets not "
-                  "collapsed to a midpoint; static term is laser+tuning only"
+                  "collapsed to a midpoint; static term is laser+tuning only; "
+              "static_J_iter uses the budgeted 5.3 W/panel and static_J_iter_200G "
+              "uses 9.12 W/panel = 2x3.84 laser + 1.44 tuning, an ASSUMPTION that the "
+              "laser scales with baud and the tuning does not -- the 3.84/1.44 split is "
+              "asserted by the manuscript and is not derivable from this repo"
                   + (" | " + ms_note if ms_note else ""))))
     if out:
         with open(OUT, "w", newline="") as fh:
@@ -141,6 +155,20 @@ if __name__ == "__main__":
           ("tier_ep32", 32, 256, 75.253,
            "200G/lane quoted rung q=2133, 4x BDP, 0 timeouts; bytes and hops are the "
            "design point's; STATIC LASER+TUNE NOT RE-BUDGETED for 200G/lane",
+           "glassfb_800"),
+          # 200G/lane, EP=128: the walk that has NO clean rung at 400 GB/s at all.
+          # Same ep128_gt.txt cabling and the same hop log, so the link term is the
+          # design point's; only the static integral changes, and it changes a long
+          # way because 194.609 ms is well under the 266.337 of the best hollow
+          # 400 GB/s rung.
+          ("tier_ep128", 128, 1024, 194.609,
+           "200G/lane quoted rung q=34133, 64x BDP, 0 timeouts and 0 measured drops; "
+           "the 400 GB/s walk has no clean rung at any buffer, so this is not a "
+           "speedup over a quoted row but the difference between having one and not; "
+           "the ladder is non-monotone (824.013 ms at 32x) and 64x is the top of the "
+           "swept range, so nothing is claimed above it; bytes and hops are the design "
+           "point's; STATIC LASER+TUNE NOT RE-BUDGETED for 200G/lane -- see "
+           "static_J_iter_200G",
            "glassfb_800"),
           # 200G/lane, EP=64. The SAME tier_ep64 hop log and the SAME flow log:
           # g64b800 runs ep64_gt.txt, the design point's cabling, so bytes x hops

@@ -667,41 +667,27 @@ def boundary():
     fig.tight_layout(pad=0.3, h_pad=1.0); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
 
 def loadfig():
-    """Load (Sec. dse): EP=16 iteration against microbatch, Glass-FB (200G/lane) and NVL72, each bar normalised
-    to that fabric's own mb=4 quoted row and split along the critical path (dark = expert A2A, light = compute)
-    from decomp_critpath.csv at the quoted cliff_all rows (user 2026-09-08: (a) only, normalised, no 100G line)."""
+    """Load (Sec. dse): EP=16 iteration against microbatch as lines (MixNet Fig. 12a style), Glass-FB
+    (200G/lane) and NVL72, each normalised to that fabric's own mb=4 quoted row (user 2026-09-08:
+    lines, no compute/A2A split, normalised y)."""
     rows = load("cliff_all")
-    dec = list(csv.DictReader(open(os.path.join(RES, "decomp_critpath.csv"))))
-    def decrow(prefix, mk):
-        c = [x for x in dec if x["label"].startswith(prefix) and abs(float(x["makespan_ms"]) - mk) < 0.05 and int(float(x.get("path_tasks") or 0)) >= 100]
-        return c[0] if c else None
     def quoted_mb(sysname, mb):
         c = [r for r in rows if r["system"] == sysname and r.get("ep") == 16 and r.get("mb") == mb and r["_quotable"] and r.get("link_rate_fixed") == "yes"]
         return min((r["makespan_ms"] for r in c), default=None)
-    DARK = {"glassfb_800": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f"}; LIGHT = {"glassfb_800": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8"}
-    NAME = {"glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72"}
-    fig, ax = plt.subplots(figsize=(3.45, 1.85), dpi=200)
-    mbs = [4, 8, 16, 32]; w = 0.36
-    for j, sysname in enumerate(("glassfb_800", "nvl64_pkt_s1")):
+    STY = {"glassfb_800": dict(color="#2b6f7f", marker="o", label="Glass-FB"), "nvl64_pkt_s1": dict(color="#4b3f8f", marker="s", label="NVL72")}
+    fig, ax = plt.subplots(figsize=(3.45, 1.7), dpi=200)
+    mbs = [4, 8, 16, 32]
+    for sysname, st in STY.items():
         ref = quoted_mb(sysname, 4)
-        for i, mb in enumerate(mbs):
-            mk = quoted_mb(sysname, mb)
-            if mk is None or ref is None: continue
-            pre = f"{sysname} EP=16 mb={mb}" if not (sysname == "nvl64_pkt_s1" and mb == 8) else "nvl64_pkt_s1 EP=16 mb=-"
-            d = decrow(pre, mk)
-            comp = float(d["compute_ms"]) / ref if d else 0; a2a = float(d["expert_a2a_ms"]) / ref if d else mk / ref
-            x = i + (j - 0.5) * w
-            ax.bar(x, comp, w * 0.9, color=LIGHT[sysname], zorder=3)
-            ax.bar(x, a2a, w * 0.9, bottom=comp, color=DARK[sysname], zorder=3, label=NAME[sysname] if i == 0 else None)
-            ax.text(x, comp + a2a + 0.015, "%.2f" % (mk / ref), ha="center", va="bottom", fontsize=6.5, color="#333")
-    from matplotlib.patches import Patch
-    h, l = ax.get_legend_handles_labels()
-    h += [Patch(facecolor="#4a4a4a", label="expert A2A (dark)"), Patch(facecolor="#d9d9d9", label="compute (light)")]
-    ax.legend(handles=h, frameon=False, fontsize=7, loc="upper left", handlelength=1.2, labelspacing=0.3)
-    ax.set_xticks(range(len(mbs))); ax.set_xticklabels(["mb=%d" % m for m in mbs], fontsize=8)
-    ax.set_ylim(0, 1.6); ax.set_ylabel("normalized iteration time", fontsize=8.5); ax.tick_params(axis="y", labelsize=7.5)
-    ax.axhline(1.0, color="#999", lw=0.5, ls=(0, (3, 2)), zorder=1)
-    ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
+        pts = [(mb, quoted_mb(sysname, mb) / ref) for mb in mbs if ref and quoted_mb(sysname, mb) is not None]
+        ax.plot([p for p, _ in pts], [v for _, v in pts], "-", lw=1.3, ms=4.5, **st)
+        for mb, v in pts:
+            ax.annotate("%.2f" % v, (mb, v), textcoords="offset points", xytext=(0, 5 if sysname == "nvl64_pkt_s1" else -10), ha="center", fontsize=6.5, color=st["color"])
+    ax.set_xscale("log", base=2); ax.set_xticks(mbs); ax.set_xticklabels([str(m) for m in mbs]); ax.minorticks_off()
+    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("normalized iteration time", fontsize=8.5)
+    ax.set_ylim(0.95, 1.36); ax.tick_params(labelsize=7.5)
+    ax.legend(frameon=False, fontsize=7.5, loc="upper left"); ax.grid(lw=0.4, alpha=0.4)
+    ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_load.png")); fig.savefig(f("fig_load.pdf")); print("wrote fig_load.png")
 
 if __name__ == "__main__":

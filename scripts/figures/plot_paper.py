@@ -216,7 +216,7 @@ def decomp():
     # headline rows only: the quotable cliff row of each (system, ep) at the default microbatch
     # (mb 8 or unset); variant cells (mb sweep, skew, hier) share system/ep and are excluded by
     # label, and duplicate decomp rows of one quoted makespan collapse to the first
-    HEAD = ("glassfb_800", "glassfb", "nvl64_pkt_s1", "nvl64_pkt", "hgx8_pkt")
+    HEAD = ("glassfb_800", "glassfb", "nvl64_pkt_s1", "hgx8_pkt")   # NVL72 = the striped model (calibrated end); pinned rows not drawn
     PRIMARY_GLASS = os.environ.get("PRIMARY_GLASS", "glassfb_800")   # design point: 200G/lane ports
     quot = set()
     try:
@@ -241,10 +241,10 @@ def decomp():
     eps_with_primary = {ep for ep, sysn, _ in parsed if sysn == PRIMARY_GLASS}
     parsed = [t for t in parsed if not (t[1] in ("glassfb", "glassfb_800") and t[1] != PRIMARY_GLASS and t[0] in eps_with_primary)]
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
-    fig, ax = plt.subplots(figsize=(7.0, 2.5), dpi=200)
-    SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72 striped", "nvl64_pkt": "NVL72 pinned", "hgx8_pkt": "HGX-8"}
-    DARK = {"glassfb_800": "#2b6f7f", "glassfb": "#2b6f7f", "nvl64_pkt_s1": "#8b7fc4", "nvl64_pkt": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
-    LIGHT = {"glassfb_800": "#c9dfe4", "glassfb": "#c9dfe4", "nvl64_pkt_s1": "#e4e0f3", "nvl64_pkt": "#cfc9e8", "hgx8_pkt": "#efd3c6"}
+    fig, ax = plt.subplots(figsize=(6.4, 2.4), dpi=200)
+    SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
+    DARK = {"glassfb_800": "#2b6f7f", "glassfb": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
+    LIGHT = {"glassfb_800": "#c9dfe4", "glassfb": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8", "hgx8_pkt": "#efd3c6"}
     xs, labels = [], []; x = 0; groups = {}
     for ep, sysname, r in parsed:
         comp = float(r.get("compute_ms") or 0); a2a = float(r.get("expert_a2a_ms") or 0)
@@ -387,8 +387,8 @@ def energy():
     g = load("power_tiers"); n = load("power_tiers_pkt")
     PRIMARY_GLASS = os.environ.get("PRIMARY_GLASS", "glassfb_800")
     eps = sorted({int(r["ep"]) for r in g} | {int(r["ep"]) for r in n})
-    systems = ["glass", "nvl64_pkt", "hgx8_pkt"]
-    NAMES = {"glass": "Glass-FB", "nvl64_pkt": "NVL72", "hgx8_pkt": "HGX-8"}
+    systems = ["glass", "nvl64_pkt_s1", "hgx8_pkt"]   # NVL72 = the striped model
+    NAMES = {"glass": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
     TIER_COL = {"elec": "#2b6f7f", "opt": "#6aa9b5", "inter": "#b7d8de", "nvlink": "#4b3f8f", "nic": "#b7aee0", "static": "none"}
     TIER_COL_HGX = {"nvlink": "#c46a4a", "nic": "#efd3c6"}
     TIER_LAB = {"elec": "electrical RDL (distance-1)", "opt": "intra-panel optical (L1/L2)", "inter": "inter-panel optical ports",
@@ -433,7 +433,7 @@ def energy():
     ncol = len(eps); nrow = 3 if tok else 2
     fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 1.9 * nrow), dpi=200, sharey=False, squeeze=False)
     drawn = set()
-    HUE = {"glass": "#2b6f7f", "nvl64_pkt": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
+    HUE = {"glass": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     for j, ep in enumerate(eps):
         a1 = axes[0][j]; a2 = axes[1][j]
         for x, sysname in enumerate(systems):

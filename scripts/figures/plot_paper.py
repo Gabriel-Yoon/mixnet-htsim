@@ -744,7 +744,14 @@ def dsefig():
     fig, axes = plt.subplots(1, len(eps), figsize=(7.0, 2.4), dpi=200)
     if len(eps) == 1: axes = [axes]
     for ax, ep in zip(axes, eps):
-        series = {a: sorted([r for r in rows if r["arm"] == a and int(r["ep"]) == ep], key=lambda r: float(r["q_over_bdp"])) for a, _, _, _ in ARMS}
+        series = {}
+        for a, _, _, _ in ARMS:   # one row per q: the quoted row wins over its unquoted duplicate (the deriver carries both)
+            best = {}
+            for r in rows:
+                if r["arm"] != a or int(r["ep"]) != ep: continue
+                k = float(r["q_over_bdp"]); cur = best.get(k)
+                if cur is None or ((r.get("quotable") or "").lower() == "yes" and (cur.get("quotable") or "").lower() != "yes"): best[k] = r
+            series[a] = [best[k] for k in sorted(best)]
         base = [float(r["makespan_ms"]) for rr in series.values() for r in rr]
         floor = min(base); typical = sorted(base)[int(0.75 * (len(base) - 1))]
         top = min(max(base), typical * 1.5) * 1.06

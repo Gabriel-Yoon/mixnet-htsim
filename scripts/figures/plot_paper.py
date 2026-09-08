@@ -14,7 +14,8 @@ status. Only rows with status == final are drawn. Every figure prints the rows i
   python3 plot_paper.py all
 Env: PAPER_RES (default experiments/results/paper), OUT (default .).
 """
-import csv, os, re, sys
+import csv
+import re, os, re, sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -216,7 +217,7 @@ def decomp():
     # headline rows only: the quotable cliff row of each (system, ep) at the default microbatch
     # (mb 8 or unset); variant cells (mb sweep, skew, hier) share system/ep and are excluded by
     # label, and duplicate decomp rows of one quoted makespan collapse to the first
-    HEAD = ("glassfb_800", "glassfb", "nvl64_pkt_s1", "nvl64_pkt", "hgx8_pkt")
+    HEAD = ("glassfb_800", "glassfb", "nvl64_pkt_s1", "hgx8_pkt")   # NVL72 = the striped model (calibrated end); pinned rows not drawn
     PRIMARY_GLASS = os.environ.get("PRIMARY_GLASS", "glassfb_800")   # design point: 200G/lane ports
     quot = set()
     try:
@@ -241,31 +242,31 @@ def decomp():
     eps_with_primary = {ep for ep, sysn, _ in parsed if sysn == PRIMARY_GLASS}
     parsed = [t for t in parsed if not (t[1] in ("glassfb", "glassfb_800") and t[1] != PRIMARY_GLASS and t[0] in eps_with_primary)]
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
-    fig, ax = plt.subplots(figsize=(4.2, 2.7), dpi=200)
-    SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72 striped", "nvl64_pkt": "NVL72 pinned", "hgx8_pkt": "HGX-8"}
+    fig, ax = plt.subplots(figsize=(6.4, 2.4), dpi=200)
+    SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
+    DARK = {"glassfb_800": "#2b6f7f", "glassfb": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
+    LIGHT = {"glassfb_800": "#c9dfe4", "glassfb": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8", "hgx8_pkt": "#efd3c6"}
     xs, labels = [], []; x = 0; groups = {}
     for ep, sysname, r in parsed:
-        bottom = 0.0
-        for col, lab, ckey in classes:
-            v = float(r.get(col) or 0)
-            if v <= 0: continue
-            ax.bar(x, v, bottom=bottom, width=0.7, color=_ps.COL.get(ckey, "#999") if _ps else None,
-                   edgecolor=SYS_COLOR.get(sysname, "#333"), linewidth=0.8,
-                   label=lab if (x == 0 and not r.get("_hollow")) else None,
-                   alpha=0.45 if r.get("_hollow") else 1.0, hatch="//" if r.get("_hollow") else None)
-            bottom += v
-        ax.text(x, bottom * 1.02, f"{bottom:.1f}" + ("*" if r.get("_hollow") else ""), ha="center", fontsize=5)
+        comp = float(r.get("compute_ms") or 0); a2a = float(r.get("expert_a2a_ms") or 0)
+        other = sum(float(r.get(c) or 0) for c in ("dp_allreduce_ms", "pp_p2p_ms", "other_ms"))
+        hol = r.get("_hollow")
+        ax.bar(x, comp, width=0.72, color=LIGHT[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
+        ax.bar(x, a2a + other, bottom=comp, width=0.72, color=DARK[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
+        tot = comp + a2a + other
+        ax.text(x, tot * 1.015, f"{tot:.0f}" + ("*" if hol else ""), ha="center", va="bottom", fontsize=5.2)
         xs.append(x); labels.append(SHORT.get(sysname, sysname)); groups.setdefault(ep, []).append(x); x += 1
-        if sysname == "hgx8_pkt": x += 0.8
-    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=4.6, rotation=90)
-    ymax = ax.get_ylim()[1]
+        if sysname == "hgx8_pkt": x += 0.9
+    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=5.4, rotation=35, ha="right")
+    ymax = ax.get_ylim()[1] * 1.08
     for ep, gx in groups.items():   # EP group label above each group
-        ax.text(sum(gx) / len(gx), ymax * 0.985, f"EP={ep}", ha="center", va="top", fontsize=6.5, fontweight="bold", color="#4a5560")
+        ax.text(sum(gx) / len(gx), ymax * 0.985, f"EP={ep}", ha="center", va="top", fontsize=7, fontweight="bold", color="#4a5560")
     ax.set_ylim(0, ymax)
-    ax.set_ylabel("iteration time (ms), by critical-path class", fontsize=7); ax.tick_params(labelsize=6)
-    h_, l_ = ax.get_legend_handles_labels()
-    keep = [(h, l) for h, l in zip(h_, l_) if l in ("compute", "expert A2A")]
-    ax.legend([h for h, _ in keep], [l for _, l in keep], fontsize=5.5, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.90))
+    ax.set_ylabel("iteration time (ms)", fontsize=7); ax.tick_params(labelsize=6)
+    import matplotlib.patches as mpatches_
+    h = [mpatches_.Patch(facecolor="#5c6b74", label="expert all-to-all (dark)"), mpatches_.Patch(facecolor="#dfe4e7", edgecolor="#5c6b74", label="compute (light)")]
+    ax.legend(handles=h, fontsize=5.5, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.92))
+    ax.grid(alpha=0.25, axis="y")
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
 
 def beyond():
@@ -387,9 +388,10 @@ def energy():
     g = load("power_tiers"); n = load("power_tiers_pkt")
     PRIMARY_GLASS = os.environ.get("PRIMARY_GLASS", "glassfb_800")
     eps = sorted({int(r["ep"]) for r in g} | {int(r["ep"]) for r in n})
-    systems = ["glass", "nvl64_pkt", "hgx8_pkt"]
-    NAMES = {"glass": "Glass-FB", "nvl64_pkt": "NVL72", "hgx8_pkt": "HGX-8"}
-    TIER_COL = {"elec": "#b5651d", "opt": "#2a9d8f", "inter": "#e9a23b", "nvlink": "#7a0177", "nic": "#c77dff", "static": "none"}
+    systems = ["glass", "nvl64_pkt_s1", "hgx8_pkt"]   # NVL72 = the striped model
+    NAMES = {"glass": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
+    TIER_COL = {"elec": "#2b6f7f", "opt": "#6aa9b5", "inter": "#b7d8de", "nvlink": "#4b3f8f", "nic": "#b7aee0", "static": "none"}
+    TIER_COL_HGX = {"nvlink": "#c46a4a", "nic": "#efd3c6"}
     TIER_LAB = {"elec": "electrical RDL (distance-1)", "opt": "intra-panel optical (L1/L2)", "inter": "inter-panel optical ports",
                 "nvlink": "in-domain NVLink", "nic": "scale-out NIC", "static": "static (laser+tune / NVSwitch idle)"}
     def glass_row(ep):
@@ -421,51 +423,61 @@ def energy():
         L_lo, L_hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
         tiers = [(k, a * L_lo / lo_sum, b * L_hi / hi_sum) for k, a, b in tiers]
         return tiers, (float(r["static_J_iter_lo"]), float(r["static_J_iter_hi"]))
-    # optional per-token panel
+    # optional per-token row
     tok = {}
     tp = os.path.join(RES, "tokens_per_iter.csv")
     if os.path.exists(tp):
         for t in csv.DictReader(open(tp)):
             v = t.get("tokens_per_iter") or t.get("tokens") or ""
-            if str(t.get("mb") or "8") == "8" and v.strip():   # rows without a sourced count stay blank
-                tok[int(t["ep"])] = float(v)
-    if len(tok) < 2: tok = {}   # a per-token row with one EP sourced is not a panel; the number goes in the text
-    ncol = len(eps); nrow = 2 if tok else 1
-    fig, axes = plt.subplots(nrow, ncol, figsize=(4.6 if ncol > 3 else 3.4, 2.7 * nrow), dpi=200, sharey=False, squeeze=False)
+            if str(t.get("mb") or "8") == "8" and v.strip(): tok[int(t["ep"])] = float(v)
+    if len(tok) < 2: tok = {}
+    ncol = len(eps); nrow = 3 if tok else 2
+    fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 1.9 * nrow), dpi=200, sharey=False, squeeze=False)
     drawn = set()
+    HUE = {"glass": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     for j, ep in enumerate(eps):
-        ax = axes[0][j]
+        a1 = axes[0][j]; a2 = axes[1][j]
         for x, sysname in enumerate(systems):
             tiers, st = stacks(sysname, ep)
             if tiers is None: continue
+            # row 1: link energy by tier, linear, at the conservative pJ/bit end; tick = favorable end
             bottom = 0.0
             for k, lo, hi in tiers:
-                ax.bar(x, hi, bottom=bottom, width=0.64, color=TIER_COL[k], edgecolor="white", lw=0.4,
-                       label=TIER_LAB[k] if k not in drawn else None); drawn.add(k)
+                col = TIER_COL_HGX[k] if (sysname == "hgx8_pkt" and k in TIER_COL_HGX) else TIER_COL[k]
+                key = (k, sysname == "hgx8_pkt")
+                lab = {("nvlink", False): "in-domain NVLink (NVL72)", ("nic", False): "scale-out NIC (NVL72)",
+                       ("nvlink", True): "in-domain NVLink (HGX-8)", ("nic", True): "scale-out NIC (HGX-8)"}.get(key, TIER_LAB[k])
+                a1.bar(x, hi, bottom=bottom, width=0.66, color=col, edgecolor="white", lw=0.4,
+                       label=lab if key not in drawn else None); drawn.add(key)
                 bottom += hi
-            link_lo = sum(t[1] for t in tiers)
-            ax.plot([x - 0.32, x + 0.32], [link_lo, link_lo], color="black", lw=0.7)   # favorable pJ/bit end of the link total
-            ax.bar(x, st[1], bottom=bottom, width=0.64, facecolor="none", edgecolor="#4a5560", hatch="////", lw=0.6,
-                   label=TIER_LAB["static"] if "static" not in drawn else None); drawn.add("static")
-            ax.plot([x - 0.32, x + 0.32], [bottom + st[0], bottom + st[0]], color="#4a5560", lw=0.7)
-            tot_lo = link_lo + st[0]; tot_hi = bottom + st[1]
-            ax.text(x, tot_hi * 1.01, f"{tot_lo:.0f}–{tot_hi:.0f}", ha="center", va="bottom", fontsize=4.6)
+            link_lo = bottom_lo = sum(t[1] for t in tiers)
+            a1.plot([x - 0.33, x + 0.33], [link_lo, link_lo], color="black", lw=0.8)
+            a1.text(x, bottom * 1.02, f"{link_lo:.0f}–{bottom:.0f}", ha="center", va="bottom", fontsize=4.8)
+            # row 2: link vs static vs total, log scale, grouped
+            tot_lo, tot_hi = link_lo + st[0], bottom + st[1]
+            a2.bar(x - 0.22, bottom, width=0.2, color=HUE[sysname], label="link (bytes moved)" if "l2" not in drawn else None); drawn.add("l2")
+            a2.bar(x, max(st[1], 1e-3), width=0.2, facecolor="white", edgecolor=HUE[sysname], hatch="////", lw=0.6,
+                   label="static (idle power x iteration)" if "s2" not in drawn else None); drawn.add("s2")
+            a2.bar(x + 0.22, tot_hi, width=0.2, color="#c9ced2", label="total" if "t2" not in drawn else None); drawn.add("t2")
+            a2.text(x + 0.22, tot_hi * 1.15, f"{tot_lo:.0f}–{tot_hi:.0f}", ha="center", va="bottom", fontsize=4.6)
             if tok.get(ep):
-                a2 = axes[1][j]
-                mj_lo = tot_lo / tok[ep] * 1e3; mj_hi = tot_hi / tok[ep] * 1e3
-                a2.bar(x, mj_hi, width=0.64, color="#9aa5ad", alpha=0.5); a2.bar(x, mj_lo, width=0.64, color=SYS_COLOR.get(sysname if sysname != "glass" else "glassfb", "#999"))
-                a2.text(x, mj_hi * 1.01, f"{mj_lo:.2f}–{mj_hi:.2f}", ha="center", va="bottom", fontsize=4.6)
-        ax.set_title(f"EP={ep}", fontsize=7); ax.tick_params(labelsize=5.5)
-        ax.set_xticks(range(len(systems))); ax.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=5.2, rotation=35, ha="right")
-        ax.set_ylim(0, ax.get_ylim()[1] * 1.12)
-        if tok:
-            a2 = axes[1][j]; a2.set_xticks(range(len(systems))); a2.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=5.2, rotation=35, ha="right")
-            a2.tick_params(labelsize=5.5); a2.set_ylim(0, a2.get_ylim()[1] * 1.12)
-    axes[0][0].set_ylabel("interconnect energy per iteration (J)", fontsize=6.5)
-    if tok: axes[1][0].set_ylabel("interconnect energy per token (mJ)", fontsize=6.5)
-    h_, l_ = axes[0][0].get_legend_handles_labels()
-    fig.legend(h_, l_, fontsize=5, frameon=False, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.01), handlelength=1.6, columnspacing=1.2)
-    fig.tight_layout(pad=0.3, rect=(0, 0.10 if not tok else 0.06, 1, 1)); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
+                a3 = axes[2][j]
+                mj_lo, mj_hi = tot_lo / tok[ep] * 1e3, tot_hi / tok[ep] * 1e3
+                a3.bar(x, mj_hi, width=0.62, color="#9aa5ad", alpha=0.5); a3.bar(x, mj_lo, width=0.62, color=HUE[sysname])
+                a3.text(x, mj_hi * 1.02, f"{mj_lo:.2f}–{mj_hi:.2f}", ha="center", va="bottom", fontsize=4.6)
+        a1.set_title(f"EP={ep}", fontsize=7)
+        a2.set_yscale("log")
+        for ax in axes[:, j]:
+            ax.set_xticks(range(len(systems))); ax.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=5.2, rotation=35, ha="right")
+            ax.tick_params(labelsize=5.5); ax.grid(alpha=0.25, axis="y")
+        a1.set_ylim(0, a1.get_ylim()[1] * 1.18); a2.set_ylim(a2.get_ylim()[0], a2.get_ylim()[1] * 4)
+        for ax in axes[:-1, j]: ax.set_xticklabels([])
+    axes[0][0].set_ylabel("link energy per iteration (J)", fontsize=6.5)
+    axes[1][0].set_ylabel("energy per iteration (J), log", fontsize=6.5)
+    if tok: axes[2][0].set_ylabel("energy per token (mJ)", fontsize=6.5)
+    h1, l1 = axes[0][0].get_legend_handles_labels(); h2, l2 = axes[1][0].get_legend_handles_labels()
+    fig.legend(h1 + h2, l1 + l2, fontsize=5, frameon=False, loc="lower center", ncol=5, bbox_to_anchor=(0.5, -0.005), handlelength=1.6, columnspacing=1.0)
+    fig.tight_layout(pad=0.3, rect=(0, 0.09 if not tok else 0.07, 1, 1)); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
 def calib():
     """R-calib: NVSwitch model as an 8-GPU HGX H100 under a synthetic all-to-all (calib_nvswitch.csv:
@@ -580,9 +592,83 @@ def tail():
     name = "fig_tail2.png" if only else "fig_tail.png"
     fig.tight_layout(pad=0.3, rect=(0, 0.03, 1, 1)); fig.savefig(f(name)); print(f"wrote {name}")
 
+def boundary():
+    """Price of the boundary. (a) share of each fabric's hop-bytes that cross a domain boundary
+    (glass: inter-panel ports; NVSwitch fabrics: NICs), per EP. (b) the expert all-to-all's share of
+    the critical path against the time those cross-domain bytes alone need on the fabric's own
+    cross-domain tier (bytes / (GPUs x per-GPU cross-domain bandwidth)): one line, three prices.
+    Sources: power_tiers(.csv/_pkt.csv) hop-bytes, decomp_critpath.csv expert_a2a_ms, Table III port rates."""
+    g = load("power_tiers"); n = load("power_tiers_pkt")
+    d = list(csv.DictReader(open(os.path.join(RES, "decomp_critpath.csv"))))
+    PRIMARY_GLASS = os.environ.get("PRIMARY_GLASS", "glassfb_800")
+    XBW = {"glass": 800.0, "nvl64_pkt_s1": 100.0, "hgx8_pkt": 50.0}   # GB/s per GPU on the cross-domain tier (Table III)
+    NAMES = {"glass": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
+    HUE = {"glass": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
+    MK = {16: "o", 32: "s", 64: "D", 128: "^"}
+    eps = [16, 32, 64, 128]
+    def row(sysname, ep):
+        if sysname == "glass":
+            return next((r for r in g if r["system"] == PRIMARY_GLASS and int(r["ep"]) == ep), None)
+        return next((r for r in n if r["system"] == sysname and int(r["ep"]) == ep), None)
+    def a2a(sysname, ep):
+        key = PRIMARY_GLASS if sysname == "glass" else sysname
+        c = [x for x in d if x["label"].startswith(key + " EP=%d" % ep) and re.search(r"mb=(8|-)", x["label"])]
+        if not c: c = [x for x in d if x["label"].startswith(key + " EP=%d" % ep)]
+        if not c: return None
+        c.sort(key=lambda x: abs(float(x["makespan_ms"]) - float(row(sysname, ep)["makespan_ms"])))
+        return float(c[0]["expert_a2a_ms"])
+    pts = {}
+    for sname in XBW:
+        for ep in eps:
+            r = row(sname, ep)
+            if not r: continue
+            if sname == "glass":
+                cross = float(r["bytes_inter"]); tot = float(r["bytes_elec"]) + float(r["bytes_opt"]) + cross
+            else:
+                cross = float(r["bytes_nic"]); tot = float(r["bytes_in_domain"]) + cross
+            gpus = int(float(r["nodes"]))
+            pts[(sname, ep)] = dict(share=100 * cross / tot, tier_ms=cross / (gpus * XBW[sname]) / 1e6, a2a=a2a(sname, ep))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(3.45, 4.3), dpi=200, gridspec_kw=dict(height_ratios=[0.85, 1]))
+    # (a) share bars
+    w = 0.26; xs = list(range(len(eps)))
+    for j, sname in enumerate(XBW):
+        vals = [pts.get((sname, ep), {}).get("share") for ep in eps]
+        for i, v in enumerate(vals):
+            if v is None: continue
+            ax1.bar(i + (j - 1) * w, v, w * 0.92, color=HUE[sname], label=NAMES[sname] if i == 0 else None)
+            ax1.text(i + (j - 1) * w, v + 1.2, "%.0f" % v, ha="center", va="bottom", fontsize=5.6, color="#333")
+    ax1.set_xticks(xs); ax1.set_xticklabels(["EP=%d" % e for e in eps]); ax1.set_ylim(0, 100)
+    ax1.set_ylabel("hop-bytes crossing a domain (%)"); ax1.legend(frameon=False, fontsize=6.5, loc="upper left")
+    ax1.set_title("(a) how much traffic leaves the domain", fontsize=7.5, loc="left")
+    ax1.axvline(2.5, color="#999", lw=0.6, ls=(0, (3, 2)))
+    ax1.text(2.52, 96, "NVL boundary", fontsize=5.8, color="#666", ha="left", va="top")
+    # (b) a2a on the critical path vs the cross-domain tier's own transfer time
+    for sname in XBW:
+        xx = [pts[(sname, ep)]["tier_ms"] for ep in eps if (sname, ep) in pts and pts[(sname, ep)]["a2a"] is not None]
+        yy = [pts[(sname, ep)]["a2a"] for ep in eps if (sname, ep) in pts and pts[(sname, ep)]["a2a"] is not None]
+        ee = [ep for ep in eps if (sname, ep) in pts and pts[(sname, ep)]["a2a"] is not None]
+        ax2.plot(xx, yy, color=HUE[sname], lw=0.8, alpha=0.5, zorder=2)
+        for x, y, ep in zip(xx, yy, ee):
+            ax2.scatter([x], [y], marker=MK[ep], s=22, color=HUE[sname], edgecolor="white", lw=0.5, zorder=3)
+    for ep in eps:
+        ax2.scatter([], [], marker=MK[ep], s=18, color="#555", label="EP=%d" % ep)
+    lim = [0.3, 300]
+    ax2.plot(lim, lim, color="#bbb", lw=0.7, ls=(0, (3, 2)), zorder=1)
+    ax2.text(lim[1] * 0.9, 2.4, "A2A = cross-domain transfer\ntime (lower bound)", fontsize=5.4, color="#888", ha="right", va="bottom")
+    ax2.set_xscale("log"); ax2.set_yscale("log"); ax2.set_xlim(*lim); ax2.set_ylim(2, 300)
+    ax2.set_xlabel("cross-domain bytes / cross-domain bandwidth (ms)")
+    ax2.set_ylabel("expert A2A on critical path (ms)")
+    ax2.legend(frameon=False, fontsize=6, loc="upper left", handletextpad=0.2, ncol=2, columnspacing=0.8)
+    ax2.set_title("(b) what that traffic costs", fontsize=7.5, loc="left")
+    for ax in (ax1, ax2):
+        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.tick_params(labelsize=6.5)
+    for (sname, ep), v in sorted(pts.items()):
+        print("  %-12s EP=%3d share=%5.1f%%  tier=%7.2f ms  a2a=%s" % (NAMES[sname], ep, v["share"], v["tier_ms"], v["a2a"]))
+    fig.tight_layout(pad=0.3, h_pad=1.0); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
+
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]
-    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib}
+    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary}
     for w in (fns if "all" in which else which):
         try: fns[w]()
         except SystemExit as e: print("skip:", e)

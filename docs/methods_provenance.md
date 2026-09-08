@@ -646,6 +646,50 @@ sharding, none of which are recorded either.
 > to state the gap and draw the panel at EP=32 rather than to fill six cells with a
 > number that would be an assumption wearing an absolute unit.
 
+**Sub-class G in someone else's simulator: two empty files from a run that reported
+success.** The SimAI cross-check produced its numbers only after three false starts, and
+all three have the same shape as the header-only `cliff_pkt.csv` — an artifact that
+exists, is empty, and is indistinguishable from one that was never written.
+
+- `ncclFlowModel_EndToEnd.csv`, the file SimAI names in its own stdout as the end-to-end
+  result, is written **zero bytes** on a run that exits 0 and reports every node's bytes
+  sent and received. Nothing says the summary was not produced.
+- The ns-3 FCT file was **also** empty, for a different reason: the shipped
+  `SimAI.conf` sets `MON_END 20000`, and every flow in an 8-GPU all-to-all completes
+  after that, so the monitor discarded all 56 records. Widening the window is the only
+  change to that file beyond the four monitor paths, which pointed at a root-owned
+  `/etc/astra-sim` and made the binary segfault before any simulation — on the shipped
+  example too, which is what proved it was environmental rather than ours.
+
+The completion time therefore comes from the FCT records in the HPCC column convention,
+as `max(start + fct) - min(start)` over the collective's flows, which is where our own
+runs get theirs.
+
+> **A results file that exists and is empty is the most expensive kind of missing.** It
+> passes every check that asks whether the run succeeded, and only a check that asks
+> what the file CONTAINS can see it.
+
+**And the message-size convention was settled by a measurement rather than by reading
+the collective source.** astra-sim's `ALLTOALL` takes one `comm_size` per layer and the
+right value for M bytes per ordered pair is `8M`, not `7M` and not `M`: asking for
+469 762 048 produced **56 flows — 8 GPUs x 7 peers, every ordered pair directly** — of
+58 720 256 bytes each, and 8 x 58 720 256 is the request. Seven of eight chunks leave
+each GPU. The check that this is right is the ladder's own asymptote: efficiency reaches
+**0.9998** of line rate at 64 MB, where a factor-of-seven error would have landed at 0.14
+or 7.0 and been unmissable. That was the plan before the first run, and it is why the
+convention did not need a third opinion.
+
+**What the cross-check licenses, and what it does not.** SimAI's NVSwitch is one
+aggregate 450 GB/s link per GPU — the topology generator's only knob is `-nvbw` — so it
+corresponds to our striped control and is silent on lane pinning, the effect the pinned
+rows exist to quantify. Above 32 MB the two agree within 0.6% and above 8 MB within
+3.5%. Below 2 MB they diverge by up to **142x**, because SimAI's stock model carries
+essentially no small-message latency floor: it puts an 8 kB 8-GPU all-to-all at
+**0.334 us**. Ours is 47.6-48.6 us against a published intra-node figure of ~45 us. So
+the agreement is real at the ceiling and the disagreement at the floor is evidence for
+this model rather than against it — which is the opposite of how a bare "cross-checked
+against SimAI" would read.
+
 ### Scope limit
 
 This rule establishes that a parameter was *read*. It says nothing about whether

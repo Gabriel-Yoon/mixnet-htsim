@@ -664,31 +664,36 @@ def boundary():
     fig.tight_layout(pad=0.3, h_pad=1.0); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
 
 def loadfig():
-    """Load (Sec. dse): EP=16 iteration time against microbatch, absolute, lines per fabric (MixNet
-    Fig. 12a style): Glass-FB at 200G/lane (design point), Glass-FB at 100G/lane (thin, dashed) and
-    NVL72, each point the quotable cliff_all row at that microbatch (user 2026-09-08: a microbatch
-    sweep with absolute times, no compute/A2A split)."""
+    """Load (Sec. dse): EP=16 iteration time against microbatch, absolute on a log axis, one line per fabric
+    (Glass-FB at 200G/lane, NVL72 striped, HGX-8); each point is the quotable row at that microbatch, read
+    from cliff_all.csv and, for walks the collector has not yet synced into it, from cliff_postfix.csv
+    (batch 11: h16m4 / h16m16 / h16m32)."""
     rows = load("cliff_all")
+    post = [r for r in csv.DictReader(open(os.path.join(RES, "cliff_postfix.csv"))) if (r.get("quotable") or "").lower() == "yes"]
     def quoted_mb(sysname, mb):
-        # the mb=8 row of a system is its plain EP=16 walk, whose mb field may be blank
         c = [r for r in rows if r["system"] == sysname and r.get("ep") == 16 and (r.get("mb") == mb or (mb == 8 and not r.get("mb"))) and r["_quotable"] and r.get("link_rate_fixed") == "yes"]
-        return min((r["makespan_ms"] for r in c), default=None)
-    STY = {"glassfb_800": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB, 200G/lane"),
-           "glassfb": dict(color="#2b6f7f", marker="o", lw=0.9, ms=3.5, ls=(0, (3, 2)), label="Glass-FB, 100G/lane", alpha=0.7),
-           "nvl64_pkt_s1": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72")}
+        if c: return min(r["makespan_ms"] for r in c)
+        c = [r for r in post if r["system"] == sysname and int(float(r["ep"])) == 16 and (str(r.get("mb")) == str(mb) or (mb == 8 and not r.get("mb"))) and r.get("link_rate_fixed") == "yes"]
+        return min((float(r["makespan_ms"]) for r in c), default=None)
+    STY = {"glassfb_800": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
+           "nvl64_pkt_s1": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
+           "hgx8_pkt": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
     fig, ax = plt.subplots(figsize=(3.45, 2.3), dpi=200)
     mbs = [4, 8, 16, 32]
     for sysname, st in STY.items():
         pts = [(mb, quoted_mb(sysname, mb)) for mb in mbs if quoted_mb(sysname, mb) is not None]
         if not pts: continue
         ax.plot([p for p, _ in pts], [v for _, v in pts], **st)
-        if sysname != "glassfb":
-            for mb, v in pts:
-                ax.annotate("%.0f" % v, (mb, v), textcoords="offset points", xytext=(0, 6 if sysname == "nvl64_pkt_s1" else -11), ha="center", fontsize=6.5, color=st["color"])
+        for mb, v in pts:
+            dy = {"glassfb_800": -11, "nvl64_pkt_s1": 6, "hgx8_pkt": 6}[sysname]
+            ax.annotate("%.0f" % v, (mb, v), textcoords="offset points", xytext=(0, dy), ha="center", fontsize=6.5, color=st["color"])
+        print("  %-12s" % sysname, " ".join("mb%d=%.1f" % p for p in pts))
     ax.set_xscale("log", base=2); ax.set_xticks(mbs); ax.set_xticklabels([str(m) for m in mbs]); ax.minorticks_off()
+    ax.set_yscale("log"); ax.set_yticks([80, 100, 150, 200, 300, 400]); ax.set_yticklabels(["80", "100", "150", "200", "300", "400"])
+    ax.set_ylim(75, 480)
     ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("iteration time (ms)", fontsize=8.5)
-    ax.set_ylim(80, 118); ax.tick_params(labelsize=7.5)
-    ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.grid(lw=0.4, alpha=0.4)
+    ax.tick_params(labelsize=7.5)
+    ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.grid(lw=0.4, alpha=0.4, which="major")
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_load.png")); fig.savefig(f("fig_load.pdf")); print("wrote fig_load.png")
 

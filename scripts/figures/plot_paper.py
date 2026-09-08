@@ -749,6 +749,7 @@ def dsefig():
             ("glassfb_mesh8x8", "8x8 electrical mesh (1800 GB/s, wafer proxy)", "#4b3f8f", "^")]
     MODEL = {16: "LLaMA-MoE", 32: "LLaMA-MoE", 64: "Qwen-MoE", 128: "Arctic"}
     eps = sorted({int(r["ep"]) for r in post if r["system"] in dict((a[0], 1) for a in ARMS) and r.get("makespan_ms")})
+    eps = [e for e in eps if e <= int(os.environ.get("DSE_EP_MAX", "64"))]   # EP=128 held back until its rows land (user 2026-09-08)
     fig, axes = plt.subplots(1, len(eps), figsize=(7.0, 2.4), dpi=200)
     if len(eps) == 1: axes = [axes]
     for ax, ep in zip(axes, eps):

@@ -432,7 +432,7 @@ def energy():
             if str(t.get("mb") or "8") == "8" and v.strip(): tok[int(t["ep"])] = float(v)
     if len(tok) < 2: tok = {}
     ncol = len(eps); nrow = 3 if tok else 2
-    fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 1.55 * nrow), dpi=200, sharey=False, squeeze=False)
+    fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 1.4 * nrow), dpi=200, sharey=False, squeeze=False)
     drawn = set()
     HUE = {"glass": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     for j, ep in enumerate(eps):

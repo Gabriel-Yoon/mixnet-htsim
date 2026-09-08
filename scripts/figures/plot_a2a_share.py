@@ -29,12 +29,13 @@ RES = os.environ.get("PAPER_RES", os.path.join(HERE, "..", "..", "experiments", 
 TG = os.environ.get("TG", os.path.join(HERE, "..", "..", "experiments", "taskgraphs"))   # the four committed graphs (sha-listed in their README)
 OUT = os.environ.get("OUT", ".")
 FABRIC = os.environ.get("FABRIC", "hgx8_pkt")
-MODELS = [  # label, EP, graph basename
+MODELS = [  # label, EP, graph basename (user 2026-09-08: Fig 1 shows LLaMA-MoE EP=16 and Arctic EP=128 only)
     ("LLaMA-MoE", 16, "llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.txt"),
-    ("LLaMA-MoE", 32, "llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.txt"),
-    ("Qwen-MoE", 64, "qwenMoE_paper_dp2tp1pp4_ep64top4_L4_seq1024_mb8_H100.txt"),
     ("Arctic", 128, "arctic_paper_dp2tp1pp4_ep128top2_L4_seq1024_mb8_H100.txt"),
 ]
+if os.environ.get("ALL_EPS"):
+    MODELS[1:1] = [("LLaMA-MoE", 32, "llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.txt"),
+                   ("Qwen-MoE", 64, "qwenMoE_paper_dp2tp1pp4_ep64top4_L4_seq1024_mb8_H100.txt")]
 PHASE_OF = {"MultiHeadAttention": "Attention", "Softmax": "Gate", "Group_by": "Gate", "TopK": "Gate",
             "Dense": "Experts", "Aggregate": "Experts", "LayerNorm": "Add&Norm", "Add": "Add&Norm",
             "Input": "Add&Norm", "Repartition": "Add&Norm"}
@@ -77,6 +78,7 @@ for label, ep, g in MODELS:
     p = os.path.join(TG, g)
     mk = quoted.get(ep)
     c = [x for x in dec if x["label"].startswith(f"{FABRIC} EP={ep}") and mk is not None and abs(float(x["makespan_ms"]) - mk) < 0.05]
+    c = [x for x in c if int(float(x.get("path_tasks") or 0)) >= 100]   # a 25-task path is a parse regression (cc92914), not a walk
     if not os.path.exists(p) or not c:
         print(f"  WARNING {label} EP={ep}: {'graph missing' if not os.path.exists(p) else 'no quoted decomp row'} -- skipped"); continue
     ph = cp_phases(p); tot = sum(ph.values())

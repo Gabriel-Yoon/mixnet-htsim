@@ -731,9 +731,67 @@ def calibfig():
         print("  M=%d MB  ours %.1f us  SimAI %.1f us  ratio %.3f" % (r["msg_bytes"] / 2**20, r["T_us"], float(q["T_us"]), r["T_us"] / float(q["T_us"])))
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_calib.png")); fig.savefig(f("fig_calib.pdf")); print("wrote fig_calib.png")
 
+def dsefig():
+    """Panel-size / substrate DSE: 8x8 flattened butterfly (optical links thinned to 128 GB/s by the
+    waveguide budget) and 8x8 electrical mesh (1800 GB/s neighbour links only, the wafer-scale proxy),
+    every buffer rung of both walks (cliff_postfix.csv: systems glassfb_8x8 / glassfb_mesh8x8), against
+    the 4x4 Glass-FB quoted row (cliff_all.csv glassfb_800) as a reference line. One panel per EP,
+    x = queue depth in multiples of the 800 GB/s port BDP (q / 533 packets), y = iteration (log).
+    Filled markers: zero timeouts; hollow: rungs with timeouts (annotated with their drop count)."""
+    import math
+    post = list(csv.DictReader(open(os.path.join(RES, "cliff_postfix.csv"))))
+    allr = load("cliff_all")
+    ref = {}
+    for r in allr:
+        if r["system"] == "glassfb_800" and r["_quotable"] and r.get("link_rate_fixed") == "yes" and r.get("walk") in ("g16b800", "g32b800", "g64b800", "g128b800"):
+            ref[r["ep"]] = r["makespan_ms"]
+    ARMS = [("glassfb_8x8", "8x8 flattened butterfly (128 GB/s optical)", "#c46a4a", "s"),
+            ("glassfb_mesh8x8", "8x8 electrical mesh (1800 GB/s, wafer proxy)", "#4b3f8f", "^")]
+    MODEL = {16: "LLaMA-MoE", 32: "LLaMA-MoE", 64: "Qwen-MoE", 128: "Arctic"}
+    eps = sorted({int(r["ep"]) for r in post if r["system"] in dict((a[0], 1) for a in ARMS) and r.get("makespan_ms")})
+    fig, axes = plt.subplots(1, len(eps), figsize=(7.0, 2.4), dpi=200)
+    if len(eps) == 1: axes = [axes]
+    for ax, ep in zip(axes, eps):
+        series = {}
+        for sysname, name, col, mk in ARMS:
+            rows = sorted([r for r in post if r["system"] == sysname and int(r["ep"]) == ep and r.get("makespan_ms")], key=lambda r: int(float(r["q"])))
+            if rows: series[sysname] = rows
+        base = [float(r["makespan_ms"]) for rows in series.values() for r in rows] + ([ref[ep]] if ep in ref else [])
+        floor = min(base); typical = sorted(base)[int(0.75 * (len(base) - 1))]
+        top = min(max(base), typical * 1.5) * 1.06   # linear axis; points above it are drawn clipped at the top with their value
+        ax.set_ylim(floor * 0.85, top)
+        for sysname, name, col, mk in ARMS:
+            rows = series.get(sysname)
+            if not rows: continue
+            xs = [int(float(r["q"])) / 533.0 for r in rows]; ys = [float(r["makespan_ms"]) for r in rows]
+            yc = [min(y, top * 0.985) for y in ys]
+            ax.plot(xs, yc, "-", color=col, lw=1.1, zorder=3, label=name)
+            for x, y, y2, r in zip(xs, ys, yc, rows):
+                clean = int(float(r["rtos"] or 0)) == 0
+                ax.scatter([x], [y2], s=26, marker=mk, color=col if clean else "white", edgecolor=col, lw=0.9, zorder=4)
+                d = int(float(r["drops"] or 0))
+                if y > top * 0.985:
+                    ax.annotate("%.0f ms, %.1fM drops" % (y, d / 1e6), (x, y2), textcoords="offset points", xytext=(5, -3), fontsize=5.2, color=col, va="top")
+                elif not clean and d >= 1e5:
+                    ax.annotate("%.1fM drops" % (d / 1e6) if d >= 1e6 else "%dk drops" % (d // 1000), (x, y2), textcoords="offset points", xytext=(4, 4) if mk == "^" else (4, -9), fontsize=5.2, color=col)
+        if ep in ref:
+            ax.axhline(ref[ep], color="#2b6f7f", lw=1.3, ls=(0, (4, 2)), zorder=2, label="4x4 Glass-FB, quoted (this work)")
+            ax.text(0.98, ref[ep], "%.0f ms" % ref[ep], transform=ax.get_yaxis_transform(), ha="right", va="bottom", fontsize=6, color="#2b6f7f")
+        ax.set_xscale("log", base=2)
+        ax.set_xticks([2, 4, 8, 16, 32, 64]); ax.set_xticklabels(["2", "4", "8", "16", "32", "64"]); ax.minorticks_off()
+        ax.set_title("EP=%d  (%s)" % (ep, MODEL.get(ep, "")), fontsize=8.5, color="#4a5560")
+        ax.set_xlabel("queue depth (x port BDP)", fontsize=8); ax.tick_params(labelsize=7)
+        ax.grid(alpha=0.3, lw=0.4, which="major"); ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+    axes[0].set_ylabel("iteration time (ms)", fontsize=8.5)
+    h, l = axes[0].get_legend_handles_labels()
+    from matplotlib.lines import Line2D
+    h += [Line2D([], [], marker="o", color="#777", ls="", ms=4, label="filled: zero timeouts; hollow: timeouts")]
+    fig.legend(handles=h, fontsize=6.5, frameon=False, loc="lower center", ncol=2, bbox_to_anchor=(0.5, -0.01), handlelength=1.8, columnspacing=1.5)
+    fig.tight_layout(pad=0.3, rect=(0, 0.12, 1, 1)); fig.savefig(f("fig_dse.png")); fig.savefig(f("fig_dse.pdf")); print("wrote fig_dse.png")
+
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]
-    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary, "load": loadfig, "calibfig": calibfig}
+    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary, "load": loadfig, "calibfig": calibfig, "dse": dsefig}
     for w in (fns if "all" in which else which):
         try: fns[w]()
         except SystemExit as e: print("skip:", e)

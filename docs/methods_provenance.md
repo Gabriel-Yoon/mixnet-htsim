@@ -600,6 +600,52 @@ under `wall_s`. The gate that checks the writer reads field 10 of the `gate_defa
 the *uncapped* arm, whose banner has no comma; the self-check runs on the one arm the defect cannot
 reach.
 
+**Sub-class B has an instance in the inputs, not the outputs: the task graphs have no
+producer either.** Every row in this paper is a simulation of one of four FlexFlow task
+graphs -- `llamaMoE` at EP=16 and EP=32, `qwenMoE` at EP=64, `arctic` at EP=128 -- and
+**no recorded command produces them.** Neither repository contains a script, a log, or a
+note that generates a `*_paper_dp2tp1pp4_*` graph. The only generator script in the
+FlexFlow tree, `profile_a100_test.sh`, builds a different model at a different
+parallelism (`--train_dp 2 --train_tp 8 --train_pp 8`) and invokes a binary through
+`./build_test/`, a directory that does not exist.
+
+The gap surfaced from an ordinary request: an absolute pJ/token axis needs tokens per
+iteration, which is global batch x sequence length. Each graph ships a `.meta` recording
+dp, tp, pp, ep, topk, layers, seq, mb and devices -- and **not the batch size**. So the
+token count is not derivable from the artifacts, and the obvious repair, re-running the
+generator, is not available: the invocation would have to be reconstructed, and a
+reconstructed graph that differs from the original says nothing about the original.
+
+> **An input with no producer is the same defect as a figure with no producer, and it is
+> further upstream.** Sub-class B was recorded for committed PNGs whose plotting scripts
+> were in no repository. These are committed `.fbuf`s whose generation command is in no
+> repository, and every measured row in the paper descends from them.
+
+One number was recoverable and only one. A generator log survives for exactly one of the
+seven graphs, and it states the batch size outright -- `attention batch size:128 ...
+effective_num_elements:131072`, two independent numbers that agree at 128 x 1024. So
+llamaMoE EP=32 has a sourced 131 072 tokens per iteration and the other six have none.
+
+**The one guess that would have looked natural is already refuted by that log.** All
+seven graphs are `dp2 tp1 pp4 seq1024`, differing only in model, `ep` and `topk`, so a
+common batch size is plausible -- but the EP=32 graph runs on **256 devices with a batch
+of 128**, so batch is not the device count, and filling EP=16 and EP=128 by that rule
+would have been wrong in both directions while looking principled.
+
+`tokens_per_iter.csv` therefore carries one sourced row and six blanks, each blank giving
+its reason. Reading the count back out of the `.txt` graph dumps was tried and abandoned:
+the dumps carry per-node byte counts rather than tensor shapes, the nodes are shards whose
+size depends on the partitioning, and the four graphs do not yield to one rule -- the
+first softmax node is 8 192 bytes at EP=16 and 16 777 216 at EP=32. Recovering tokens from
+them would need assumptions about dtype, about which softmax is the router, and about
+sharding, none of which are recorded either.
+
+> **Every relative statement survives this; only the absolute axis does not.** Per-token
+> is per-iteration divided by a constant per (model, EP), so ratios between fabrics,
+> the microbatch shape and the energy comparison are all unaffected. That is the reason
+> to state the gap and draw the panel at EP=32 rather than to fill six cells with a
+> number that would be an assumption wearing an absolute unit.
+
 ### Scope limit
 
 This rule establishes that a parameter was *read*. It says nothing about whether

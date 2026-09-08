@@ -1,0 +1,19 @@
+{
+  "graph": "llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100",
+  "attention_mode": "analytical",
+  "evidence": "all attention nodes report 0 bytes",
+  "attention_nodes": 4,
+  "size_bytes": 4552136,
+  "config": {
+    "dp": 2,
+    "tp": 1,
+    "pp": 4,
+    "ep": 16,
+    "topk": 2,
+    "layers": 4,
+    "seq": 1024,
+    "mb": 8,
+    "devices": 128
+  },
+  "note": "attention_mode is inferred from the 0-byte signature, not recorded at generation time; see docs/paper_todo.md D35"
+}

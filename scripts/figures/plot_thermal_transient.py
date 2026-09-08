@@ -58,9 +58,9 @@ for plo, pts in sorted(series.items(), key=lambda kv: -kv[0]):
     if tau and step_K:
         for p, d in pts:
             m = step_K * (700.0 - plo) / 700.0 * np.tanh(p / (4 * tau)); print("  model check P_lo=%d T=%.4g s: ANSYS %.1f K, model %.1f K" % (plo, p, d, m))
-for T0, name in ((0.01084, "microbatch"), (0.08675, "iteration")):
+for T0, name, y0, va in ((0.01084, "microbatch", 31.5, "top"), (0.08675, "iteration", 1.0, "bottom")):
     ax.axvline(T0, color="#bbb", lw=0.6, ls=(0, (1, 2)), zorder=1)
-    ax.text(T0 * 1.08, 7.6, name, fontsize=8, color="#666", ha="left", va="center")
+    ax.text(T0 * 1.12, y0, name, fontsize=7.5, color="#666", ha="left", va=va, rotation=90)
 # (no in-figure title: the caption carries it)
 # (the idle-to-TDP step solve, 28.8 K at 0.3 s, is the 0 W series' own plateau; not drawn separately)
 chan_K = CHANNEL_PM / PM_PER_K

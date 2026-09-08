@@ -67,17 +67,17 @@ MIX=mixtral8x7B_paper_dp2tp4pp4_ep8top2_L4_seq1024_mb8_H100.fbuf
 # 2x/4x/8x of the 400 GB/s port BDP (266.7 pkt at MTU 1500, RTT 4x250 ns), the
 # same rungs the EP=32 walk uses on the same port rate.
 echo "### placement ON"
-export RUNG_EP_PLACE=1
-for q in 533 1066 2133; do
-  sub 20G 8:00:00 "mixon_q$q" glass 8 256 "$MIX" wm_ep32.txt "$MAP" "$q" 8 "mixon_q$q"
+export RUNG_EP_PLACE=1 RUNG_TP=4 RUNG_EP=8
+for q in 533 1066 2133 4267; do
+  sub 20G 8:00:00 "mix2on_q$q" glass 8 256 "$MIX" wm_ep32.txt "$MAP" "$q" 8 "mix2on_q$q"
 done
 
 echo "### placement OFF (naive rank order)"
-export RUNG_EP_PLACE=0
-for q in 533 1066 2133; do
-  sub 20G 8:00:00 "mixoff_q$q" glass 8 256 "$MIX" wm_ep32.txt "$MAP" "$q" 8 "mixoff_q$q"
+export RUNG_EP_PLACE=0 RUNG_TP=4 RUNG_EP=8
+for q in 533 1066 2133 4267; do
+  sub 20G 8:00:00 "mix2off_q$q" glass 8 256 "$MIX" wm_ep32.txt "$MAP" "$q" 8 "mix2off_q$q"
 done
-unset RUNG_EP_PLACE
+unset RUNG_EP_PLACE RUNG_TP RUNG_EP
 
 echo
 echo "submitted/listed $N job(s)"

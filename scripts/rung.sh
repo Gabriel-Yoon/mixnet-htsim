@@ -13,7 +13,8 @@
 #
 # Usage:
 #   rung.sh glass <ep> <nodes> <fbuf> <wm> <portmap> <q> <mb> <tag>
-#     env knobs: RUNG_DIM_A2A (1), RUNG_NO_PORTMAP, RUNG_HIER, RUNG_PORT_BW (400 GB/s)
+#     env knobs: RUNG_DIM_A2A (1), RUNG_NO_PORTMAP, RUNG_HIER, RUNG_PORT_BW (400 GB/s),
+#                RUNG_EP_PLACE (1), RUNG_TP (1), RUNG_EP (1), RUNG_SYS (glassfb)
 #   rung.sh pkt   <sys> <ep> <nodes> <fbuf> <wm> <D> <S> <L> <nic> <q> <qc> <tag>
 set -uo pipefail
 cd /storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/src/clos/datacenter
@@ -47,17 +48,24 @@ if [ "$IS_GLASS" = 1 ]; then
   PORT_BW=${RUNG_PORT_BW:-400}
   # EP-aware placement. 0 is naive rank order, the ablation arm.
   PLACE=${RUNG_EP_PLACE:-1}
-  echo "rung knobs: dim_a2a=$DIM portmap=${RUNG_NO_PORTMAP:+OMITTED}${RUNG_NO_PORTMAP:-$MAP} hier=${RUNG_HIER:-0} port_bw=$PORT_BW ep_place=$PLACE" >&2
+  # The parallelism degrees the PLACEMENT MAP is built from. The topology defaults
+  # to tp=1 ep=1 and rung.sh never passed anything, so a tp>1 graph was placed as
+  # though it were tp=1 -- where the map is the identity and the placement toggle
+  # cannot do anything. Every headline row here is a dp2 tp1 pp4 graph, so the
+  # default was right for them; it was wrong the first time a tp=4 graph was run.
+  TPD=${RUNG_TP:-1}
+  EPD=${RUNG_EP:-1}
+  echo "rung knobs: dim_a2a=$DIM portmap=${RUNG_NO_PORTMAP:+OMITTED}${RUNG_NO_PORTMAP:-$MAP} hier=${RUNG_HIER:-0} port_bw=$PORT_BW ep_place=$PLACE tp=$TPD ep=$EPD" >&2
   if [ "${RUNG_NO_PORTMAP:-0}" = 1 ]; then
     # mesh cabling: no port map at all, which is a different fabric, not a
     # different setting of one
     GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
-    GLASS_EP_PLACE="$PLACE" GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" \
+    GLASS_EP_PLACE="$PLACE" GLASS_TP="$TPD" GLASS_EP="$EPD" GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" \
       timeout 43200 $BIN -logdir "$LD" -nodes "$NODES" -flowfile "$R/$FB" \
         -disable-intra-shortcut -mtu 1500 -q "$Q" $HIER -weightmatrix "$T/$WM" > "$LOG" 2>&1
   else
     GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
-    GLASS_EP_PLACE="$PLACE" GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" GLASS_PORT_MAP="$PM/$MAP" \
+    GLASS_EP_PLACE="$PLACE" GLASS_TP="$TPD" GLASS_EP="$EPD" GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" GLASS_PORT_MAP="$PM/$MAP" \
       timeout 43200 $BIN -logdir "$LD" -nodes "$NODES" -flowfile "$R/$FB" \
         -disable-intra-shortcut -mtu 1500 -q "$Q" $HIER -weightmatrix "$T/$WM" > "$LOG" 2>&1
   fi
@@ -124,7 +132,7 @@ if [ "$IS_GLASS" = 1 ]; then
     mean_fct_ms="$(echo "$FSTAT"|cut -d, -f3)" p50_fct_ms="$(echo "$FSTAT"|cut -d, -f4)" \
     p99_fct_ms="$(echo "$FSTAT"|cut -d, -f5)" max_fct_ms="$(echo "$FSTAT"|cut -d, -f6)" \
     fct_logdir="$FLD" fct_status="$FSTATUS" \
-    wall_s="$((T1-T0))" status="$ST" note="post-fix rung ($MODE); dim_a2a=${RUNG_DIM_A2A:-1}; portmap=${RUNG_NO_PORTMAP:+none}${RUNG_NO_PORTMAP:-$MAP}; hier=${RUNG_HIER:-0}; port_bw=${RUNG_PORT_BW:-400}; ep_place=${RUNG_EP_PLACE:-1}${PBNOTE}"
+    wall_s="$((T1-T0))" status="$ST" note="post-fix rung ($MODE); dim_a2a=${RUNG_DIM_A2A:-1}; portmap=${RUNG_NO_PORTMAP:+none}${RUNG_NO_PORTMAP:-$MAP}; hier=${RUNG_HIER:-0}; port_bw=${RUNG_PORT_BW:-400}; ep_place=${RUNG_EP_PLACE:-1}; tp=${RUNG_TP:-1}; ep=${RUNG_EP:-1}${PBNOTE}"
 else
   csv_row "$CSV" paper_ref=cliff system="$SYS" ep="$EP" nodes="$NODES" domain="$D" \
     switches="$SW" link_gbps="$L" nic_bw="$NIC" q_nvs="$Q" q_nic="$QC" \

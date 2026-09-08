@@ -1,0 +1,611 @@
+label,op,compute_ms,share_of_compute
+glassfb EP=16 q=1064,MultiHeadAttention,34.6189,0.4207
+glassfb EP=16 q=1064,Dense,18.6095,0.2262
+glassfb EP=16 q=1064,Softmax,11.6931,0.1421
+glassfb EP=16 q=1064,LayerNorm,9.3291,0.1134
+glassfb EP=16 q=1064,Aggregate cooperation,5.3551,0.0651
+glassfb EP=16 q=1064,Add,2.6507,0.0322
+glassfb EP=16 q=1064,Group_by,0.0213,0.0003
+glassfb EP=16 q=1064,TopK,0.0036,0.0000
+glassfb EP=16 q=1064,Input,0.0000,0.0000
+glassfb EP=16 q=1064,Repartition,0.0000,0.0000
+nvl64_pkt EP=16 q=544,MultiHeadAttention,34.6162,0.4456
+nvl64_pkt EP=16 q=544,Dense,18.5013,0.2382
+nvl64_pkt EP=16 q=544,Softmax,11.6160,0.1495
+nvl64_pkt EP=16 q=544,Aggregate cooperation,9.3764,0.1207
+nvl64_pkt EP=16 q=544,LayerNorm,2.8699,0.0369
+nvl64_pkt EP=16 q=544,Add,0.6648,0.0086
+nvl64_pkt EP=16 q=544,Group_by,0.0213,0.0003
+nvl64_pkt EP=16 q=544,TopK,0.0107,0.0001
+nvl64_pkt EP=16 q=544,Input,0.0000,0.0000
+nvl64_pkt EP=16 q=544,Repartition,0.0000,0.0000
+glassfb EP=32 q=2133,MultiHeadAttention,35.6346,0.5699
+glassfb EP=32 q=2133,Aggregate cooperation,11.6535,0.1864
+glassfb EP=32 q=2133,Dense,10.8654,0.1738
+glassfb EP=32 q=2133,Softmax,3.0809,0.0493
+glassfb EP=32 q=2133,LayerNorm,0.7281,0.0116
+glassfb EP=32 q=2133,Add,0.5513,0.0088
+glassfb EP=32 q=2133,Group_by,0.0097,0.0002
+glassfb EP=32 q=2133,TopK,0.0029,0.0000
+glassfb EP=32 q=2133,Input,0.0000,0.0000
+glassfb EP=32 q=2133,Repartition,0.0000,0.0000
+nvl64_pkt EP=32 q=1088,MultiHeadAttention,34.6162,0.6349
+nvl64_pkt EP=32 q=1088,Dense,8.9437,0.1640
+nvl64_pkt EP=32 q=1088,Aggregate cooperation,7.2832,0.1336
+nvl64_pkt EP=32 q=1088,Softmax,3.4034,0.0624
+nvl64_pkt EP=32 q=1088,Add,0.2015,0.0037
+nvl64_pkt EP=32 q=1088,LayerNorm,0.0404,0.0007
+nvl64_pkt EP=32 q=1088,Group_by,0.0240,0.0004
+nvl64_pkt EP=32 q=1088,TopK,0.0058,0.0001
+nvl64_pkt EP=32 q=1088,Input,0.0000,0.0000
+nvl64_pkt EP=32 q=1088,Repartition,0.0000,0.0000
+glassfb EP=64 k16,MultiHeadAttention,9.6167,0.4067
+glassfb EP=64 k16,Dense,6.0640,0.2565
+glassfb EP=64 k16,Softmax,3.5344,0.1495
+glassfb EP=64 k16,LayerNorm,2.8606,0.1210
+glassfb EP=64 k16,Add,0.7838,0.0331
+glassfb EP=64 k16,Aggregate cooperation,0.7620,0.0322
+glassfb EP=64 k16,Group_by,0.0130,0.0006
+glassfb EP=64 k16,TopK,0.0100,0.0004
+glassfb EP=64 k16,Input,0.0000,0.0000
+glassfb EP=64 k16,Repartition,0.0000,0.0000
+glassfb EP=64 k32,MultiHeadAttention,9.6167,0.4069
+glassfb EP=64 k32,Dense,6.0915,0.2577
+glassfb EP=64 k32,LayerNorm,2.6674,0.1129
+glassfb EP=64 k32,Softmax,2.6073,0.1103
+glassfb EP=64 k32,Aggregate cooperation,1.5128,0.0640
+glassfb EP=64 k32,Add,1.1173,0.0473
+glassfb EP=64 k32,Group_by,0.0130,0.0006
+glassfb EP=64 k32,TopK,0.0100,0.0004
+glassfb EP=64 k32,Input,0.0000,0.0000
+glassfb EP=64 k32,Repartition,0.0000,0.0000
+glassfb EP=64 k64,MultiHeadAttention,9.6167,0.4097
+glassfb EP=64 k64,Dense,6.0915,0.2595
+glassfb EP=64 k64,Softmax,2.6073,0.1111
+glassfb EP=64 k64,LayerNorm,2.6004,0.1108
+glassfb EP=64 k64,Aggregate cooperation,1.4136,0.0602
+glassfb EP=64 k64,Add,1.1173,0.0476
+glassfb EP=64 k64,Group_by,0.0130,0.0006
+glassfb EP=64 k64,TopK,0.0100,0.0004
+glassfb EP=64 k64,Input,0.0000,0.0000
+glassfb EP=64 k64,Repartition,0.0000,0.0000
+nvl64_pkt EP=64 q1088,MultiHeadAttention,9.6162,0.4801
+nvl64_pkt EP=64 q1088,Dense,6.0405,0.3016
+nvl64_pkt EP=64 q1088,Softmax,2.6073,0.1302
+nvl64_pkt EP=64 q1088,LayerNorm,1.4633,0.0731
+nvl64_pkt EP=64 q1088,Aggregate cooperation,0.1544,0.0077
+nvl64_pkt EP=64 q1088,Add,0.1290,0.0064
+nvl64_pkt EP=64 q1088,Group_by,0.0130,0.0007
+nvl64_pkt EP=64 q1088,TopK,0.0067,0.0003
+nvl64_pkt EP=64 q1088,Input,0.0000,0.0000
+nvl64_pkt EP=64 q1088,Repartition,0.0000,0.0000
+nvl64_pkt EP=64 q2176,MultiHeadAttention,10.6012,0.5445
+nvl64_pkt EP=64 q2176,Dense,5.6043,0.2879
+nvl64_pkt EP=64 q2176,Softmax,2.6075,0.1339
+nvl64_pkt EP=64 q2176,Aggregate cooperation,0.4937,0.0254
+nvl64_pkt EP=64 q2176,Add,0.1247,0.0064
+nvl64_pkt EP=64 q2176,LayerNorm,0.0203,0.0010
+nvl64_pkt EP=64 q2176,Group_by,0.0132,0.0007
+nvl64_pkt EP=64 q2176,TopK,0.0033,0.0002
+nvl64_pkt EP=64 q2176,Input,0.0000,0.0000
+nvl64_pkt EP=64 q2176,Repartition,0.0000,0.0000
+nvl64_pkt EP=64 q544,MultiHeadAttention,9.6162,0.4532
+nvl64_pkt EP=64 q544,Dense,6.0405,0.2847
+nvl64_pkt EP=64 q544,Softmax,2.6073,0.1229
+nvl64_pkt EP=64 q544,LayerNorm,1.3178,0.0621
+nvl64_pkt EP=64 q544,Aggregate cooperation,1.1588,0.0546
+nvl64_pkt EP=64 q544,Add,0.4536,0.0214
+nvl64_pkt EP=64 q544,Group_by,0.0130,0.0006
+nvl64_pkt EP=64 q544,TopK,0.0100,0.0005
+nvl64_pkt EP=64 q544,Input,0.0000,0.0000
+nvl64_pkt EP=64 q544,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=16 q=2400,MultiHeadAttention,34.6176,0.4239
+nvl64_pkt_s1 EP=16 q=2400,Dense,18.6019,0.2278
+nvl64_pkt_s1 EP=16 q=2400,Softmax,11.6160,0.1422
+nvl64_pkt_s1 EP=16 q=2400,LayerNorm,9.4940,0.1163
+nvl64_pkt_s1 EP=16 q=2400,Aggregate cooperation,4.6943,0.0575
+nvl64_pkt_s1 EP=16 q=2400,Add,2.6111,0.0320
+nvl64_pkt_s1 EP=16 q=2400,Group_by,0.0213,0.0003
+nvl64_pkt_s1 EP=16 q=2400,TopK,0.0072,0.0001
+nvl64_pkt_s1 EP=16 q=2400,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=16 q=2400,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=32 q=4800,MultiHeadAttention,34.6189,0.5572
+nvl64_pkt_s1 EP=32 q=4800,Dense,10.2519,0.1650
+nvl64_pkt_s1 EP=32 q=4800,LayerNorm,9.2594,0.1490
+nvl64_pkt_s1 EP=32 q=4800,Aggregate cooperation,4.6579,0.0750
+nvl64_pkt_s1 EP=32 q=4800,Softmax,3.0534,0.0491
+nvl64_pkt_s1 EP=32 q=4800,Add,0.2830,0.0046
+nvl64_pkt_s1 EP=32 q=4800,Group_by,0.0097,0.0002
+nvl64_pkt_s1 EP=32 q=4800,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=32 q=4800,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=32 q=4800,TopK,0.0000,0.0000
+nvl64_pkt_s1 EP=64 q=9600,MultiHeadAttention,9.6167,0.4278
+nvl64_pkt_s1 EP=64 q=9600,Dense,6.0961,0.2712
+nvl64_pkt_s1 EP=64 q=9600,Softmax,2.6073,0.1160
+nvl64_pkt_s1 EP=64 q=9600,LayerNorm,2.6016,0.1157
+nvl64_pkt_s1 EP=64 q=9600,Aggregate cooperation,1.3873,0.0617
+nvl64_pkt_s1 EP=64 q=9600,Add,0.1451,0.0065
+nvl64_pkt_s1 EP=64 q=9600,Group_by,0.0130,0.0006
+nvl64_pkt_s1 EP=64 q=9600,TopK,0.0100,0.0004
+nvl64_pkt_s1 EP=64 q=9600,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=64 q=9600,Repartition,0.0000,0.0000
+glassfb_800 EP=128 mb=8 g128b800_q34133,MultiHeadAttention,103.7678,0.6404
+glassfb_800 EP=128 mb=8 g128b800_q34133,Aggregate cooperation,35.5871,0.2196
+glassfb_800 EP=128 mb=8 g128b800_q34133,Dense,19.1206,0.1180
+glassfb_800 EP=128 mb=8 g128b800_q34133,LayerNorm,1.7843,0.0110
+glassfb_800 EP=128 mb=8 g128b800_q34133,Add,1.0655,0.0066
+glassfb_800 EP=128 mb=8 g128b800_q34133,Softmax,0.6978,0.0043
+glassfb_800 EP=128 mb=8 g128b800_q34133,Group_by,0.0123,0.0001
+glassfb_800 EP=128 mb=8 g128b800_q34133,TopK,0.0034,0.0000
+glassfb_800 EP=128 mb=8 g128b800_q34133,Input,0.0000,0.0000
+glassfb_800 EP=128 mb=8 g128b800_q34133,Repartition,0.0000,0.0000
+glassfb_800 EP=16 mb=8 g16b800_q533,MultiHeadAttention,34.6181,0.4217
+glassfb_800 EP=16 mb=8 g16b800_q533,Dense,18.6057,0.2266
+glassfb_800 EP=16 mb=8 g16b800_q533,Softmax,11.6931,0.1424
+glassfb_800 EP=16 mb=8 g16b800_q533,LayerNorm,9.5011,0.1157
+glassfb_800 EP=16 mb=8 g16b800_q533,Aggregate cooperation,5.0429,0.0614
+glassfb_800 EP=16 mb=8 g16b800_q533,Add,2.6111,0.0318
+glassfb_800 EP=16 mb=8 g16b800_q533,Group_by,0.0213,0.0003
+glassfb_800 EP=16 mb=8 g16b800_q533,TopK,0.0072,0.0001
+glassfb_800 EP=16 mb=8 g16b800_q533,Input,0.0000,0.0000
+glassfb_800 EP=16 mb=8 g16b800_q533,Repartition,0.0000,0.0000
+glassfb_800 EP=16 mb=16 g16b800m16_q533,MultiHeadAttention,34.6181,0.4289
+glassfb_800 EP=16 mb=16 g16b800m16_q533,Dense,18.5814,0.2302
+glassfb_800 EP=16 mb=16 g16b800m16_q533,Softmax,11.6085,0.1438
+glassfb_800 EP=16 mb=16 g16b800m16_q533,LayerNorm,9.6083,0.1190
+glassfb_800 EP=16 mb=16 g16b800m16_q533,Aggregate cooperation,5.4908,0.0680
+glassfb_800 EP=16 mb=16 g16b800m16_q533,Add,0.7776,0.0096
+glassfb_800 EP=16 mb=16 g16b800m16_q533,Group_by,0.0206,0.0003
+glassfb_800 EP=16 mb=16 g16b800m16_q533,TopK,0.0071,0.0001
+glassfb_800 EP=16 mb=16 g16b800m16_q533,Input,0.0000,0.0000
+glassfb_800 EP=16 mb=16 g16b800m16_q533,Repartition,0.0000,0.0000
+glassfb_800 EP=16 mb=32 g16b800m32_q533,MultiHeadAttention,34.6168,0.4501
+glassfb_800 EP=16 mb=32 g16b800m32_q533,Dense,18.4416,0.2398
+glassfb_800 EP=16 mb=32 g16b800m32_q533,Softmax,11.6117,0.1510
+glassfb_800 EP=16 mb=32 g16b800m32_q533,Aggregate cooperation,11.4614,0.1490
+glassfb_800 EP=16 mb=32 g16b800m32_q533,Add,0.6593,0.0086
+glassfb_800 EP=16 mb=32 g16b800m32_q533,LayerNorm,0.0948,0.0012
+glassfb_800 EP=16 mb=32 g16b800m32_q533,Group_by,0.0206,0.0003
+glassfb_800 EP=16 mb=32 g16b800m32_q533,TopK,0.0071,0.0001
+glassfb_800 EP=16 mb=32 g16b800m32_q533,Input,0.0000,0.0000
+glassfb_800 EP=16 mb=32 g16b800m32_q533,Repartition,0.0000,0.0000
+glassfb_800 EP=16 mb=4 g16b800m4_q533,MultiHeadAttention,34.6181,0.4186
+glassfb_800 EP=16 mb=4 g16b800m4_q533,Dense,18.6598,0.2256
+glassfb_800 EP=16 mb=4 g16b800m4_q533,Softmax,13.5548,0.1639
+glassfb_800 EP=16 mb=4 g16b800m4_q533,LayerNorm,9.4216,0.1139
+glassfb_800 EP=16 mb=4 g16b800m4_q533,Aggregate cooperation,5.6368,0.0682
+glassfb_800 EP=16 mb=4 g16b800m4_q533,Add,0.7783,0.0094
+glassfb_800 EP=16 mb=4 g16b800m4_q533,Group_by,0.0205,0.0002
+glassfb_800 EP=16 mb=4 g16b800m4_q533,TopK,0.0070,0.0001
+glassfb_800 EP=16 mb=4 g16b800m4_q533,Input,0.0000,0.0000
+glassfb_800 EP=16 mb=4 g16b800m4_q533,Repartition,0.0000,0.0000
+glassfb EP=16 mb=16 g16m16_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=16 g16m16_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=16 g16m16_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=16 g16m16_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=16 g16m16_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=16 g16m16_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=16 g16m16_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=16 g16m16_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=16 g16m16_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=16 g16m16_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=16 g16m16_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=16 g16m16_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=16 g16m16_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=16 g16m16_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=16 g16m16_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=16 g16m16_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=16 g16m16_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=16 g16m16_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=16 g16m16_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=16 g16m16_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=16 g16m16_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=16 g16m16_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=16 g16m16_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=16 g16m16_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=16 g16m16_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=16 g16m16_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=16 g16m16_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=16 g16m16_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=16 g16m16_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=16 g16m16_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=16 g16m16_q532,MultiHeadAttention,34.6187,0.4303
+glassfb EP=16 mb=16 g16m16_q532,Dense,18.5849,0.2310
+glassfb EP=16 mb=16 g16m16_q532,Softmax,11.6085,0.1443
+glassfb EP=16 mb=16 g16m16_q532,LayerNorm,9.4182,0.1171
+glassfb EP=16 mb=16 g16m16_q532,Aggregate cooperation,5.3757,0.0668
+glassfb EP=16 mb=16 g16m16_q532,Add,0.8167,0.0102
+glassfb EP=16 mb=16 g16m16_q532,Group_by,0.0206,0.0003
+glassfb EP=16 mb=16 g16m16_q532,TopK,0.0035,0.0000
+glassfb EP=16 mb=16 g16m16_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=16 g16m16_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=32 g16m32_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=32 g16m32_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=32 g16m32_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=32 g16m32_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=32 g16m32_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=32 g16m32_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=32 g16m32_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=32 g16m32_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=32 g16m32_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=32 g16m32_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=32 g16m32_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=32 g16m32_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=32 g16m32_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=32 g16m32_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=32 g16m32_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=32 g16m32_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=32 g16m32_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=32 g16m32_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=32 g16m32_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=32 g16m32_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=32 g16m32_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=32 g16m32_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=32 g16m32_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=32 g16m32_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=32 g16m32_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=32 g16m32_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=32 g16m32_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=32 g16m32_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=32 g16m32_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=32 g16m32_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=32 g16m32_q532,MultiHeadAttention,30.0007,0.4344
+glassfb EP=16 mb=32 g16m32_q532,Dense,15.8475,0.2295
+glassfb EP=16 mb=32 g16m32_q532,Softmax,11.5608,0.1674
+glassfb EP=16 mb=32 g16m32_q532,Aggregate cooperation,11.0326,0.1597
+glassfb EP=16 mb=32 g16m32_q532,Add,0.4615,0.0067
+glassfb EP=16 mb=32 g16m32_q532,LayerNorm,0.1328,0.0019
+glassfb EP=16 mb=32 g16m32_q532,Group_by,0.0206,0.0003
+glassfb EP=16 mb=32 g16m32_q532,TopK,0.0106,0.0002
+glassfb EP=16 mb=32 g16m32_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=32 g16m32_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=4 g16m4_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=4 g16m4_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=4 g16m4_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=4 g16m4_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=4 g16m4_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=4 g16m4_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=4 g16m4_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=4 g16m4_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=4 g16m4_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=4 g16m4_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=4 g16m4_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=4 g16m4_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=4 g16m4_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=4 g16m4_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=4 g16m4_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=4 g16m4_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=4 g16m4_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=4 g16m4_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=4 g16m4_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=4 g16m4_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=4 g16m4_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=4 g16m4_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=4 g16m4_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=4 g16m4_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=4 g16m4_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=4 g16m4_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=4 g16m4_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=4 g16m4_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=4 g16m4_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=4 g16m4_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=4 g16m4_q532,MultiHeadAttention,34.6174,0.4188
+glassfb EP=16 mb=4 g16m4_q532,Dense,18.6563,0.2257
+glassfb EP=16 mb=4 g16m4_q532,Softmax,13.5548,0.1640
+glassfb EP=16 mb=4 g16m4_q532,LayerNorm,9.4249,0.1140
+glassfb EP=16 mb=4 g16m4_q532,Aggregate cooperation,5.6368,0.0682
+glassfb EP=16 mb=4 g16m4_q532,Add,0.7391,0.0089
+glassfb EP=16 mb=4 g16m4_q532,Group_by,0.0205,0.0002
+glassfb EP=16 mb=4 g16m4_q532,TopK,0.0105,0.0001
+glassfb EP=16 mb=4 g16m4_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=4 g16m4_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=8 g16m8_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=8 g16m8_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=8 g16m8_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=8 g16m8_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=8 g16m8_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=8 g16m8_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=8 g16m8_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=8 g16m8_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=8 g16m8_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=8 g16m8_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=8 g16m8_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=8 g16m8_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=8 g16m8_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=8 g16m8_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=8 g16m8_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=8 g16m8_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=8 g16m8_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=8 g16m8_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=8 g16m8_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=8 g16m8_q532,Repartition,0.0000,0.0000
+glassfb EP=16 mb=8 g16m8_q532,MultiHeadAttention,34.6175,0.4220
+glassfb EP=16 mb=8 g16m8_q532,Dense,18.6022,0.2268
+glassfb EP=16 mb=8 g16m8_q532,Softmax,11.6931,0.1426
+glassfb EP=16 mb=8 g16m8_q532,LayerNorm,9.4663,0.1154
+glassfb EP=16 mb=8 g16m8_q532,Aggregate cooperation,5.0429,0.0615
+glassfb EP=16 mb=8 g16m8_q532,Add,2.5715,0.0314
+glassfb EP=16 mb=8 g16m8_q532,Group_by,0.0213,0.0003
+glassfb EP=16 mb=8 g16m8_q532,TopK,0.0107,0.0001
+glassfb EP=16 mb=8 g16m8_q532,Input,0.0000,0.0000
+glassfb EP=16 mb=8 g16m8_q532,Repartition,0.0000,0.0000
+glassfb EP=32 mb=8 g32_q2133,MultiHeadAttention,36.0053,0.5753
+glassfb EP=32 mb=8 g32_q2133,Aggregate cooperation,11.3369,0.1812
+glassfb EP=32 mb=8 g32_q2133,Dense,10.8654,0.1736
+glassfb EP=32 mb=8 g32_q2133,Softmax,3.0809,0.0492
+glassfb EP=32 mb=8 g32_q2133,LayerNorm,0.7281,0.0116
+glassfb EP=32 mb=8 g32_q2133,Add,0.5513,0.0088
+glassfb EP=32 mb=8 g32_q2133,Group_by,0.0097,0.0002
+glassfb EP=32 mb=8 g32_q2133,TopK,0.0029,0.0000
+glassfb EP=32 mb=8 g32_q2133,Input,0.0000,0.0000
+glassfb EP=32 mb=8 g32_q2133,Repartition,0.0000,0.0000
+glassfb_800 EP=32 mb=8 g32b800_q2133,MultiHeadAttention,35.6442,0.5694
+glassfb_800 EP=32 mb=8 g32b800_q2133,Aggregate cooperation,12.0317,0.1922
+glassfb_800 EP=32 mb=8 g32b800_q2133,Dense,10.8660,0.1736
+glassfb_800 EP=32 mb=8 g32b800_q2133,Softmax,3.0809,0.0492
+glassfb_800 EP=32 mb=8 g32b800_q2133,LayerNorm,0.7281,0.0116
+glassfb_800 EP=32 mb=8 g32b800_q2133,Add,0.2354,0.0038
+glassfb_800 EP=32 mb=8 g32b800_q2133,Group_by,0.0097,0.0002
+glassfb_800 EP=32 mb=8 g32b800_q2133,TopK,0.0029,0.0000
+glassfb_800 EP=32 mb=8 g32b800_q2133,Input,0.0000,0.0000
+glassfb_800 EP=32 mb=8 g32b800_q2133,Repartition,0.0000,0.0000
+glassfb EP=64 mb=8 g64_q17067,MultiHeadAttention,9.6281,0.4009
+glassfb EP=64 mb=8 g64_q17067,Dense,6.0643,0.2525
+glassfb EP=64 mb=8 g64_q17067,Softmax,2.6073,0.1086
+glassfb EP=64 mb=8 g64_q17067,Aggregate cooperation,2.2923,0.0954
+glassfb EP=64 mb=8 g64_q17067,Add,2.0665,0.0860
+glassfb EP=64 mb=8 g64_q17067,LayerNorm,1.3433,0.0559
+glassfb EP=64 mb=8 g64_q17067,Group_by,0.0130,0.0005
+glassfb EP=64 mb=8 g64_q17067,TopK,0.0033,0.0001
+glassfb EP=64 mb=8 g64_q17067,Input,0.0000,0.0000
+glassfb EP=64 mb=8 g64_q17067,Repartition,0.0000,0.0000
+glassfb_800 EP=64 mb=8 g64b800_q8533,MultiHeadAttention,9.8073,0.4366
+glassfb_800 EP=64 mb=8 g64b800_q8533,Dense,7.3023,0.3250
+glassfb_800 EP=64 mb=8 g64b800_q8533,Softmax,2.6072,0.1161
+glassfb_800 EP=64 mb=8 g64b800_q8533,Aggregate cooperation,2.2311,0.0993
+glassfb_800 EP=64 mb=8 g64b800_q8533,Add,0.4525,0.0201
+glassfb_800 EP=64 mb=8 g64b800_q8533,TopK,0.0309,0.0014
+glassfb_800 EP=64 mb=8 g64b800_q8533,LayerNorm,0.0202,0.0009
+glassfb_800 EP=64 mb=8 g64b800_q8533,Group_by,0.0136,0.0006
+glassfb_800 EP=64 mb=8 g64b800_q8533,Input,0.0000,0.0000
+glassfb_800 EP=64 mb=8 g64b800_q8533,Repartition,0.0000,0.0000
+hgx8_pkt EP=128 mb=- h128_q1224,MultiHeadAttention,114.4071,0.7337
+hgx8_pkt EP=128 mb=- h128_q1224,Dense,18.1292,0.1163
+hgx8_pkt EP=128 mb=- h128_q1224,Softmax,14.1438,0.0907
+hgx8_pkt EP=128 mb=- h128_q1224,LayerNorm,7.4581,0.0478
+hgx8_pkt EP=128 mb=- h128_q1224,Add,1.0788,0.0069
+hgx8_pkt EP=128 mb=- h128_q1224,Aggregate cooperation,0.6861,0.0044
+hgx8_pkt EP=128 mb=- h128_q1224,Group_by,0.0123,0.0001
+hgx8_pkt EP=128 mb=- h128_q1224,TopK,0.0067,0.0000
+hgx8_pkt EP=128 mb=- h128_q1224,Input,0.0000,0.0000
+hgx8_pkt EP=128 mb=- h128_q1224,Repartition,0.0000,0.0000
+hgx8_pkt EP=16 mb=- h16_q612,MultiHeadAttention,34.6162,0.4792
+hgx8_pkt EP=16 mb=- h16_q612,Dense,18.4466,0.2554
+hgx8_pkt EP=16 mb=- h16_q612,Softmax,11.6160,0.1608
+hgx8_pkt EP=16 mb=- h16_q612,Aggregate cooperation,6.7587,0.0936
+hgx8_pkt EP=16 mb=- h16_q612,Add,0.6246,0.0086
+hgx8_pkt EP=16 mb=- h16_q612,LayerNorm,0.1365,0.0019
+hgx8_pkt EP=16 mb=- h16_q612,Group_by,0.0213,0.0003
+hgx8_pkt EP=16 mb=- h16_q612,TopK,0.0107,0.0001
+hgx8_pkt EP=16 mb=- h16_q612,Input,0.0000,0.0000
+hgx8_pkt EP=16 mb=- h16_q612,Repartition,0.0000,0.0000
+hgx8_pkt EP=16 mb=- h16_q612,MultiHeadAttention,34.6162,0.4792
+hgx8_pkt EP=16 mb=- h16_q612,Dense,18.4466,0.2554
+hgx8_pkt EP=16 mb=- h16_q612,Softmax,11.6160,0.1608
+hgx8_pkt EP=16 mb=- h16_q612,Aggregate cooperation,6.7587,0.0936
+hgx8_pkt EP=16 mb=- h16_q612,Add,0.6246,0.0086
+hgx8_pkt EP=16 mb=- h16_q612,LayerNorm,0.1365,0.0019
+hgx8_pkt EP=16 mb=- h16_q612,Group_by,0.0213,0.0003
+hgx8_pkt EP=16 mb=- h16_q612,TopK,0.0107,0.0001
+hgx8_pkt EP=16 mb=- h16_q612,Input,0.0000,0.0000
+hgx8_pkt EP=16 mb=- h16_q612,Repartition,0.0000,0.0000
+hgx8_pkt EP=16 mb=- h16_q612,MultiHeadAttention,34.6162,0.4792
+hgx8_pkt EP=16 mb=- h16_q612,Dense,18.4466,0.2554
+hgx8_pkt EP=16 mb=- h16_q612,Softmax,11.6160,0.1608
+hgx8_pkt EP=16 mb=- h16_q612,Aggregate cooperation,6.7587,0.0936
+hgx8_pkt EP=16 mb=- h16_q612,Add,0.6246,0.0086
+hgx8_pkt EP=16 mb=- h16_q612,LayerNorm,0.1365,0.0019
+hgx8_pkt EP=16 mb=- h16_q612,Group_by,0.0213,0.0003
+hgx8_pkt EP=16 mb=- h16_q612,TopK,0.0107,0.0001
+hgx8_pkt EP=16 mb=- h16_q612,Input,0.0000,0.0000
+hgx8_pkt EP=16 mb=- h16_q612,Repartition,0.0000,0.0000
+hgx8_pkt EP=32 mb=- h32_q1224,MultiHeadAttention,34.6442,0.6082
+hgx8_pkt EP=32 mb=- h32_q1224,Dense,14.7637,0.2592
+hgx8_pkt EP=32 mb=- h32_q1224,LayerNorm,4.2671,0.0749
+hgx8_pkt EP=32 mb=- h32_q1224,Softmax,3.0534,0.0536
+hgx8_pkt EP=32 mb=- h32_q1224,Add,0.2033,0.0036
+hgx8_pkt EP=32 mb=- h32_q1224,Aggregate cooperation,0.0138,0.0002
+hgx8_pkt EP=32 mb=- h32_q1224,Group_by,0.0097,0.0002
+hgx8_pkt EP=32 mb=- h32_q1224,TopK,0.0087,0.0002
+hgx8_pkt EP=32 mb=- h32_q1224,Input,0.0000,0.0000
+hgx8_pkt EP=32 mb=- h32_q1224,Repartition,0.0000,0.0000
+hgx8_pkt EP=64 mb=- h64_q1224,MultiHeadAttention,9.6162,0.4648
+hgx8_pkt EP=64 mb=- h64_q1224,Dense,6.0182,0.2909
+hgx8_pkt EP=64 mb=- h64_q1224,Softmax,2.6073,0.1260
+hgx8_pkt EP=64 mb=- h64_q1224,TopK,1.2887,0.0623
+hgx8_pkt EP=64 mb=- h64_q1224,LayerNorm,0.9617,0.0465
+hgx8_pkt EP=64 mb=- h64_q1224,Add,0.1841,0.0089
+hgx8_pkt EP=64 mb=- h64_q1224,Group_by,0.0130,0.0006
+hgx8_pkt EP=64 mb=- h64_q1224,Aggregate cooperation,0.0006,0.0000
+hgx8_pkt EP=64 mb=- h64_q1224,Input,0.0000,0.0000
+hgx8_pkt EP=64 mb=- h64_q1224,Repartition,0.0000,0.0000
+glassfb EP=32 mb=8 hier32_q2133,MultiHeadAttention,34.6162,0.7037
+glassfb EP=32 mb=8 hier32_q2133,Dense,10.5250,0.2140
+glassfb EP=32 mb=8 hier32_q2133,Softmax,3.4172,0.0695
+glassfb EP=32 mb=8 hier32_q2133,LayerNorm,0.4046,0.0082
+glassfb EP=32 mb=8 hier32_q2133,Add,0.2110,0.0043
+glassfb EP=32 mb=8 hier32_q2133,Group_by,0.0097,0.0002
+glassfb EP=32 mb=8 hier32_q2133,TopK,0.0087,0.0002
+glassfb EP=32 mb=8 hier32_q2133,Input,0.0000,0.0000
+glassfb EP=32 mb=8 hier32_q2133,Repartition,0.0000,0.0000
+glassfb EP=32 mb=8 hier32_q2133,Aggregate cooperation,0.0000,0.0000
+nvl64_pkt EP=128 mb=- n128_q2176,MultiHeadAttention,100.9638,0.6500
+nvl64_pkt EP=128 mb=- n128_q2176,Aggregate cooperation,31.8315,0.2049
+nvl64_pkt EP=128 mb=- n128_q2176,Dense,17.1249,0.1102
+nvl64_pkt EP=128 mb=- n128_q2176,LayerNorm,4.5726,0.0294
+nvl64_pkt EP=128 mb=- n128_q2176,Softmax,0.6897,0.0044
+nvl64_pkt EP=128 mb=- n128_q2176,Add,0.1356,0.0009
+nvl64_pkt EP=128 mb=- n128_q2176,TopK,0.0067,0.0000
+nvl64_pkt EP=128 mb=- n128_q2176,Group_by,0.0042,0.0000
+nvl64_pkt EP=128 mb=- n128_q2176,Input,0.0000,0.0000
+nvl64_pkt EP=128 mb=- n128_q2176,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,MultiHeadAttention,100.9638,0.6358
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,Aggregate cooperation,39.7550,0.2503
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,Dense,17.2061,0.1084
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,Softmax,0.6822,0.0043
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,Add,0.1317,0.0008
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,LayerNorm,0.0383,0.0002
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,Group_by,0.0123,0.0001
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,TopK,0.0101,0.0001
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=128 mb=- s1_128_q9600,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,MultiHeadAttention,34.6195,0.4251
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Dense,18.6090,0.2285
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Softmax,11.6160,0.1426
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,LayerNorm,9.4289,0.1158
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Aggregate cooperation,6.2728,0.0770
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Add,0.8640,0.0106
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Group_by,0.0213,0.0003
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,TopK,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,MultiHeadAttention,34.6195,0.4251
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Dense,18.6090,0.2285
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Softmax,11.6160,0.1426
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,LayerNorm,9.4289,0.1158
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Aggregate cooperation,6.2728,0.0770
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Add,0.8640,0.0106
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Group_by,0.0213,0.0003
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,TopK,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,MultiHeadAttention,34.6195,0.4251
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Dense,18.6090,0.2285
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Softmax,11.6160,0.1426
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,LayerNorm,9.4289,0.1158
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Aggregate cooperation,6.2728,0.0770
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Add,0.8640,0.0106
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Group_by,0.0213,0.0003
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=- s1_16_q2400,TopK,0.0000,0.0000
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,MultiHeadAttention,34.6167,0.5592
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,Aggregate cooperation,13.7957,0.2229
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,Dense,10.1619,0.1642
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,Softmax,3.0534,0.0493
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,Add,0.2153,0.0035
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,LayerNorm,0.0404,0.0007
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,Group_by,0.0097,0.0002
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,TopK,0.0058,0.0001
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=32 mb=- s1_32_q4800,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,MultiHeadAttention,9.6156,0.4317
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,Dense,6.0133,0.2700
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,Add,3.9680,0.1781
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,Softmax,2.6073,0.1171
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,LayerNorm,0.0357,0.0016
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,Group_by,0.0130,0.0006
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,Aggregate cooperation,0.0118,0.0005
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,TopK,0.0100,0.0004
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=64 mb=- s1_64_q9600,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,MultiHeadAttention,34.6168,0.4381
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,Dense,18.4371,0.2333
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,Aggregate cooperation,13.5811,0.1719
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,Softmax,11.6087,0.1469
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,Add,0.6585,0.0083
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,LayerNorm,0.0943,0.0012
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,Group_by,0.0206,0.0003
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,TopK,0.0071,0.0001
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=16 s1m16_q2400,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,MultiHeadAttention,34.6168,0.4378
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,Dense,18.4385,0.2332
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,Aggregate cooperation,13.6149,0.1722
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,Softmax,11.6117,0.1469
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,Add,0.6593,0.0083
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,LayerNorm,0.0948,0.0012
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,Group_by,0.0206,0.0003
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,TopK,0.0071,0.0001
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=32 s1m32_q2400,Repartition,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,MultiHeadAttention,34.6187,0.4200
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,Dense,18.5827,0.2255
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,Softmax,11.6884,0.1418
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,LayerNorm,9.3898,0.1139
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,Aggregate cooperation,5.4722,0.0664
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,Add,2.6419,0.0321
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,Group_by,0.0205,0.0002
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,TopK,0.0035,0.0000
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,Input,0.0000,0.0000
+nvl64_pkt_s1 EP=16 mb=4 s1m4_q2400,Repartition,0.0000,0.0000
+glassfb EP=32 mb=8 sk1p2_q2133,MultiHeadAttention,35.6051,0.5684
+glassfb EP=32 mb=8 sk1p2_q2133,Aggregate cooperation,11.8009,0.1884
+glassfb EP=32 mb=8 sk1p2_q2133,Dense,10.8653,0.1734
+glassfb EP=32 mb=8 sk1p2_q2133,Softmax,3.0809,0.0492
+glassfb EP=32 mb=8 sk1p2_q2133,LayerNorm,0.7281,0.0116
+glassfb EP=32 mb=8 sk1p2_q2133,Add,0.5513,0.0088
+glassfb EP=32 mb=8 sk1p2_q2133,Group_by,0.0097,0.0002
+glassfb EP=32 mb=8 sk1p2_q2133,TopK,0.0029,0.0000
+glassfb EP=32 mb=8 sk1p2_q2133,Input,0.0000,0.0000
+glassfb EP=32 mb=8 sk1p2_q2133,Repartition,0.0000,0.0000
+glassfb EP=32 mb=8 sk2p0_q2133,MultiHeadAttention,38.9669,0.6336
+glassfb EP=32 mb=8 sk2p0_q2133,Dense,10.5529,0.1716
+glassfb EP=32 mb=8 sk2p0_q2133,Aggregate cooperation,7.9680,0.1296
+glassfb EP=32 mb=8 sk2p0_q2133,Softmax,3.0671,0.0499
+glassfb EP=32 mb=8 sk2p0_q2133,Add,0.5430,0.0088
+glassfb EP=32 mb=8 sk2p0_q2133,LayerNorm,0.3914,0.0064
+glassfb EP=32 mb=8 sk2p0_q2133,Group_by,0.0097,0.0002
+glassfb EP=32 mb=8 sk2p0_q2133,TopK,0.0058,0.0001
+glassfb EP=32 mb=8 sk2p0_q2133,Input,0.0000,0.0000
+glassfb EP=32 mb=8 sk2p0_q2133,Repartition,0.0000,0.0000
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),MultiHeadAttention,113.4495,0.8670
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),Dense,14.1372,0.1080
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),Aggregate cooperation,2.4212,0.0185
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),Softmax,0.6824,0.0052
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),Add,0.1386,0.0011
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),LayerNorm,0.0125,0.0001
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),Group_by,0.0082,0.0001
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),Input,0.0000,0.0000
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),Repartition,0.0000,0.0000
+glassfb EP=128 mb=8 g128_q4267 BEST-RUNG-NOT-QUOTED (107670 RTO),TopK,0.0000,0.0000
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),Dense,96.3283,0.5231
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),Softmax,38.8040,0.2107
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),MultiHeadAttention,34.6162,0.1880
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),Aggregate cooperation,10.9125,0.0593
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),LayerNorm,2.2693,0.0123
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),Add,1.1890,0.0065
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),Group_by,0.0343,0.0002
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),Input,0.0000,0.0000
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),Repartition,0.0000,0.0000
+glassfb EP=8 mb=8 mix2off_q4267 BEST-RUNG-NOT-QUOTED (386 RTO),TopK,0.0000,0.0000
+hgx8_pkt EP=32 q1224,MultiHeadAttention,34.6442,0.6082
+hgx8_pkt EP=32 q1224,Dense,14.7637,0.2592
+hgx8_pkt EP=32 q1224,LayerNorm,4.2671,0.0749
+hgx8_pkt EP=32 q1224,Softmax,3.0534,0.0536
+hgx8_pkt EP=32 q1224,Add,0.2033,0.0036
+hgx8_pkt EP=32 q1224,Aggregate cooperation,0.0138,0.0002
+hgx8_pkt EP=32 q1224,Group_by,0.0097,0.0002
+hgx8_pkt EP=32 q1224,TopK,0.0087,0.0002
+hgx8_pkt EP=32 q1224,Input,0.0000,0.0000
+hgx8_pkt EP=32 q1224,Repartition,0.0000,0.0000
+hgx8_pkt EP=32 q2448,MultiHeadAttention,34.6442,0.6082
+hgx8_pkt EP=32 q2448,Dense,14.7637,0.2592
+hgx8_pkt EP=32 q2448,LayerNorm,4.2671,0.0749
+hgx8_pkt EP=32 q2448,Softmax,3.0534,0.0536
+hgx8_pkt EP=32 q2448,Add,0.2033,0.0036
+hgx8_pkt EP=32 q2448,Aggregate cooperation,0.0138,0.0002
+hgx8_pkt EP=32 q2448,Group_by,0.0097,0.0002
+hgx8_pkt EP=32 q2448,TopK,0.0087,0.0002
+hgx8_pkt EP=32 q2448,Input,0.0000,0.0000
+hgx8_pkt EP=32 q2448,Repartition,0.0000,0.0000
+hgx8_pkt EP=32 q4896,MultiHeadAttention,34.6442,0.6082
+hgx8_pkt EP=32 q4896,Dense,14.7637,0.2592
+hgx8_pkt EP=32 q4896,LayerNorm,4.2671,0.0749
+hgx8_pkt EP=32 q4896,Softmax,3.0534,0.0536
+hgx8_pkt EP=32 q4896,Add,0.2033,0.0036
+hgx8_pkt EP=32 q4896,Aggregate cooperation,0.0138,0.0002
+hgx8_pkt EP=32 q4896,Group_by,0.0097,0.0002
+hgx8_pkt EP=32 q4896,TopK,0.0087,0.0002
+hgx8_pkt EP=32 q4896,Input,0.0000,0.0000
+hgx8_pkt EP=32 q4896,Repartition,0.0000,0.0000

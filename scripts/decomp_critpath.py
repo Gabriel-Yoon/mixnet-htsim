@@ -32,6 +32,10 @@ from the flow log, as a separate column.
 import collections, csv, os, re, sys
 
 OUT = ("/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper/decomp_critpath.csv")
+# The per-op compute split lives in its own file. decomp_critpath.csv's schema is
+# what the figures read and is not changed here.
+OUT_OPS = ("/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly/experiments/results/paper/decomp_ops.csv")
+OPROWS = []
 ROWS = []
 
 TYPE_NAMES = {
@@ -79,9 +83,18 @@ def parse(path):
                 mn = RE_NAME.search(line)
                 if mn:
                     nm = mn.group(1)
-                    # drop FlexFlow's trailing instance id: Dense_5000255 -> Dense
-                    base = nm.rsplit("_", 1)
-                    tname[tid] = base[0] if len(base) == 2 and base[1].isdigit() else nm
+                    # Drop FlexFlow's trailing instance ids. There can be MORE THAN
+                    # ONE -- MultiHeadAttention_1000001_2000002 -- so strip until the
+                    # last segment is not a number. An op whose real name ends in a
+                    # number does not use an underscore before it (Conv2D), and a
+                    # multi-word name stops at its word (Group_by).
+                    while True:
+                        base = nm.rsplit("_", 1)
+                        if len(base) == 2 and base[1].isdigit():
+                            nm = base[0]
+                        else:
+                            break
+                    tname[tid] = nm
                 else:
                     unnamed[0] += 1
                 continue
@@ -175,6 +188,9 @@ def run(label, log, flowlog=None):
         for nm, v in sorted(per_op.items(), key=lambda kv: -kv[1]):
             print("      %-24s %9.3f ms  (%5.1f%% of compute)"
                   % (nm, v / 1e9, 100.0 * v / per["compute"] if per["compute"] else 0))
+            OPROWS.append(dict(label=label, op=nm, compute_ms="%.4f" % (v / 1e9),
+                               share_of_compute=("%.4f" % (v / per["compute"])
+                                                 if per["compute"] else "")))
     bs = bytes_split(flowlog)
     if bs:
         intra, cross = bs
@@ -278,6 +294,11 @@ if __name__ == "__main__":
     import glob as _g
     for f in sorted(_g.glob(os.path.join(hgx, "hgx8_pkt_ep32_q*.log"))):
         run("hgx8_pkt EP=32 " + os.path.basename(f).split("_")[-1].replace(".log", ""), f)
+    if OPROWS:
+        with open(OUT_OPS, "w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(OPROWS[0].keys()))
+            w.writeheader(); w.writerows(OPROWS)
+        print("wrote %s: %d (row, op) pair(s)" % (OUT_OPS, len(OPROWS)))
     if ROWS:
         with open(OUT, "w", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=list(ROWS[0].keys()))

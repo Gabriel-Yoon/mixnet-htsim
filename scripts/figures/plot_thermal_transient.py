@@ -62,7 +62,7 @@ for plo, pts in sorted(series.items(), key=lambda kv: -kv[0]):
 for T0, name in ((0.01084, "microbatch"), (0.08675, "iteration")):
     ax.axvline(T0, color="#bbb", lw=0.6, ls=(0, (1, 2)), zorder=1)
     ax.text(T0 * 1.08, 7.6, name, fontsize=5.6, color="#888", ha="left", va="center")
-ax.text(0.02, 0.97, "markers: ANSYS periodic solves (glass tile stack, h = 200k)", transform=ax.transAxes, fontsize=5.6, color="#555", ha="left", va="top")
+# (no in-figure title: the caption carries it)
 if step_K:
     ax.axhline(step_K, color="#c46a4a", lw=0.9, ls=(0, (4, 2)), zorder=1)
     ax.text(0.02, step_K + 0.6, "idle-to-TDP step: %.1f K (10-90%% rise %.0f ms)" % (step_K, 1e3 * rise_s), transform=ax.get_yaxis_transform(), ha="left", va="bottom", fontsize=6, color="#c46a4a")
@@ -72,7 +72,7 @@ ax.text(0.02, chan_K + 0.5, "one 100 GHz channel (0.8 nm)", transform=ax.get_yax
 ax.set_xscale("log"); ax.set_xlabel("GPU power fluctuation period", fontsize=8.5)
 ax.set_xlim(0.001, 6.0); ax.set_xticks([0.001, 0.01, 0.1, 1.0]); ax.set_xticklabels(["1 ms", "10 ms", "100 ms", "1 s"]); ax.minorticks_off()
 ax.set_ylabel("PIC swing, peak-to-peak (K)", fontsize=8.5)
-ax.set_ylim(0, (step_K or 30) * 1.25); ax.tick_params(labelsize=7.5)
+ax.set_ylim(0, (step_K or 30) * 1.15); ax.tick_params(labelsize=7.5)
 ax2 = ax.twinx(); ax2.set_ylim(0, ax.get_ylim()[1] * PM_PER_K / 1000.0); ax2.set_ylabel("microring drift (nm) at 80 pm/K", fontsize=8.5); ax2.tick_params(labelsize=7.5)
 ax2.spines["top"].set_visible(False); ax.spines["top"].set_visible(False)
 ax.legend(frameon=False, fontsize=6.0, loc="center left", bbox_to_anchor=(0.0, 0.60), handlelength=1.8)

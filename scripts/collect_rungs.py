@@ -88,6 +88,15 @@ LADDERS = {
     ("glassfb_mesh8x8", "32"):  [1066, 2133, 4267, 8533, 17067, 34133],
     ("glassfb_mesh8x8", "64"):  [1066, 2133, 4267, 8533, 17067, 34133],
     ("glassfb_mesh8x8", "128"): [1066, 2133, 4267, 8533, 17067, 34133],
+    # submit_batch12.sh, the copper-medium ablation. The paper's own 4x4 flattened
+    # butterfly with the distance->=2 intra-panel links moved from optical to copper
+    # (GLASS_OPT_BW 384->100, GLASS_OPT_LAT 300->400 ns); ports, electrical tier,
+    # placement, cabling and routing are unchanged. Same six rungs as glassfb_800 at
+    # each EP so the arms compare rung for rung rather than at their own quoted
+    # buffers -- which the 8x8 arms showed is a different question.
+    ("copper_fb", "16"): [266, 533, 1066, 2133, 4267, 8533],
+    ("copper_fb", "32"): [533, 1066, 2133, 4267, 8533, 17067],
+    ("copper_fb", "64"): [1066, 2133, 4267, 8533, 17067, 34133],
 }
 
 
@@ -136,14 +145,20 @@ WORKLOAD = {"16": "llamaMoE", "32": "llamaMoE", "64": "qwenMoE", "128": "arctic"
 # the system name, so a new name silently means family="" and, worse, q_over_bdp=""
 # -- no buffer axis at all for every 200G/lane row.
 FAMILY = {"glassfb": "glass", "hgx8_pkt": "pkt", "nvl64_pkt_s1": "pkt",
-          "glassfb_800": "glass", "glassfb_8x8": "glass", "glassfb_mesh8x8": "glass"}
+          "glassfb_800": "glass", "glassfb_8x8": "glass", "glassfb_mesh8x8": "glass",
+          # the flattened butterfly with copper long links: same fabric family, the
+          # medium is what the arm varies, and the system name is what names it
+          "copper_fb": "glass"}
 # 800.0, not 400.0: q_over_bdp is q x MTU / (port_bw x RTT), so the SAME packet
 # count is half the BDP multiple at twice the port rate. Using 400 here would
 # report every 200G rung at twice its true multiple and put the 800 GB/s q=533
 # row (1x BDP) on the axis at 2x, next to a 400 GB/s row that holds twice the
 # buffer in bytes-per-BDP. The ladders above were already chosen in these units.
 PORT_GBPS = {"glassfb": 400.0, "hgx8_pkt": 112.5, "nvl64_pkt_s1": 900.0,
-             "glassfb_800": 800.0, "glassfb_8x8": 800.0, "glassfb_mesh8x8": 800.0}
+             "glassfb_800": 800.0, "glassfb_8x8": 800.0, "glassfb_mesh8x8": 800.0,
+             # ports stay at 800 GB/s in the copper arm -- only the distance->=2
+             # INTRA-panel links change medium -- so q_over_bdp is the same axis
+             "copper_fb": 800.0}
 RTT_S = 4 * 250e-9          # four 250 ns hops, the same for every fabric here
 MTU = 1500
 

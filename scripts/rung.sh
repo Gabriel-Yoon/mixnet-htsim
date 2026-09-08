@@ -55,16 +55,35 @@ if [ "$IS_GLASS" = 1 ]; then
   # default was right for them; it was wrong the first time a tp=4 graph was run.
   TPD=${RUNG_TP:-1}
   EPD=${RUNG_EP:-1}
-  echo "rung knobs: dim_a2a=$DIM portmap=${RUNG_NO_PORTMAP:+OMITTED}${RUNG_NO_PORTMAP:-$MAP} hier=${RUNG_HIER:-0} port_bw=$PORT_BW ep_place=$PLACE tp=$TPD ep=$EPD" >&2
+  # Panel geometry and the intra-panel degree bound. PSZ/PCOLS give the panel a
+  # different shape (16 = 4x4, 64 = 8x8); OPTBW is the per-optical-link rate, which
+  # falls as the panel grows because a GPU's optical egress budget is fixed;
+  # MAXDIST=1 keeps only grid-adjacent intra links, i.e. a mesh.
+  PSZ=${RUNG_PANEL:-16}
+  PCOLS=${RUNG_PCOLS:-4}
+  OPTBW=${RUNG_OPT_BW:-384}
+  # Long-link LATENCY pad. Empty by default so the topology's own 300 ns stands and
+  # every existing walk is unchanged; set for the copper arm, where the medium is a
+  # different bandwidth AND a different pad. Exported only when non-empty, so an
+  # unset knob cannot be mistaken for a deliberate 0.
+  OPTLAT=${RUNG_OPT_LAT:-}
+  # export, not an env prefix: ${OPTLAT:+GLASS_OPT_LAT=...} looks like it would set
+  # the variable and does not -- bash recognises assignment prefixes from the source
+  # text before expansion, so the expanded word becomes the COMMAND NAME and the run
+  # dies before the simulator starts. Only exported when non-empty, so an unset knob
+  # leaves the topology's own 300 ns default and every existing walk is unchanged.
+  if [ -n "$OPTLAT" ]; then export GLASS_OPT_LAT="$OPTLAT"; fi
+  MAXD=${RUNG_MAXDIST:-0}
+  echo "rung knobs: dim_a2a=$DIM portmap=${RUNG_NO_PORTMAP:+OMITTED}${RUNG_NO_PORTMAP:-$MAP} hier=${RUNG_HIER:-0} port_bw=$PORT_BW ep_place=$PLACE tp=$TPD ep=$EPD panel=$PSZ x$PCOLS opt_bw=$OPTBW opt_lat=${OPTLAT:-default300} maxdist=$MAXD" >&2
   if [ "${RUNG_NO_PORTMAP:-0}" = 1 ]; then
     # mesh cabling: no port map at all, which is a different fabric, not a
     # different setting of one
-    GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
+    GLASS_RTO_MIN_US=100 GLASS_PANEL="$PSZ" GLASS_PCOLS="$PCOLS" GLASS_ELEC_BW=1800 GLASS_OPT_BW="$OPTBW" GLASS_MAXDIST="$MAXD" \
     GLASS_EP_PLACE="$PLACE" GLASS_TP="$TPD" GLASS_EP="$EPD" GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" \
       timeout 43200 $BIN -logdir "$LD" -nodes "$NODES" -flowfile "$R/$FB" \
         -disable-intra-shortcut -mtu 1500 -q "$Q" $HIER -weightmatrix "$T/$WM" > "$LOG" 2>&1
   else
-    GLASS_RTO_MIN_US=100 GLASS_PANEL=16 GLASS_ELEC_BW=1800 GLASS_OPT_BW=384 \
+    GLASS_RTO_MIN_US=100 GLASS_PANEL="$PSZ" GLASS_PCOLS="$PCOLS" GLASS_ELEC_BW=1800 GLASS_OPT_BW="$OPTBW" GLASS_MAXDIST="$MAXD" \
     GLASS_EP_PLACE="$PLACE" GLASS_TP="$TPD" GLASS_EP="$EPD" GLASS_DIM_A2A="$DIM" GLASS_PORT_BW="$PORT_BW" GLASS_PORT_MAP="$PM/$MAP" \
       timeout 43200 $BIN -logdir "$LD" -nodes "$NODES" -flowfile "$R/$FB" \
         -disable-intra-shortcut -mtu 1500 -q "$Q" $HIER -weightmatrix "$T/$WM" > "$LOG" 2>&1
@@ -132,7 +151,7 @@ if [ "$IS_GLASS" = 1 ]; then
     mean_fct_ms="$(echo "$FSTAT"|cut -d, -f3)" p50_fct_ms="$(echo "$FSTAT"|cut -d, -f4)" \
     p99_fct_ms="$(echo "$FSTAT"|cut -d, -f5)" max_fct_ms="$(echo "$FSTAT"|cut -d, -f6)" \
     fct_logdir="$FLD" fct_status="$FSTATUS" \
-    wall_s="$((T1-T0))" status="$ST" note="post-fix rung ($MODE); dim_a2a=${RUNG_DIM_A2A:-1}; portmap=${RUNG_NO_PORTMAP:+none}${RUNG_NO_PORTMAP:-$MAP}; hier=${RUNG_HIER:-0}; port_bw=${RUNG_PORT_BW:-400}; ep_place=${RUNG_EP_PLACE:-1}; tp=${RUNG_TP:-1}; ep=${RUNG_EP:-1}${PBNOTE}"
+    wall_s="$((T1-T0))" status="$ST" note="post-fix rung ($MODE); dim_a2a=${RUNG_DIM_A2A:-1}; portmap=${RUNG_NO_PORTMAP:+none}${RUNG_NO_PORTMAP:-$MAP}; hier=${RUNG_HIER:-0}; port_bw=${RUNG_PORT_BW:-400}; ep_place=${RUNG_EP_PLACE:-1}; tp=${RUNG_TP:-1}; ep=${RUNG_EP:-1}; panel=${RUNG_PANEL:-16}; pcols=${RUNG_PCOLS:-4}; opt_bw=${RUNG_OPT_BW:-384}; maxdist=${RUNG_MAXDIST:-0}${PBNOTE}"
 else
   csv_row "$CSV" paper_ref=cliff system="$SYS" ep="$EP" nodes="$NODES" domain="$D" \
     switches="$SW" link_gbps="$L" nic_bw="$NIC" q_nvs="$Q" q_nic="$QC" \

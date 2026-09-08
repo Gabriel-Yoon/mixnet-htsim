@@ -242,7 +242,7 @@ def decomp():
     eps_with_primary = {ep for ep, sysn, _ in parsed if sysn == PRIMARY_GLASS}
     parsed = [t for t in parsed if not (t[1] in ("glassfb", "glassfb_800") and t[1] != PRIMARY_GLASS and t[0] in eps_with_primary)]
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
-    fig, ax = plt.subplots(figsize=(6.4, 2.4), dpi=200)
+    fig, ax = plt.subplots(figsize=(7.0, 2.25), dpi=200)
     SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
     DARK = {"glassfb_800": "#2b6f7f", "glassfb": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     LIGHT = {"glassfb_800": "#c9dfe4", "glassfb": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8", "hgx8_pkt": "#efd3c6"}
@@ -254,18 +254,18 @@ def decomp():
         ax.bar(x, comp, width=0.72, color=LIGHT[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
         ax.bar(x, a2a + other, bottom=comp, width=0.72, color=DARK[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
         tot = comp + a2a + other
-        ax.text(x, tot * 1.015, f"{tot:.0f}" + ("*" if hol else ""), ha="center", va="bottom", fontsize=5.2)
+        ax.text(x, tot * 1.015, f"{tot:.0f}" + ("*" if hol else ""), ha="center", va="bottom", fontsize=7)
         xs.append(x); labels.append(SHORT.get(sysname, sysname)); groups.setdefault(ep, []).append(x); x += 1
         if sysname == "hgx8_pkt": x += 0.9
-    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=5.4, rotation=35, ha="right")
+    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=8, rotation=30, ha="right")
     ymax = ax.get_ylim()[1] * 1.08
     for ep, gx in groups.items():   # EP group label above each group
-        ax.text(sum(gx) / len(gx), ymax * 0.985, f"EP={ep}", ha="center", va="top", fontsize=7, fontweight="bold", color="#4a5560")
+        ax.text(sum(gx) / len(gx), ymax * 0.985, f"EP={ep}", ha="center", va="top", fontsize=9, fontweight="bold", color="#4a5560")
     ax.set_ylim(0, ymax)
-    ax.set_ylabel("iteration time (ms)", fontsize=7); ax.tick_params(labelsize=6)
+    ax.set_ylabel("iteration time (ms)", fontsize=9); ax.tick_params(labelsize=8)
     import matplotlib.patches as mpatches_
     h = [mpatches_.Patch(facecolor="#5c6b74", label="expert all-to-all (dark)"), mpatches_.Patch(facecolor="#dfe4e7", edgecolor="#5c6b74", label="compute (light)")]
-    ax.legend(handles=h, fontsize=5.5, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.92))
+    ax.legend(handles=h, fontsize=8, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.92))
     ax.grid(alpha=0.25, axis="y")
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
 
@@ -432,7 +432,7 @@ def energy():
             if str(t.get("mb") or "8") == "8" and v.strip(): tok[int(t["ep"])] = float(v)
     if len(tok) < 2: tok = {}
     ncol = len(eps); nrow = 3 if tok else 2
-    fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 1.9 * nrow), dpi=200, sharey=False, squeeze=False)
+    fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 1.75 * nrow), dpi=200, sharey=False, squeeze=False)
     drawn = set()
     HUE = {"glass": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     for j, ep in enumerate(eps):
@@ -452,31 +452,31 @@ def energy():
                 bottom += hi
             link_lo = bottom_lo = sum(t[1] for t in tiers)
             a1.plot([x - 0.33, x + 0.33], [link_lo, link_lo], color="black", lw=0.8)
-            a1.text(x, bottom * 1.02, f"{link_lo:.0f}–{bottom:.0f}", ha="center", va="bottom", fontsize=4.8)
+            a1.text(x, bottom * 1.02, f"{link_lo:.0f}–{bottom:.0f}", ha="center", va="bottom", fontsize=6.5)
             # row 2: link vs static vs total, log scale, grouped
             tot_lo, tot_hi = link_lo + st[0], bottom + st[1]
             a2.bar(x - 0.22, bottom, width=0.2, color=HUE[sysname], label="link (bytes moved)" if "l2" not in drawn else None); drawn.add("l2")
             a2.bar(x, max(st[1], 1e-3), width=0.2, facecolor="white", edgecolor=HUE[sysname], hatch="////", lw=0.6,
                    label="static (idle power x iteration)" if "s2" not in drawn else None); drawn.add("s2")
             a2.bar(x + 0.22, tot_hi, width=0.2, color="#c9ced2", label="total" if "t2" not in drawn else None); drawn.add("t2")
-            a2.text(x + 0.22, tot_hi * 1.15, f"{tot_lo:.0f}–{tot_hi:.0f}", ha="center", va="bottom", fontsize=4.6)
+            a2.text(x + 0.22, tot_hi * 1.15, f"{tot_lo:.0f}–{tot_hi:.0f}", ha="center", va="bottom", fontsize=6.2)
             if tok.get(ep):
                 a3 = axes[2][j]
                 mj_lo, mj_hi = tot_lo / tok[ep] * 1e3, tot_hi / tok[ep] * 1e3
                 a3.bar(x, mj_hi, width=0.62, color="#9aa5ad", alpha=0.5); a3.bar(x, mj_lo, width=0.62, color=HUE[sysname])
                 a3.text(x, mj_hi * 1.02, f"{mj_lo:.2f}–{mj_hi:.2f}", ha="center", va="bottom", fontsize=4.6)
-        a1.set_title(f"EP={ep}", fontsize=7)
+        a1.set_title(f"EP={ep}", fontsize=9.5)
         a2.set_yscale("log")
         for ax in axes[:, j]:
-            ax.set_xticks(range(len(systems))); ax.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=5.2, rotation=35, ha="right")
-            ax.tick_params(labelsize=5.5); ax.grid(alpha=0.25, axis="y")
+            ax.set_xticks(range(len(systems))); ax.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=8, rotation=30, ha="right")
+            ax.tick_params(labelsize=7.5); ax.grid(alpha=0.25, axis="y")
         a1.set_ylim(0, a1.get_ylim()[1] * 1.18); a2.set_ylim(a2.get_ylim()[0], a2.get_ylim()[1] * 4)
         for ax in axes[:-1, j]: ax.set_xticklabels([])
-    axes[0][0].set_ylabel("link energy per iteration (J)", fontsize=6.5)
-    axes[1][0].set_ylabel("energy per iteration (J), log", fontsize=6.5)
+    axes[0][0].set_ylabel("link energy per iteration (J)", fontsize=8.5)
+    axes[1][0].set_ylabel("energy per iteration (J), log", fontsize=8.5)
     if tok: axes[2][0].set_ylabel("energy per token (mJ)", fontsize=6.5)
     h1, l1 = axes[0][0].get_legend_handles_labels(); h2, l2 = axes[1][0].get_legend_handles_labels()
-    fig.legend(h1 + h2, l1 + l2, fontsize=5, frameon=False, loc="lower center", ncol=5, bbox_to_anchor=(0.5, -0.005), handlelength=1.6, columnspacing=1.0)
+    fig.legend(h1 + h2, l1 + l2, fontsize=7.5, frameon=False, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.005), handlelength=1.6, columnspacing=1.0)
     fig.tight_layout(pad=0.3, rect=(0, 0.09 if not tok else 0.07, 1, 1)); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
 def calib():
@@ -666,9 +666,47 @@ def boundary():
         print("  %-12s EP=%3d share=%5.1f%%  tier=%7.2f ms  a2a=%s" % (NAMES[sname], ep, v["share"], v["tier_ms"], v["a2a"]))
     fig.tight_layout(pad=0.3, h_pad=1.0); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
 
+def loadfig():
+    """Load (Sec. dse): EP=16 iteration against microbatch, Glass-FB (200G/lane) and NVL72, each bar normalised
+    to that fabric's own mb=4 quoted row and split along the critical path (dark = expert A2A, light = compute)
+    from decomp_critpath.csv at the quoted cliff_all rows (user 2026-09-08: (a) only, normalised, no 100G line)."""
+    rows = load("cliff_all")
+    dec = list(csv.DictReader(open(os.path.join(RES, "decomp_critpath.csv"))))
+    def decrow(prefix, mk):
+        c = [x for x in dec if x["label"].startswith(prefix) and abs(float(x["makespan_ms"]) - mk) < 0.05 and int(float(x.get("path_tasks") or 0)) >= 100]
+        return c[0] if c else None
+    def quoted_mb(sysname, mb):
+        c = [r for r in rows if r["system"] == sysname and r.get("ep") == 16 and r.get("mb") == mb and r["_quotable"] and r.get("link_rate_fixed") == "yes"]
+        return min((r["makespan_ms"] for r in c), default=None)
+    DARK = {"glassfb_800": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f"}; LIGHT = {"glassfb_800": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8"}
+    NAME = {"glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72"}
+    fig, ax = plt.subplots(figsize=(3.45, 1.85), dpi=200)
+    mbs = [4, 8, 16, 32]; w = 0.36
+    for j, sysname in enumerate(("glassfb_800", "nvl64_pkt_s1")):
+        ref = quoted_mb(sysname, 4)
+        for i, mb in enumerate(mbs):
+            mk = quoted_mb(sysname, mb)
+            if mk is None or ref is None: continue
+            pre = f"{sysname} EP=16 mb={mb}" if not (sysname == "nvl64_pkt_s1" and mb == 8) else "nvl64_pkt_s1 EP=16 mb=-"
+            d = decrow(pre, mk)
+            comp = float(d["compute_ms"]) / ref if d else 0; a2a = float(d["expert_a2a_ms"]) / ref if d else mk / ref
+            x = i + (j - 0.5) * w
+            ax.bar(x, comp, w * 0.9, color=LIGHT[sysname], zorder=3)
+            ax.bar(x, a2a, w * 0.9, bottom=comp, color=DARK[sysname], zorder=3, label=NAME[sysname] if i == 0 else None)
+            ax.text(x, comp + a2a + 0.015, "%.2f" % (mk / ref), ha="center", va="bottom", fontsize=6.5, color="#333")
+    from matplotlib.patches import Patch
+    h, l = ax.get_legend_handles_labels()
+    h += [Patch(facecolor="#4a4a4a", label="expert A2A (dark)"), Patch(facecolor="#d9d9d9", label="compute (light)")]
+    ax.legend(handles=h, frameon=False, fontsize=7, loc="upper left", handlelength=1.2, labelspacing=0.3)
+    ax.set_xticks(range(len(mbs))); ax.set_xticklabels(["mb=%d" % m for m in mbs], fontsize=8)
+    ax.set_ylim(0, 1.6); ax.set_ylabel("normalized iteration time", fontsize=8.5); ax.tick_params(axis="y", labelsize=7.5)
+    ax.axhline(1.0, color="#999", lw=0.5, ls=(0, (3, 2)), zorder=1)
+    ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
+    fig.tight_layout(pad=0.3); fig.savefig(f("fig_load.png")); fig.savefig(f("fig_load.pdf")); print("wrote fig_load.png")
+
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]
-    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary}
+    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary, "load": loadfig}
     for w in (fns if "all" in which else which):
         try: fns[w]()
         except SystemExit as e: print("skip:", e)

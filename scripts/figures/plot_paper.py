@@ -715,7 +715,7 @@ def calibfig():
     fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.45, 3.4), dpi=200, sharex=True)
     # top: completion time
     a1.axhspan(45, 85, color="#c46a4a", alpha=0.15, lw=0)
-    a1.text(6.0e7, 62, "measured 8xH100 floor, 45-85 us", fontsize=5.8, color="#8a4a30", va="center", ha="right")
+    a1.text(8500, 105, "measured 8xH100 floor, 45-85 us", fontsize=5.8, color="#8a4a30", va="bottom", ha="left")
     a1.plot([r["msg_bytes"] for r in s18], [r["T_us"] for r in s18], "-", color="#b7c5cc", lw=1.0, label="per-lane hashed (rejected)")
     a1.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.4, ms=3.5, label="this work (NVSwitch model)")
     if sim:

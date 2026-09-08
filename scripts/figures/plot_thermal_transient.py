@@ -35,7 +35,7 @@ STYLE = {210: dict(color="#2b6f7f", marker="o", lw=1.2, label="GPU 700 / 210 W (
          0: dict(color="#8a97a3", marker="s", lw=0.9, ls=(0, (3, 2)), label="GPU 700 / 0 W (bound)", zorder=3),
          350: dict(color="#b7c5cc", marker="^", lw=0.9, ls=(0, (1, 1.5)), label="GPU 700 / 350 W", zorder=2)}
 
-fig, ax = plt.subplots(figsize=(3.45, 2.3), dpi=200)
+fig, ax = plt.subplots(figsize=(3.45, 1.95), dpi=200)
 for plo, pts in sorted(series.items(), key=lambda kv: -kv[0]):
     pts.sort()
     st = STYLE.get(plo, dict(color="#999", marker="x", label=f"P_lo={plo} W"))

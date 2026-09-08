@@ -243,8 +243,8 @@ def decomp():
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
     fig, ax = plt.subplots(figsize=(7.0, 2.5), dpi=200)
     SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72 striped", "nvl64_pkt": "NVL72 pinned", "hgx8_pkt": "HGX-8"}
-    DARK = {"glassfb_800": "#1f6f8b", "glassfb": "#1f6f8b", "nvl64_pkt_s1": "#b06fc0", "nvl64_pkt": "#7a0177", "hgx8_pkt": "#d95f0e"}
-    LIGHT = {"glassfb_800": "#c3dde6", "glassfb": "#c3dde6", "nvl64_pkt_s1": "#e9d9f0", "nvl64_pkt": "#d8b5dc", "hgx8_pkt": "#f7d3ba"}
+    DARK = {"glassfb_800": "#2b6f7f", "glassfb": "#2b6f7f", "nvl64_pkt_s1": "#8b7fc4", "nvl64_pkt": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
+    LIGHT = {"glassfb_800": "#c9dfe4", "glassfb": "#c9dfe4", "nvl64_pkt_s1": "#e4e0f3", "nvl64_pkt": "#cfc9e8", "hgx8_pkt": "#efd3c6"}
     xs, labels = [], []; x = 0; groups = {}
     for ep, sysname, r in parsed:
         comp = float(r.get("compute_ms") or 0); a2a = float(r.get("expert_a2a_ms") or 0)
@@ -263,7 +263,7 @@ def decomp():
     ax.set_ylim(0, ymax)
     ax.set_ylabel("iteration time (ms)", fontsize=7); ax.tick_params(labelsize=6)
     import matplotlib.patches as mpatches_
-    h = [mpatches_.Patch(facecolor="#9aa5ad", label="expert all-to-all (dark)"), mpatches_.Patch(facecolor="#dfe4e7", edgecolor="#9aa5ad", label="compute (light)")]
+    h = [mpatches_.Patch(facecolor="#5c6b74", label="expert all-to-all (dark)"), mpatches_.Patch(facecolor="#dfe4e7", edgecolor="#5c6b74", label="compute (light)")]
     ax.legend(handles=h, fontsize=5.5, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.92))
     ax.grid(alpha=0.25, axis="y")
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
@@ -389,7 +389,8 @@ def energy():
     eps = sorted({int(r["ep"]) for r in g} | {int(r["ep"]) for r in n})
     systems = ["glass", "nvl64_pkt", "hgx8_pkt"]
     NAMES = {"glass": "Glass-FB", "nvl64_pkt": "NVL72", "hgx8_pkt": "HGX-8"}
-    TIER_COL = {"elec": "#b5651d", "opt": "#2a9d8f", "inter": "#e9a23b", "nvlink": "#7a0177", "nic": "#c77dff", "static": "none"}
+    TIER_COL = {"elec": "#2b6f7f", "opt": "#6aa9b5", "inter": "#b7d8de", "nvlink": "#4b3f8f", "nic": "#b7aee0", "static": "none"}
+    TIER_COL_HGX = {"nvlink": "#c46a4a", "nic": "#efd3c6"}
     TIER_LAB = {"elec": "electrical RDL (distance-1)", "opt": "intra-panel optical (L1/L2)", "inter": "inter-panel optical ports",
                 "nvlink": "in-domain NVLink", "nic": "scale-out NIC", "static": "static (laser+tune / NVSwitch idle)"}
     def glass_row(ep):
@@ -432,7 +433,7 @@ def energy():
     ncol = len(eps); nrow = 3 if tok else 2
     fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 1.9 * nrow), dpi=200, sharey=False, squeeze=False)
     drawn = set()
-    HUE = {"glass": "#1f6f8b", "nvl64_pkt": "#7a0177", "hgx8_pkt": "#d95f0e"}
+    HUE = {"glass": "#2b6f7f", "nvl64_pkt": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     for j, ep in enumerate(eps):
         a1 = axes[0][j]; a2 = axes[1][j]
         for x, sysname in enumerate(systems):
@@ -441,18 +442,22 @@ def energy():
             # row 1: link energy by tier, linear, at the conservative pJ/bit end; tick = favorable end
             bottom = 0.0
             for k, lo, hi in tiers:
-                a1.bar(x, hi, bottom=bottom, width=0.66, color=TIER_COL[k], edgecolor="white", lw=0.4,
-                       label=TIER_LAB[k] if k not in drawn else None); drawn.add(k)
+                col = TIER_COL_HGX[k] if (sysname == "hgx8_pkt" and k in TIER_COL_HGX) else TIER_COL[k]
+                key = (k, sysname == "hgx8_pkt")
+                lab = {("nvlink", False): "in-domain NVLink (NVL72)", ("nic", False): "scale-out NIC (NVL72)",
+                       ("nvlink", True): "in-domain NVLink (HGX-8)", ("nic", True): "scale-out NIC (HGX-8)"}.get(key, TIER_LAB[k])
+                a1.bar(x, hi, bottom=bottom, width=0.66, color=col, edgecolor="white", lw=0.4,
+                       label=lab if key not in drawn else None); drawn.add(key)
                 bottom += hi
             link_lo = bottom_lo = sum(t[1] for t in tiers)
             a1.plot([x - 0.33, x + 0.33], [link_lo, link_lo], color="black", lw=0.8)
             a1.text(x, bottom * 1.02, f"{link_lo:.0f}–{bottom:.0f}", ha="center", va="bottom", fontsize=4.8)
             # row 2: link vs static vs total, log scale, grouped
             tot_lo, tot_hi = link_lo + st[0], bottom + st[1]
-            a2.bar(x - 0.22, bottom, width=0.2, color=HUE[sysname], label="link (bytes moved)" if ("L2", ) and "l2" not in drawn else None); drawn.add("l2")
-            a2.bar(x, max(st[1], 1e-3), width=0.2, facecolor="none", edgecolor=HUE[sysname], hatch="////", lw=0.6,
+            a2.bar(x - 0.22, bottom, width=0.2, color=HUE[sysname], label="link (bytes moved)" if "l2" not in drawn else None); drawn.add("l2")
+            a2.bar(x, max(st[1], 1e-3), width=0.2, facecolor="white", edgecolor=HUE[sysname], hatch="////", lw=0.6,
                    label="static (idle power x iteration)" if "s2" not in drawn else None); drawn.add("s2")
-            a2.bar(x + 0.22, tot_hi, width=0.2, color=HUE[sysname], alpha=0.35, label="total" if "t2" not in drawn else None); drawn.add("t2")
+            a2.bar(x + 0.22, tot_hi, width=0.2, color="#c9ced2", label="total" if "t2" not in drawn else None); drawn.add("t2")
             a2.text(x + 0.22, tot_hi * 1.15, f"{tot_lo:.0f}–{tot_hi:.0f}", ha="center", va="bottom", fontsize=4.6)
             if tok.get(ep):
                 a3 = axes[2][j]
@@ -470,7 +475,7 @@ def energy():
     axes[1][0].set_ylabel("energy per iteration (J), log", fontsize=6.5)
     if tok: axes[2][0].set_ylabel("energy per token (mJ)", fontsize=6.5)
     h1, l1 = axes[0][0].get_legend_handles_labels(); h2, l2 = axes[1][0].get_legend_handles_labels()
-    fig.legend(h1 + h2, l1 + l2, fontsize=5, frameon=False, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.005), handlelength=1.6, columnspacing=1.2)
+    fig.legend(h1 + h2, l1 + l2, fontsize=5, frameon=False, loc="lower center", ncol=5, bbox_to_anchor=(0.5, -0.005), handlelength=1.6, columnspacing=1.0)
     fig.tight_layout(pad=0.3, rect=(0, 0.09 if not tok else 0.07, 1, 1)); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
 def calib():

@@ -22,9 +22,20 @@ SRC = os.path.join(ROOT, "experiments/results/paper/cliff_postfix.csv")
 OUT = os.path.join(ROOT, "experiments/results/paper/medium_ablation.csv")
 
 # system -> (arm, long-link medium, GB/s, latency pad ns)
-ARM = {"glassfb_800": ("glass", "optical", "384", "300"),
-       "copper_fb":   ("copper", "copper",  "100", "400")}
-DESIGN_WALK = {"g16b800", "g32b800", "g64b800", "cu16", "cu32", "cu64"}
+# arm label, long-link medium, GB/s, latency pad ns.
+# glass_pad400 is the latency-only CONTROL: glass bandwidth carrying the copper
+# pad, so the difference between it and glass is the pad's share of the copper
+# penalty and the rest is bandwidth's. 200 GB/s is a RATE POINT at the copper pad,
+# not a claim that copper reaches 200 GB/s over a panel diagonal -- the
+# copper-feasible rate this ablation was specified around is 100.
+ARM = {"glassfb_800":   ("glass",      "optical",    "384", "300"),
+       "copper_fb":     ("copper100",  "copper",     "100", "400"),
+       "copper_fb_50":  ("copper50",   "copper",     "50",  "400"),
+       "copper_fb_200": ("rate200",    "rate_point", "200", "400"),
+       "glass_pad400":  ("glass_pad400", "optical",  "384", "400")}
+DESIGN_WALK = {"g16b800", "g32b800", "g64b800", "cu16", "cu32", "cu64",
+               "cu50_16", "cu50_32", "cu50_64", "cu200_16", "cu200_32", "cu200_64",
+               "gp400_16", "gp400_32", "gp400_64"}
 
 FIELDS = ["paper_ref", "arm", "grid", "long_link_medium", "long_link_GBps",
           "long_link_lat_ns", "elec_GBps", "port_GBps", "ep", "nodes", "mb", "cabling",

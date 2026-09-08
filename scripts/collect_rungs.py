@@ -97,6 +97,20 @@ LADDERS = {
     ("copper_fb", "16"): [266, 533, 1066, 2133, 4267, 8533],
     ("copper_fb", "32"): [533, 1066, 2133, 4267, 8533, 17067],
     ("copper_fb", "64"): [1066, 2133, 4267, 8533, 17067, 34133],
+    # submit_batch13.sh. Arm 1 sweeps the long-link RATE at the copper pad (50 and
+    # 200 GB/s, against copper_fb's 100 and glassfb_800's 384); arm 2 is the
+    # latency-only control, glass bandwidth with the copper pad, which separates the
+    # pad's share of the copper penalty from the bandwidth's. Same six rungs per EP
+    # as every other arm of this ablation, so all of them compare rung-for-rung.
+    ("copper_fb_50", "16"):  [266, 533, 1066, 2133, 4267, 8533],
+    ("copper_fb_50", "32"):  [533, 1066, 2133, 4267, 8533, 17067],
+    ("copper_fb_50", "64"):  [1066, 2133, 4267, 8533, 17067, 34133],
+    ("copper_fb_200", "16"): [266, 533, 1066, 2133, 4267, 8533],
+    ("copper_fb_200", "32"): [533, 1066, 2133, 4267, 8533, 17067],
+    ("copper_fb_200", "64"): [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glass_pad400", "16"):  [266, 533, 1066, 2133, 4267, 8533],
+    ("glass_pad400", "32"):  [533, 1066, 2133, 4267, 8533, 17067],
+    ("glass_pad400", "64"):  [1066, 2133, 4267, 8533, 17067, 34133],
 }
 
 
@@ -148,7 +162,8 @@ FAMILY = {"glassfb": "glass", "hgx8_pkt": "pkt", "nvl64_pkt_s1": "pkt",
           "glassfb_800": "glass", "glassfb_8x8": "glass", "glassfb_mesh8x8": "glass",
           # the flattened butterfly with copper long links: same fabric family, the
           # medium is what the arm varies, and the system name is what names it
-          "copper_fb": "glass"}
+          "copper_fb": "glass", "copper_fb_50": "glass", "copper_fb_200": "glass",
+          "glass_pad400": "glass"}
 # 800.0, not 400.0: q_over_bdp is q x MTU / (port_bw x RTT), so the SAME packet
 # count is half the BDP multiple at twice the port rate. Using 400 here would
 # report every 200G rung at twice its true multiple and put the 800 GB/s q=533
@@ -158,7 +173,8 @@ PORT_GBPS = {"glassfb": 400.0, "hgx8_pkt": 112.5, "nvl64_pkt_s1": 900.0,
              "glassfb_800": 800.0, "glassfb_8x8": 800.0, "glassfb_mesh8x8": 800.0,
              # ports stay at 800 GB/s in the copper arm -- only the distance->=2
              # INTRA-panel links change medium -- so q_over_bdp is the same axis
-             "copper_fb": 800.0}
+             "copper_fb": 800.0, "copper_fb_50": 800.0, "copper_fb_200": 800.0,
+             "glass_pad400": 800.0}
 RTT_S = 4 * 250e-9          # four 250 ns hops, the same for every fabric here
 MTU = 1500
 

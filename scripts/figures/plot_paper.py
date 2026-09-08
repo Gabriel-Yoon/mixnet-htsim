@@ -242,7 +242,7 @@ def decomp():
     eps_with_primary = {ep for ep, sysn, _ in parsed if sysn == PRIMARY_GLASS}
     parsed = [t for t in parsed if not (t[1] in ("glassfb", "glassfb_800") and t[1] != PRIMARY_GLASS and t[0] in eps_with_primary)]
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
-    fig, ax = plt.subplots(figsize=(7.0, 2.7), dpi=200)
+    fig, ax = plt.subplots(figsize=(7.0, 2.25), dpi=200)
     SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
     DARK = {"glassfb_800": "#2b6f7f", "glassfb": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     LIGHT = {"glassfb_800": "#c9dfe4", "glassfb": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8", "hgx8_pkt": "#efd3c6"}
@@ -432,7 +432,7 @@ def energy():
             if str(t.get("mb") or "8") == "8" and v.strip(): tok[int(t["ep"])] = float(v)
     if len(tok) < 2: tok = {}
     ncol = len(eps); nrow = 3 if tok else 2
-    fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 2.3 * nrow), dpi=200, sharey=False, squeeze=False)
+    fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 1.75 * nrow), dpi=200, sharey=False, squeeze=False)
     drawn = set()
     HUE = {"glass": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     for j, ep in enumerate(eps):
@@ -680,7 +680,7 @@ def loadfig():
         return min((r["makespan_ms"] for r in c), default=None)
     DARK = {"glassfb_800": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f"}; LIGHT = {"glassfb_800": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8"}
     NAME = {"glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72"}
-    fig, ax = plt.subplots(figsize=(3.45, 2.3), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.85), dpi=200)
     mbs = [4, 8, 16, 32]; w = 0.36
     for j, sysname in enumerate(("glassfb_800", "nvl64_pkt_s1")):
         ref = quoted_mb(sysname, 4)

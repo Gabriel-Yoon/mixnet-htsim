@@ -74,6 +74,20 @@ LADDERS = {
     ("glassfb_800", "32"):  [533, 1066, 2133, 4267, 8533, 17067],
     ("glassfb_800", "64"):  [1066, 2133, 4267, 8533, 17067, 34133],
     ("glassfb_800", "128"): [1066, 2133, 4267, 8533, 17067, 34133],
+    # submit_batch10.sh, the panel-size DSE. Both arms are 8x8 panels with 800 GB/s
+    # ports, so both take the same six multiples of the 800 GB/s BDP at every EP --
+    # 2x..64x, starting at 1066 rather than 533 because the 4x4 walks showed nothing
+    # clean below 2x at any EP above 16. The two arms differ only by GLASS_MAXDIST
+    # and so must NOT share a walk: a mesh rung and a butterfly rung at the same
+    # buffer are two fabrics, not two rungs of one ladder.
+    ("glassfb_8x8", "16"):      [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glassfb_8x8", "32"):      [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glassfb_8x8", "64"):      [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glassfb_8x8", "128"):     [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glassfb_mesh8x8", "16"):  [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glassfb_mesh8x8", "32"):  [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glassfb_mesh8x8", "64"):  [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glassfb_mesh8x8", "128"): [1066, 2133, 4267, 8533, 17067, 34133],
 }
 
 
@@ -116,8 +130,20 @@ def submitted_q(key):
 
 # Workload per EP for this sweep, and the port bandwidth per fabric in GB/s.
 WORKLOAD = {"16": "llamaMoE", "32": "llamaMoE", "64": "qwenMoE", "128": "arctic"}
-FAMILY = {"glassfb": "glass", "hgx8_pkt": "pkt", "nvl64_pkt_s1": "pkt"}
-PORT_GBPS = {"glassfb": 400.0, "hgx8_pkt": 112.5, "nvl64_pkt_s1": 900.0}
+# The 800 GB/s systems are the same fabric family as glassfb -- they are the glass
+# panel at 200G/lane -- and were given separate system names only so a 200G walk
+# could not land inside the 400 GB/s design point's row. Both dicts are keyed on
+# the system name, so a new name silently means family="" and, worse, q_over_bdp=""
+# -- no buffer axis at all for every 200G/lane row.
+FAMILY = {"glassfb": "glass", "hgx8_pkt": "pkt", "nvl64_pkt_s1": "pkt",
+          "glassfb_800": "glass", "glassfb_8x8": "glass", "glassfb_mesh8x8": "glass"}
+# 800.0, not 400.0: q_over_bdp is q x MTU / (port_bw x RTT), so the SAME packet
+# count is half the BDP multiple at twice the port rate. Using 400 here would
+# report every 200G rung at twice its true multiple and put the 800 GB/s q=533
+# row (1x BDP) on the axis at 2x, next to a 400 GB/s row that holds twice the
+# buffer in bytes-per-BDP. The ladders above were already chosen in these units.
+PORT_GBPS = {"glassfb": 400.0, "hgx8_pkt": 112.5, "nvl64_pkt_s1": 900.0,
+             "glassfb_800": 800.0, "glassfb_8x8": 800.0, "glassfb_mesh8x8": 800.0}
 RTT_S = 4 * 250e-9          # four 250 ns hops, the same for every fabric here
 MTU = 1500
 

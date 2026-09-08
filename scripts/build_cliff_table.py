@@ -40,7 +40,7 @@ OUT = os.path.join(PAPER, "cliff_all.csv")
 # share (system, ep, mb) and are different experiments. Dropping it made every
 # consumer downstream unable to tell them apart, and R1 drew whichever was fastest.
 FIELDS = ["paper_ref", "family", "system", "variant", "walk", "model_name", "topk", "ep", "mb", "nodes",
-          "q", "q_over_bdp", "rto_min_us", "mtu", "makespan_ms", "rtos",
+          "q", "q_over_bdp", "rto_min_us", "mtu", "makespan_ms", "rtos", "drops",
           "quotable", "quotable_why", "fct_logdir", "source", "note",
           "link_rate_fixed", "quoted_by"]
 
@@ -140,6 +140,9 @@ for name, (default_system, default_model) in SOURCES.items():
                 "mtu": pick(r, "mtu"),
                 "makespan_ms": ms,
                 "rtos": pick(r, "rtos"),
+                # the measured loss count, carried so the table the figures read can
+                # express "zero measured drops" -- it lived only in cliff_postfix
+                "drops": pick(r, "drops"),
                 "variant": pick(r, "variant"),
                 "walk": pick(r, "walk"),
                 "quotable": pick(r, "quotable"),

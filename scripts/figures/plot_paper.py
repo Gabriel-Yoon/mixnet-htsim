@@ -14,7 +14,8 @@ status. Only rows with status == final are drawn. Every figure prints the rows i
   python3 plot_paper.py all
 Env: PAPER_RES (default experiments/results/paper), OUT (default .).
 """
-import csv, os, re, sys
+import csv
+import re, os, re, sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -591,9 +592,83 @@ def tail():
     name = "fig_tail2.png" if only else "fig_tail.png"
     fig.tight_layout(pad=0.3, rect=(0, 0.03, 1, 1)); fig.savefig(f(name)); print(f"wrote {name}")
 
+def boundary():
+    """Price of the boundary. (a) share of each fabric's hop-bytes that cross a domain boundary
+    (glass: inter-panel ports; NVSwitch fabrics: NICs), per EP. (b) the expert all-to-all's share of
+    the critical path against the time those cross-domain bytes alone need on the fabric's own
+    cross-domain tier (bytes / (GPUs x per-GPU cross-domain bandwidth)): one line, three prices.
+    Sources: power_tiers(.csv/_pkt.csv) hop-bytes, decomp_critpath.csv expert_a2a_ms, Table III port rates."""
+    g = load("power_tiers"); n = load("power_tiers_pkt")
+    d = list(csv.DictReader(open(os.path.join(RES, "decomp_critpath.csv"))))
+    PRIMARY_GLASS = os.environ.get("PRIMARY_GLASS", "glassfb_800")
+    XBW = {"glass": 800.0, "nvl64_pkt_s1": 100.0, "hgx8_pkt": 50.0}   # GB/s per GPU on the cross-domain tier (Table III)
+    NAMES = {"glass": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
+    HUE = {"glass": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
+    MK = {16: "o", 32: "s", 64: "D", 128: "^"}
+    eps = [16, 32, 64, 128]
+    def row(sysname, ep):
+        if sysname == "glass":
+            return next((r for r in g if r["system"] == PRIMARY_GLASS and int(r["ep"]) == ep), None)
+        return next((r for r in n if r["system"] == sysname and int(r["ep"]) == ep), None)
+    def a2a(sysname, ep):
+        key = PRIMARY_GLASS if sysname == "glass" else sysname
+        c = [x for x in d if x["label"].startswith(key + " EP=%d" % ep) and re.search(r"mb=(8|-)", x["label"])]
+        if not c: c = [x for x in d if x["label"].startswith(key + " EP=%d" % ep)]
+        if not c: return None
+        c.sort(key=lambda x: abs(float(x["makespan_ms"]) - float(row(sysname, ep)["makespan_ms"])))
+        return float(c[0]["expert_a2a_ms"])
+    pts = {}
+    for sname in XBW:
+        for ep in eps:
+            r = row(sname, ep)
+            if not r: continue
+            if sname == "glass":
+                cross = float(r["bytes_inter"]); tot = float(r["bytes_elec"]) + float(r["bytes_opt"]) + cross
+            else:
+                cross = float(r["bytes_nic"]); tot = float(r["bytes_in_domain"]) + cross
+            gpus = int(float(r["nodes"]))
+            pts[(sname, ep)] = dict(share=100 * cross / tot, tier_ms=cross / (gpus * XBW[sname]) / 1e6, a2a=a2a(sname, ep))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7.0, 2.35), dpi=200, gridspec_kw=dict(width_ratios=[1.15, 1]))
+    # (a) share bars
+    w = 0.26; xs = list(range(len(eps)))
+    for j, sname in enumerate(XBW):
+        vals = [pts.get((sname, ep), {}).get("share") for ep in eps]
+        for i, v in enumerate(vals):
+            if v is None: continue
+            ax1.bar(i + (j - 1) * w, v, w * 0.92, color=HUE[sname], label=NAMES[sname] if i == 0 else None)
+            ax1.text(i + (j - 1) * w, v + 1.2, "%.0f" % v, ha="center", va="bottom", fontsize=5.6, color="#333")
+    ax1.set_xticks(xs); ax1.set_xticklabels(["EP=%d" % e for e in eps]); ax1.set_ylim(0, 100)
+    ax1.set_ylabel("hop-bytes crossing a domain (%)"); ax1.legend(frameon=False, fontsize=6.5, loc="upper left")
+    ax1.set_title("(a) how much of the traffic leaves the domain", fontsize=7.5, loc="left")
+    ax1.axvline(2.5, color="#999", lw=0.6, ls=(0, (3, 2)))
+    ax1.text(2.52, 96, "NVL boundary", fontsize=5.8, color="#666", ha="left", va="top")
+    # (b) a2a on the critical path vs the cross-domain tier's own transfer time
+    for sname in XBW:
+        xx = [pts[(sname, ep)]["tier_ms"] for ep in eps if (sname, ep) in pts and pts[(sname, ep)]["a2a"] is not None]
+        yy = [pts[(sname, ep)]["a2a"] for ep in eps if (sname, ep) in pts and pts[(sname, ep)]["a2a"] is not None]
+        ee = [ep for ep in eps if (sname, ep) in pts and pts[(sname, ep)]["a2a"] is not None]
+        ax2.plot(xx, yy, color=HUE[sname], lw=0.8, alpha=0.5, zorder=2)
+        for x, y, ep in zip(xx, yy, ee):
+            ax2.scatter([x], [y], marker=MK[ep], s=22, color=HUE[sname], edgecolor="white", lw=0.5, zorder=3)
+    for ep in eps:
+        ax2.scatter([], [], marker=MK[ep], s=18, color="#555", label="EP=%d" % ep)
+    lim = [0.3, 300]
+    ax2.plot(lim, lim, color="#bbb", lw=0.7, ls=(0, (3, 2)), zorder=1)
+    ax2.text(lim[1] * 0.9, 2.6, "A2A = cross-domain transfer time\n(lower bound)", fontsize=5.4, color="#888", ha="right", va="bottom")
+    ax2.set_xscale("log"); ax2.set_yscale("log"); ax2.set_xlim(*lim); ax2.set_ylim(2, 300)
+    ax2.set_xlabel("cross-domain bytes / cross-domain bandwidth (ms)")
+    ax2.set_ylabel("expert A2A on critical path (ms)")
+    ax2.legend(frameon=False, fontsize=6, loc="upper left", handletextpad=0.2)
+    ax2.set_title("(b) what that traffic costs", fontsize=7.5, loc="left")
+    for ax in (ax1, ax2):
+        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False); ax.tick_params(labelsize=6.5)
+    for (sname, ep), v in sorted(pts.items()):
+        print("  %-12s EP=%3d share=%5.1f%%  tier=%7.2f ms  a2a=%s" % (NAMES[sname], ep, v["share"], v["tier_ms"], v["a2a"]))
+    fig.tight_layout(pad=0.3); fig.savefig(f("fig_boundary.png")); fig.savefig(f("fig_boundary.pdf")); print("wrote fig_boundary.png")
+
 if __name__ == "__main__":
     which = sys.argv[1:] or ["all"]
-    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib}
+    fns = {"cliff": cliff, "decomp": decomp, "beyond": beyond, "mb": mb, "ladder": ladder, "energy": energy, "tail": tail, "calib": calib, "boundary": boundary}
     for w in (fns if "all" in which else which):
         try: fns[w]()
         except SystemExit as e: print("skip:", e)

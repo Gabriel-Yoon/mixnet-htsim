@@ -409,7 +409,8 @@ def energy():
             L_lo, L_hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
             tiers = [(k, a * L_lo / lo_sum, b * L_hi / hi_sum) for k, a, b in tiers]
             st = float(r.get("static_J_iter") or 0)
-            return tiers, (st, st)
+            st_hi = float(r.get("static_J_iter_200G") or st)   # 5.3 W/panel (100G lanes) .. 9.12 W (200G lanes), as in the energy table
+            return tiers, (st, st_hi)
         r = next((r for r in n if r["system"] == sysname and int(r["ep"]) == ep), None)
         if not r: return None, None
         nlo, nhi = float(r["nvlink_pj_bit_lo"]), float(r["nvlink_pj_bit_hi"]); nic = float(r["nic_pj_bit"])

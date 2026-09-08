@@ -242,32 +242,34 @@ def decomp():
     eps_with_primary = {ep for ep, sysn, _ in parsed if sysn == PRIMARY_GLASS}
     parsed = [t for t in parsed if not (t[1] in ("glassfb", "glassfb_800") and t[1] != PRIMARY_GLASS and t[0] in eps_with_primary)]
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
-    fig, ax = plt.subplots(figsize=(7.0, 2.7), dpi=200)
     SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
     DARK = {"glassfb_800": "#2b6f7f", "glassfb": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
     LIGHT = {"glassfb_800": "#c9dfe4", "glassfb": "#c9dfe4", "nvl64_pkt_s1": "#cfc9e8", "hgx8_pkt": "#efd3c6"}
-    xs, labels = [], []; x = 0; groups = {}
-    for ep, sysname, r in parsed:
-        comp = float(r.get("compute_ms") or 0); a2a = float(r.get("expert_a2a_ms") or 0)
-        other = sum(float(r.get(c) or 0) for c in ("dp_allreduce_ms", "pp_p2p_ms", "other_ms"))
-        hol = r.get("_hollow")
-        ax.bar(x, comp, width=0.72, color=LIGHT[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
-        ax.bar(x, a2a + other, bottom=comp, width=0.72, color=DARK[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
-        tot = comp + a2a + other
-        ax.text(x, tot * 1.015, f"{tot:.0f}" + ("*" if hol else ""), ha="center", va="bottom", fontsize=7)
-        xs.append(x); labels.append(SHORT.get(sysname, sysname)); groups.setdefault(ep, []).append(x); x += 1
-        if sysname == "hgx8_pkt": x += 0.9
-    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=8, rotation=30, ha="right")
-    ymax = ax.get_ylim()[1] * 1.08
-    for ep, gx in groups.items():   # EP group label above each group
-        ax.text(sum(gx) / len(gx), ymax * 0.985, f"EP={ep}", ha="center", va="top", fontsize=9, fontweight="bold", color="#4a5560")
-    ax.set_ylim(0, ymax)
-    ax.set_ylabel("iteration time (ms)", fontsize=9); ax.tick_params(labelsize=8)
+    MODEL = {16: "LLaMA-MoE", 32: "LLaMA-MoE", 64: "Qwen-MoE", 128: "Arctic"}
+    eps = sorted({ep for ep, _, _ in parsed})
+    # one panel per EP with its own y scale: the model (and so the compute floor) changes with EP,
+    # so the fabrics compare within a panel and a shared axis would waste most of the height
+    fig, axes = plt.subplots(1, len(eps), figsize=(7.0, 2.35), dpi=200)
+    for ax, ep in zip(axes, eps):
+        grp = [t for t in parsed if t[0] == ep]
+        for x, (_, sysname, r) in enumerate(grp):
+            comp = float(r.get("compute_ms") or 0); a2a = float(r.get("expert_a2a_ms") or 0)
+            other = sum(float(r.get(c) or 0) for c in ("dp_allreduce_ms", "pp_p2p_ms", "other_ms"))
+            hol = r.get("_hollow")
+            ax.bar(x, comp, width=0.68, color=LIGHT[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
+            ax.bar(x, a2a + other, bottom=comp, width=0.68, color=DARK[sysname], edgecolor=DARK[sysname], linewidth=0.7, alpha=0.5 if hol else 1.0, hatch="//" if hol else None)
+            tot = comp + a2a + other
+            ax.text(x, tot * 1.02, f"{tot:.0f}" + ("*" if hol else ""), ha="center", va="bottom", fontsize=7.5)
+        ax.set_xticks(range(len(grp))); ax.set_xticklabels([SHORT.get(t[1], t[1]) for t in grp], fontsize=8, rotation=25, ha="right")
+        ax.set_ylim(0, ax.get_ylim()[1] * 1.12); ax.set_xlim(-0.6, len(grp) - 0.4)
+        ax.set_title(f"EP={ep}  ({MODEL.get(ep, '')})", fontsize=8.5, color="#4a5560")
+        ax.tick_params(labelsize=7.5); ax.grid(alpha=0.25, axis="y")
+        ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
+    axes[0].set_ylabel("iteration time (ms)", fontsize=9)
     import matplotlib.patches as mpatches_
     h = [mpatches_.Patch(facecolor="#5c6b74", label="expert all-to-all (dark)"), mpatches_.Patch(facecolor="#dfe4e7", edgecolor="#5c6b74", label="compute (light)")]
-    ax.legend(handles=h, fontsize=8, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.92))
-    ax.grid(alpha=0.25, axis="y")
-    fig.tight_layout(pad=0.3); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
+    fig.legend(handles=h, fontsize=8, frameon=False, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 1.01))
+    fig.tight_layout(pad=0.3, w_pad=0.8, rect=(0, 0, 1, 0.9)); fig.savefig(f("fig_decomp.png")); print("wrote fig_decomp.png")
 
 def beyond():
     """R-beyond (Fig 6c): every fabric past the NVL boundary, EP=128 (Arctic top-2) from cliff_all.

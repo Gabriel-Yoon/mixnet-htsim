@@ -216,7 +216,8 @@ def decomp():
     # headline rows only: the quotable cliff row of each (system, ep) at the default microbatch
     # (mb 8 or unset); variant cells (mb sweep, skew, hier) share system/ep and are excluded by
     # label, and duplicate decomp rows of one quoted makespan collapse to the first
-    HEAD = ("glassfb", "glassfb_800", "nvl64_pkt_s1", "nvl64_pkt", "hgx8_pkt")
+    HEAD = ("glassfb_800", "glassfb", "nvl64_pkt_s1", "nvl64_pkt", "hgx8_pkt")
+    PRIMARY_GLASS = os.environ.get("PRIMARY_GLASS", "glassfb_800")   # design point: 200G/lane ports
     quot = set()
     try:
         for c in csv.DictReader(open(os.path.join(RES, "cliff_all.csv"))):
@@ -236,9 +237,12 @@ def decomp():
             print(f"[decomp] skip {r['label']}: not a quotable cliff row"); continue
         if key in seen: continue
         seen.add(key); parsed.append((int(m.group(2)), m.group(1), r))
+    # where the design-point glass row exists at an EP, the other glass variant is dropped from the group
+    eps_with_primary = {ep for ep, sysn, _ in parsed if sysn == PRIMARY_GLASS}
+    parsed = [t for t in parsed if not (t[1] in ("glassfb", "glassfb_800") and t[1] != PRIMARY_GLASS and t[0] in eps_with_primary)]
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
-    fig, ax = plt.subplots(figsize=(4.0, 2.7), dpi=200)
-    SHORT = {"glassfb": "Glass-FB", "glassfb_800": "Glass-FB 200G/lane", "nvl64_pkt_s1": "NVL72 striped", "nvl64_pkt": "NVL72 pinned", "hgx8_pkt": "HGX-8"}
+    fig, ax = plt.subplots(figsize=(4.2, 2.7), dpi=200)
+    SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72 striped", "nvl64_pkt": "NVL72 pinned", "hgx8_pkt": "HGX-8"}
     xs, labels = [], []; x = 0; groups = {}
     for ep, sysname, r in parsed:
         bottom = 0.0
@@ -258,7 +262,7 @@ def decomp():
     for ep, gx in groups.items():   # EP group label above each group
         ax.text(sum(gx) / len(gx), ymax * 0.985, f"EP={ep}", ha="center", va="top", fontsize=6.5, fontweight="bold", color="#4a5560")
     ax.set_ylim(0, ymax)
-    ax.set_ylabel("critical-path time (ms)", fontsize=7); ax.tick_params(labelsize=6)
+    ax.set_ylabel("iteration time (ms), by critical-path class", fontsize=7); ax.tick_params(labelsize=6)
     h_, l_ = ax.get_legend_handles_labels()
     keep = [(h, l) for h, l in zip(h_, l_) if l in ("compute", "expert A2A")]
     ax.legend([h for h, _ in keep], [l for _, l in keep], fontsize=5.5, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 0.90))
@@ -375,28 +379,90 @@ def ladder():
     fig.tight_layout(pad=0.3); fig.savefig(f("fig_ladder.png")); print("wrote fig_ladder.png")
 
 def energy():
-    """R5: per-iteration interconnect energy, link (bytes moved) vs static, both pJ/bit ends, per EP."""
+    """R5: interconnect energy per iteration, broken down by tier (glass: electrical RDL / intra-panel
+    optical / inter-panel optical; NVSwitch fabrics: in-domain NVLink / NIC) plus the static term
+    (laser+tune per panel; NVSwitch idle power per GPU). Link tiers are drawn at the conservative pJ/bit
+    end, with a tick at the favorable end; static hatched. Optional second panel: energy per token when
+    tokens_per_iter.csv exists (model, ep, mb, tokens)."""
     g = load("power_tiers"); n = load("power_tiers_pkt")
+    PRIMARY_GLASS = os.environ.get("PRIMARY_GLASS", "glassfb_800")
     eps = sorted({int(r["ep"]) for r in g} | {int(r["ep"]) for r in n})
-    systems = ["glassfb", "nvl64_pkt", "hgx8_pkt"]
-    fig, axes = plt.subplots(1, len(eps), figsize=(3.4 if len(eps) <= 3 else 7.0, 2.6), dpi=200, sharey=False)   # per-panel scale: EP=128 is 4x the EP=64 column
-    axes = list(axes) if len(eps) > 1 else [axes]
-    for ax, ep in zip(axes, eps):
+    systems = ["glass", "nvl64_pkt", "hgx8_pkt"]
+    NAMES = {"glass": "Glass-FB", "nvl64_pkt": "NVL72", "hgx8_pkt": "HGX-8"}
+    TIER_COL = {"elec": "#b5651d", "opt": "#2a9d8f", "inter": "#e9a23b", "nvlink": "#7a0177", "nic": "#c77dff", "static": "none"}
+    TIER_LAB = {"elec": "electrical RDL (distance-1)", "opt": "intra-panel optical (L1/L2)", "inter": "inter-panel optical ports",
+                "nvlink": "in-domain NVLink", "nic": "scale-out NIC", "static": "static (laser+tune / NVSwitch idle)"}
+    def glass_row(ep):
+        return next((r for r in g if r["system"] == PRIMARY_GLASS and int(r["ep"]) == ep), None) or \
+               next((r for r in g if r["system"] == "glassfb" and int(r["ep"]) == ep), None)
+    def stacks(sysname, ep):
+        """[(tier, J_lo, J_hi)] link tiers then static."""
+        if sysname == "glass":
+            r = glass_row(ep)
+            if not r: return None, None
+            rdl = float(r["rdl_pj_bit"]); glo, ghi = float(r["glass_pj_bit_lo"]), float(r["glass_pj_bit_hi"])
+            be, bo, bi = float(r["bytes_elec"]), float(r["bytes_opt"]), float(r["bytes_inter"])
+            tiers = [("elec", be * 8 * (rdl + glo) * 1e-12, be * 8 * (rdl + ghi) * 1e-12),   # RDL tier carries +1 pJ/bit RDL on top of the glass bracket? see energy_model.md
+                     ("opt", bo * 8 * glo * 1e-12, bo * 8 * ghi * 1e-12),
+                     ("inter", bi * 8 * glo * 1e-12, bi * 8 * ghi * 1e-12)]
+            # scale the per-tier split so the tiers sum to the table's own link_J_iter (the table is authoritative)
+            lo_sum = sum(t[1] for t in tiers); hi_sum = sum(t[2] for t in tiers)
+            L_lo, L_hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
+            tiers = [(k, a * L_lo / lo_sum, b * L_hi / hi_sum) for k, a, b in tiers]
+            st = float(r.get("static_J_iter") or 0)
+            return tiers, (st, st)
+        r = next((r for r in n if r["system"] == sysname and int(r["ep"]) == ep), None)
+        if not r: return None, None
+        nlo, nhi = float(r["nvlink_pj_bit_lo"]), float(r["nvlink_pj_bit_hi"]); nic = float(r["nic_pj_bit"])
+        bd, bn = float(r["bytes_in_domain"]), float(r["bytes_nic"])
+        hd, hc = float(r.get("hops_in_domain") or 1), float(r.get("hops_cross") or 1)
+        tiers = [("nvlink", bd * hd * 8 * nlo * 1e-12, bd * hd * 8 * nhi * 1e-12), ("nic", bn * hc * 8 * nic * 1e-12, bn * hc * 8 * nic * 1e-12)]
+        lo_sum = sum(t[1] for t in tiers); hi_sum = sum(t[2] for t in tiers)
+        L_lo, L_hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
+        tiers = [(k, a * L_lo / lo_sum, b * L_hi / hi_sum) for k, a, b in tiers]
+        return tiers, (float(r["static_J_iter_lo"]), float(r["static_J_iter_hi"]))
+    # optional per-token panel
+    tok = {}
+    tp = os.path.join(RES, "tokens_per_iter.csv")
+    if os.path.exists(tp):
+        for t in csv.DictReader(open(tp)):
+            if str(t.get("mb") or "8") == "8": tok[int(t["ep"])] = float(t["tokens"])
+    ncol = len(eps); nrow = 2 if tok else 1
+    fig, axes = plt.subplots(nrow, ncol, figsize=(4.6 if ncol > 3 else 3.4, 2.7 * nrow), dpi=200, sharey=False, squeeze=False)
+    drawn = set()
+    for j, ep in enumerate(eps):
+        ax = axes[0][j]
         for x, sysname in enumerate(systems):
-            r = next((r for r in (g + n) if r["system"] == sysname and int(r["ep"]) == ep), None)
-            if not r: continue
-            lo, hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
-            slo = float(r.get("static_J_iter_lo") or r.get("static_J_iter") or 0); shi = float(r.get("static_J_iter_hi") or r.get("static_J_iter") or slo)
-            c = SYS_COLOR.get(sysname, "#999")
-            ax.bar(x, hi, color=c, alpha=0.35, width=0.62); ax.bar(x, lo, color=c, width=0.62)             # link: dark = favourable pJ/bit end
-            ax.bar(x, shi, bottom=hi, color="none", edgecolor=c, hatch="////", width=0.62, lw=0.6)         # static (assumed), hatched
-            ax.plot([x - 0.31, x + 0.31], [hi + slo, hi + slo], color=c, lw=0.8)                         # static's favourable end
-            ax.text(x, hi + shi + 2, f"{lo + slo:.0f}–{hi + shi:.0f}", ha="center", va="bottom", fontsize=4.8)
-        ax.set_xticks(range(len(systems))); ax.set_xticklabels(["Glass-FB", "NVL72", "HGX-8"][:len(systems)], fontsize=5.2, rotation=35, ha="right")
+            tiers, st = stacks(sysname, ep)
+            if tiers is None: continue
+            bottom = 0.0
+            for k, lo, hi in tiers:
+                ax.bar(x, hi, bottom=bottom, width=0.64, color=TIER_COL[k], edgecolor="white", lw=0.4,
+                       label=TIER_LAB[k] if k not in drawn else None); drawn.add(k)
+                bottom += hi
+            link_lo = sum(t[1] for t in tiers)
+            ax.plot([x - 0.32, x + 0.32], [link_lo, link_lo], color="black", lw=0.7)   # favorable pJ/bit end of the link total
+            ax.bar(x, st[1], bottom=bottom, width=0.64, facecolor="none", edgecolor="#4a5560", hatch="////", lw=0.6,
+                   label=TIER_LAB["static"] if "static" not in drawn else None); drawn.add("static")
+            ax.plot([x - 0.32, x + 0.32], [bottom + st[0], bottom + st[0]], color="#4a5560", lw=0.7)
+            tot_lo = link_lo + st[0]; tot_hi = bottom + st[1]
+            ax.text(x, tot_hi * 1.01, f"{tot_lo:.0f}–{tot_hi:.0f}", ha="center", va="bottom", fontsize=4.6)
+            if tok.get(ep):
+                a2 = axes[1][j]
+                pj_lo = tot_lo / tok[ep] * 1e12; pj_hi = tot_hi / tok[ep] * 1e12
+                a2.bar(x, pj_hi, width=0.64, color="#9aa5ad", alpha=0.5); a2.bar(x, pj_lo, width=0.64, color=SYS_COLOR.get(sysname if sysname != "glass" else "glassfb", "#999"))
+                a2.text(x, pj_hi * 1.01, f"{pj_lo:.0f}–{pj_hi:.0f}", ha="center", va="bottom", fontsize=4.6)
         ax.set_title(f"EP={ep}", fontsize=7); ax.tick_params(labelsize=5.5)
+        ax.set_xticks(range(len(systems))); ax.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=5.2, rotation=35, ha="right")
         ax.set_ylim(0, ax.get_ylim()[1] * 1.12)
-    axes[0].set_ylabel("interconnect energy per iteration (J)", fontsize=6.5)
-    fig.tight_layout(pad=0.3); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
+        if tok:
+            a2 = axes[1][j]; a2.set_xticks(range(len(systems))); a2.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=5.2, rotation=35, ha="right")
+            a2.tick_params(labelsize=5.5); a2.set_ylim(0, a2.get_ylim()[1] * 1.12)
+    axes[0][0].set_ylabel("interconnect energy per iteration (J)", fontsize=6.5)
+    if tok: axes[1][0].set_ylabel("interconnect energy per token (pJ)", fontsize=6.5)
+    h_, l_ = axes[0][0].get_legend_handles_labels()
+    fig.legend(h_, l_, fontsize=5, frameon=False, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.01), handlelength=1.6, columnspacing=1.2)
+    fig.tight_layout(pad=0.3, rect=(0, 0.10 if not tok else 0.06, 1, 1)); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
 def calib():
     """R-calib: NVSwitch model as an 8-GPU HGX H100 under a synthetic all-to-all (calib_nvswitch.csv:

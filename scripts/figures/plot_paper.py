@@ -171,6 +171,20 @@ def cliff():
         for ep, y, r in sens:   # hollow packet-level points carry their timeout count; quoted rows passed the measured-loss gate
             if r.get("rtos") and r["rtos"] > 0 and not dashed:
                 ax.annotate(f"{r['rtos']:,} RTO", (ep, y), fontsize=4.6, textcoords="offset points", xytext=(3, 3))
+    # compute floor per EP (grey tick): the glass row's compute contribution from decomp_critpath, so the
+    # reader sees that the model, not the fabric, sets the level at each EP
+    try:
+        floor = {}
+        for d in csv.DictReader(open(os.path.join(RES, "decomp_critpath.csv"))):
+            mm = re.match(r"glassfb EP=(\d+)", d["label"])
+            if mm and not re.search(r"hier|sk\d|mix|npl|mb=(4|16|32)\b", d["label"]):
+                floor.setdefault(int(mm.group(1)), float(d["compute_ms"]))
+        for ep_, c_ in floor.items():
+            ax.plot([ep_ / 1.12, ep_ * 1.12], [c_, c_], color="#9aa5ad", lw=1.0, ls=(0, (1.5, 1.5)), zorder=1)
+        if floor:
+            ax.plot([], [], color="#9aa5ad", lw=1.0, ls=(0, (1.5, 1.5)), label="compute floor (model per EP)")
+    except Exception as e:
+        print("[cliff] no compute floor:", e)
     # model per point
     models = {}
     # label each EP by the glass row's model; a row with a blank model_name (collector rows) defers to

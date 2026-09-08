@@ -110,12 +110,7 @@ def port(c, r):
         ax.plot([x0, px], [py, py], **lead)
         ax.add_patch(Rectangle((px - port_h / 2, py - port_w / 2), port_h, port_w, facecolor=C_PORT_FACE, edgecolor=C_PORT, lw=0.6, zorder=4))
 
-# external laser source at the south-west corner, feeding the panel's distribution waveguide
-lx, ly = -0.98, -1.02
-ax.add_patch(FancyBboxPatch((lx - 0.22, ly - 0.14), 0.44, 0.28, boxstyle="round,pad=0,rounding_size=0.05",
-                            facecolor=C_ELS, edgecolor="none", zorder=5))
-ax.text(lx, ly, "ELS", ha="center", va="center", fontsize=8, color="white", fontweight="bold", zorder=6)
-ax.plot([lx + 0.2, -TILE / 2 - 0.02], [ly + 0.1, -TILE / 2 + 0.04], color=C_ELS, lw=1.4, ls=(0, (2, 1.5)), zorder=2)
+# (external laser source not drawn: it sits off-panel, see Fig. 2a)
 
 # labels on the source's links: d1 above the straight copper link, d2 / d3 under their arcs
 ax.text(0.5, 0.0 + 0.12, "d1", ha="center", va="bottom", fontsize=8, color=C_D1, fontweight="bold", zorder=7)
@@ -134,8 +129,8 @@ h = [mpatches.Patch(color=C_D1, label="distance-1: electrical RDL, 1800 GB/s"),
      mpatches.Patch(color=C_LATTICE, label="the other GPUs' row/column links")]
 ax.legend(handles=h, loc="upper center", bbox_to_anchor=(0.5, -0.01), fontsize=7.2, frameon=False, ncol=1, handlelength=1.6, borderaxespad=0)
 
-ax.set_xlim(-1.3, (N - 1) * PITCH + 0.75)
-ax.set_ylim(-1.3, (N - 1) * PITCH + 0.75)
+ax.set_xlim(-1.0, (N - 1) * PITCH + 0.9)
+ax.set_ylim(-1.0, (N - 1) * PITCH + 0.9)
 fig.tight_layout(pad=0.2)
 for ext in ("png", "pdf"):
     fig.savefig(os.path.join(OUT, f"fig_panel.{ext}"), bbox_inches="tight", pad_inches=0.02)

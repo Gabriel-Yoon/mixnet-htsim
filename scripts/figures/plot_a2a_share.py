@@ -26,7 +26,7 @@ except Exception:
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RES = os.environ.get("PAPER_RES", os.path.join(HERE, "..", "..", "experiments", "results", "paper"))
-TG = os.environ.get("TG", os.path.join(HERE, "..", "..", "..", "taskgraph"))
+TG = os.environ.get("TG", os.path.join(HERE, "..", "..", "experiments", "taskgraphs"))   # the four committed graphs (sha-listed in their README)
 OUT = os.environ.get("OUT", ".")
 FABRIC = os.environ.get("FABRIC", "hgx8_pkt")
 MODELS = [  # label, EP, graph basename

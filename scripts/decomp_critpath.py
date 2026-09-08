@@ -50,9 +50,12 @@ CLASS_OF = {
     "comm": "other", "nominal_comm": "other", "barrier": "other",
 }
 
-RE_FIN = re.compile(r"finished task:(\d+),.*?name: (\S+) type (\d+) now (\d+)")
-# the op name without FlexFlow's trailing instance id: Dense_5000255 -> Dense
-RE_OPNAME = re.compile(r"^(.*?)_\d+$")
+# The task set. UNCHANGED, and deliberately blind to the name: this pattern decides
+# which tasks exist, so nothing optional may be added to it.
+RE_FIN = re.compile(r"finished task:(\d+),.*?type (\d+) now (\d+)")
+# The op label, read separately and allowed to fail. Whatever sits between "name:"
+# and " type" -- names may contain spaces, so this is not \S+.
+RE_NAME = re.compile(r"name:\s*(.*?)\s+type ")
 RE_EDGE = re.compile(r"^(\d+) -> Task (\d+) counter at")
 # The run's OWN reported makespan. A still-running log yields a perfectly
 # well-formed but partial critical path -- glass EP=64 read 33.547 ms from a
@@ -65,22 +68,30 @@ RE_ITER = re.compile(r"finished one iter.*?now (\d+)")
 def parse(path):
     finish, ttype, preds = {}, {}, collections.defaultdict(set)
     tname = {}
+    unnamed = [0]
     with open(path, errors="replace") as fh:
         for line in fh:
             m = RE_FIN.search(line)
             if m:
                 tid = int(m.group(1))
-                finish[tid] = int(m.group(4))
-                ttype[tid] = int(m.group(3))
-                nm = m.group(2)
-                # rsplit rather than a regex: the id suffix is the last _<digits>
-                # and nothing else about the name is assumed
-                base = nm.rsplit("_", 1)
-                tname[tid] = base[0] if len(base) == 2 and base[1].isdigit() else nm
+                finish[tid] = int(m.group(3))
+                ttype[tid] = int(m.group(2))
+                mn = RE_NAME.search(line)
+                if mn:
+                    nm = mn.group(1)
+                    # drop FlexFlow's trailing instance id: Dense_5000255 -> Dense
+                    base = nm.rsplit("_", 1)
+                    tname[tid] = base[0] if len(base) == 2 and base[1].isdigit() else nm
+                else:
+                    unnamed[0] += 1
                 continue
             m = RE_EDGE.match(line)
             if m:
                 preds[int(m.group(2))].add(int(m.group(1)))
+    if unnamed[0]:
+        print("    note: %d finished-task line(s) carried no readable name; they are "
+              "still in the graph and contribute to the path, only their op label is "
+              "'?'" % unnamed[0])
     return finish, ttype, preds, tname
 
 
@@ -145,6 +156,14 @@ def run(label, log, flowlog=None):
     if total != reported:
         print("%-26s SKIPPED: critical path sums to %.3f ms but the run reports %.3f ms"
               % (label, total / 1e9, reported / 1e9))
+        return None
+    # The sum-to-total check above cannot see a dropped task, because dropping an
+    # intermediate task preserves the total. This one can: the tasks parsed from a
+    # log are a property of the log, so if a change to the parser starts losing
+    # them the count moves.
+    if len(finish) < 1000:
+        print("%-26s REFUSED: only %d tasks parsed from the log -- the parser is "
+              "dropping records" % (label, len(finish)))
         return None
     print("\n=== %s ===" % label)
     print("  critical path: %d tasks, %d distinct tasks logged, makespan %.3f ms"

@@ -726,6 +726,44 @@ Both copies were fixed — the launcher and the install script that stages the b
 and the two verdicts they now print were confirmed against a binary known to carry the
 gate and against the pre-rebuild binary known not to.
 
+**Sub-class P is the citation that points at nothing.** Sub-class B was committed
+artifacts whose producer is missing. This is its mirror in the other direction: a
+producer that names its own source, in a docstring, for a source that does not exist.
+
+`scripts/figures/plot_energy_final.py` opens with "All values documented in
+`scripts/energy_methodology.md`". **There is no such file** — not under that name, not
+under any other, anywhere in the repo or in the eight job snapshots that carry copies
+of the script. The only occurrences of the string are the docstring itself and those
+copies. Every energy constant the paper's headline figure rests on is therefore
+asserted by a sentence that cannot be followed.
+
+What that sentence was covering, established by reading the code rather than the claim:
+
+| constant | what it is | what backs it |
+|---|---|---|
+| `NIC_PJ_BIT` 15.0 | scale-out NIC + switch port | **nothing** — see below |
+| `NVS_STATIC_W_PER_GPU` (7.5, 12.5) | 540 W/rack / 72 GPUs, and 4x NVSwitch3 / 8 GPUs | reproduces the paper's published 39 / 62 GB/s/W exactly; no external source for the 540 W |
+| `LASER_TUNE` 5.3 W/panel | 960 x 1 mW / 25% WPE + 2 x 960 x 0.75 mW | arithmetic only; no source for any of the three inputs |
+
+The NIC figure is the one that had a live consequence. Its comment attributed 15.0 to
+"the tier_power accounting" — and `scripts/tier_power.py` carries
+`PJ_SCALEOUT = (16, 20)`, `scripts/whole_power2.py` carries `PJ_NIC = (16, 20)`, and
+`docs/interconnect_parameters.md` documents the class as 16-20 pJ/bit. So the constant
+was **below every documented figure in this repo**, and the accounting it named said
+something else. It is now 16.0, the low end of the documented range, which is also the
+conservative end because the figure is charged to the incumbent.
+
+> **An attribution is not a citation until someone follows it.** Three constants each
+> carried a phrase that reads like provenance — "per the tier_power accounting", "all
+> values documented in ..." — and not one of the three survived being followed. The
+> phrasing is what made them look settled; a bare number with no comment would have
+> been questioned two months earlier.
+
+The two that remain unsourced are not being repaired by invention. The NVSwitch pair is
+labelled as the paper's own two system points, validated against its own published
+numbers; the laser and ring-tuning inputs are labelled as budget assumptions. Both
+statements are true and neither is a citation.
+
 ### Scope limit
 
 This rule establishes that a parameter was *read*. It says nothing about whether

@@ -1,0 +1,2 @@
+paper_ref,system,cabling,ep,nodes,mb,q,relayed_pairs,completed,makespan_ms,rtos,drops,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,wall_s,status,note,link_rate_fixed,binary_sha
+cliff,glassfb,ep128_gt.txt,128,1024,8,1066,0,COMPLETE,273.493,394052,66245923,4757504,3671040,0.2831,0.0008,6.6976,47.1933,11901,sweep,post-fix rung (glassdrop); dim_a2a=1; portmap=ep128_gt.txt; hier=0; port_bw=400,yes,0d5ee1e

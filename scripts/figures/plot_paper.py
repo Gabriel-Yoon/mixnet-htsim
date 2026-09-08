@@ -467,7 +467,7 @@ def energy():
                 mj_lo, mj_hi = tot_lo / tok[ep] * 1e3, tot_hi / tok[ep] * 1e3
                 a3.bar(x, mj_hi, width=0.62, color="#9aa5ad", alpha=0.5); a3.bar(x, mj_lo, width=0.62, color=HUE[sysname])
                 a3.text(x, mj_hi * 1.02, f"{mj_lo:.2f}–{mj_hi:.2f}", ha="center", va="bottom", fontsize=4.6)
-        a1.set_title(f"EP={ep}", fontsize=9.5)
+        a1.set_title(f"EP={ep}  ({ {16: 'LLaMA-MoE', 32: 'LLaMA-MoE', 64: 'Qwen-MoE', 128: 'Arctic'}.get(ep, '') })", fontsize=9)
         a2.set_yscale("log")
         for ax in axes[:, j]:
             ax.set_xticks(range(len(systems))); ax.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=8, rotation=30, ha="right")

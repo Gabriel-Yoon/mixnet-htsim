@@ -94,7 +94,7 @@ def _rung_key(r):
         q = float("inf")
     return (q, r["makespan_ms"])
 
-_VARIANT_CELL = re.compile(r"hier|sk\d|^x2_|^npl")
+_VARIANT_CELL = re.compile(r"hier|sk\d|^x2_|^npl|^mix")
 
 
 def headline_only(rows, what):

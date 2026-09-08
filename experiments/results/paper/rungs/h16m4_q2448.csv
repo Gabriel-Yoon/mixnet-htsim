@@ -1,2 +1,2 @@
 paper_ref,system,ep,nodes,domain,switches,link_gbps,nic_bw,q_nvs,q_nic,makespan_ms,rtos,drops,flows_total,flows_payload,mean_fct_ms,p50_fct_ms,p99_fct_ms,max_fct_ms,fct_logdir,fct_status,wall_s,status,note,link_rate_fixed,binary_sha
-,,,,,,,,,,,,,,,,,,,,,,submitted,job=12964471 host=atl1-1-02-008-3-2 start=2026-09-08T10:12:29,,
+cliff,hgx8_pkt,16,128,8,4,112.5,50,2448,270,107.634,0,0,78592,57472,0.1071,0.0042,1.7563,5.6079,./logs/rung_12964471_2401201_1788876750064425922,clean,126,sweep,post-fix rung; one job per rung,yes,68851bb

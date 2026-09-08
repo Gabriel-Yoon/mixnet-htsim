@@ -23,10 +23,18 @@
 # edge, WATOS D2D 3.5-4.5 TB/s), and it keeps one MTP-16 per GPU for cross-panel
 # egress even though a wafer would not have that. What it does not get is a direct
 # link to a non-adjacent peer: GLASS_MAXDIST=1 builds only grid-adjacent intra links
-# and routes everything else hop by hop in XY order. Verified before submission --
-# at EP=16 the mesh moves ZERO bytes on the optical tier (every intra hop is now
-# distance-1, hence electrical), the inter-panel bytes are unchanged, and the
-# electrical bytes rise 2.69x.
+# and routes everything else hop by hop in XY order. Verified before submission at
+# EP=16, and then re-verified PER RUN AND PER EP on the 8x8 geometry itself once the
+# arms had run -- experiments/results/paper/tier_bytes_dse.csv, from
+# scripts/tier_bytes_dse.sh. The mesh moves ZERO bytes on the optical tier at EP 16,
+# 32 and 64 (every intra hop is distance-1, hence electrical), the inter-panel bytes
+# are identical between the arms, and the electrical hop-bytes rise 6.44x at EP=16,
+# 8.68x at EP=32 and 13.27x at EP=64.
+#
+# THIS COMMENT SAID 2.69x. That figure came from the pre-submission check under a
+# different geometry and is wrong for the 8x8 arm -- low by a factor of 2.4 at EP=16
+# and nearly 5 at EP=64. Corrected here because a script header is read as
+# documentation, and this one would have contradicted the CSV it introduces.
 set -uo pipefail
 REPO=/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly
 cd "$REPO"

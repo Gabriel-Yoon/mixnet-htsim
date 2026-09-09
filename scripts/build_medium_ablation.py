@@ -80,11 +80,16 @@ with open(OUT, "w", newline="") as fh:
 print("wrote %s: %d row(s)" % (OUT, len(out)))
 
 q = {(r["ep"], r["arm"]): r for r in out if r["quotable"] == "yes"}
-print("\n%-5s %-24s %-24s %s" % ("EP", "glass (quoted)", "copper (quoted)", "same rung?"))
+ORDER = ["glass", "glass_pad400", "rate200", "copper100", "copper50"]
+print("\n%-14s %-22s %-22s %-22s" % ("arm", "EP=16", "EP=32", "EP=64"))
+for a in ORDER:
+    cells = []
+    for ep in ("16", "32", "64"):
+        r = q.get((ep, a))
+        cells.append("%9s ms @ q=%-6s" % (r["makespan_ms"], r["q"]) if r else "   (not quoted)")
+    print("%-14s %-22s %-22s %-22s" % (a, *cells))
+# the arms do not all quote at the same rung; say so rather than let a reader assume
 for ep in ("16", "32", "64"):
-    g, c = q.get((ep, "glass")), q.get((ep, "copper"))
-    if not g or not c:
-        print("%-5s incomplete" % ep); continue
-    print("%-5s %8s ms @ q=%-8s %8s ms @ q=%-8s %s"
-          % (ep, g["makespan_ms"], g["q"], c["makespan_ms"], c["q"],
-             "yes" if g["q"] == c["q"] else "NO -- compare at matched q"))
+    rungs = {a: q[(ep, a)]["q"] for a in ORDER if (ep, a) in q}
+    if len(set(rungs.values())) > 1:
+        print("  EP=%s quotes at DIFFERENT rungs %s -- compare at matched q" % (ep, rungs))

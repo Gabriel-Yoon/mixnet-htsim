@@ -32,8 +32,8 @@ GEOM = {
     "glassfb_800":     dict(arm="4x4",  grid="4x4", topo="flattened_butterfly", opt_bw="384", maxdist="0"),
     # the 32-GPU panel: a RECTANGLE, 8 rows x 4 cols. It varies shape as well as
     # size, which the grid column states so a size curve cannot hide it.
-    "glassfb_8x4":     dict(arm="fb8x4",   grid="8x4", topo="flattened_butterfly", opt_bw="192", maxdist="0"),
-    "glassfb_mesh8x4": dict(arm="mesh8x4", grid="8x4", topo="mesh",                opt_bw="192", maxdist="1"),
+    "glassfb_8x4":     dict(arm="fb8x4",   grid="8x4", topo="flattened_butterfly", opt_bw="256", maxdist="0"),
+    "glassfb_mesh8x4": dict(arm="mesh8x4", grid="8x4", topo="mesh",                opt_bw="256", maxdist="1")  # inert: the mesh uses no optical links,
 }
 # The 4x4 walk names that ARE the design point, one per EP. The mb-variant walks
 # (g16b800m4 and friends) are the load sweep, not the design point, and must not

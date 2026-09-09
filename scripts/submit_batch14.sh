@@ -84,7 +84,7 @@ L16=llamaMoE_paper_dp2tp1pp4_ep16top2_L4_seq1024_mb8_H100.fbuf
 L32=llamaMoE_paper_dp2tp1pp4_ep32top2_L4_seq1024_mb8_H100.fbuf
 QME=qwenMoE_paper_dp2tp1pp4_ep64top4_L4_seq1024_mb8_H100.fbuf
 
-export RUNG_PORT_BW=800 RUNG_PANEL=32 RUNG_PCOLS=4 RUNG_OPT_BW=192
+export RUNG_PORT_BW=800 RUNG_PANEL=32 RUNG_PCOLS=4 RUNG_OPT_BW=256
 for arm in fb mesh; do
   if [ "$arm" = mesh ]; then export RUNG_MAXDIST=1 RUNG_SYS=glassfb_mesh8x4; pre=m32
   else                        export RUNG_MAXDIST=0 RUNG_SYS=glassfb_8x4;     pre=p32; fi
@@ -93,7 +93,7 @@ for arm in fb mesh; do
               "64 512 $QME wm_ep64.txt 20G 20:00:00 1066 2133 4267 8533 17067 34133"; do
     set -- $spec
     ep=$1 nodes=$2 fb=$3 wm=$4 mem=$5 tm=$6; shift 6
-    echo "### $RUNG_SYS EP=$ep  (panel 32 = 8 rows x 4 cols, opt 192 GB/s)"
+    echo "### $RUNG_SYS EP=$ep  (panel 32 = 8 rows x 4 cols, opt 256 GB/s)"
     for q in "$@"; do
       sub "$mem" "$tm" "${pre}_${ep}_q$q" glass "$ep" "$nodes" "$fb" "$wm" "p32_ep${ep}.txt" "$q" 8 "${pre}_${ep}_q$q"
     done

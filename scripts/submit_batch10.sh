@@ -9,14 +9,27 @@
 # EP-aware placement, dim-order routing and the measured-loss gate. The 4x4 arm is
 # already measured (87.700 / 75.253 / 39.879 / 194.609) and is NOT re-run.
 #
-# OPTICAL BANDWIDTH AT 8x8. 128 GB/s per optical link, against 384 at 4x4. The
-# invariant that makes this the right number is a FIXED OPTICAL EGRESS BUDGET PER
-# GPU: a 4x4 corner GPU has 4 optical peers at 384 GB/s and an 8x8 corner GPU has 12
-# at 128, and 4 x 384 = 12 x 128 = 1536 GB/s either way. That identity is the check;
-# the inequality it was quoted from (2*deg*n + 4m <= 60, m=3.125) permits n up to 5.9
-# at 4x4 and so does not by itself pin the 384 the paper uses. Recorded because a
-# constant that reproduces the existing design point is worth more than one that
-# merely satisfies a bound.
+# OPTICAL BANDWIDTH AT 8x8. 128 GB/s per optical link, against 384 at 4x4. The rule
+# is the PER-GPU WAVEGUIDE BUDGET, 2*deg*n_wg + 4m <= 60 with 4m = 12.5, where n_wg
+# is waveguides per optical link at 128 GB/s each and deg is the FB degree -- all
+# row/column peers, 2(n-1) for an n x n grid, which is the convention the ASP-DAC
+# manuscript states in its own Sec. 5.3. So n_wg <= 47.5/(2*deg):
+#
+#     4x4   deg  6   n_wg <= 3.96   n_wg=3  ->  384 GB/s
+#     8x4   deg 10   n_wg <= 2.37   n_wg=2  ->  256 GB/s
+#     8x8   deg 14   n_wg <= 1.70   n_wg=1  ->  128 GB/s
+#
+# THIS HEADER USED TO SAY the budget "permits n up to 5.9 at 4x4 and so does not by
+# itself pin the 384 the paper uses". That was wrong, and wrong because I counted
+# deg as 4 -- the row/column peers minus the two grid-adjacent ones, which are
+# electrical RDL. With the paper's own 2(n-1) the budget pins 384 exactly.
+#
+# THE 1536 GB/s "FIXED EGRESS BUDGET" IS NOT AN INVARIANT. 4 optical peers x 384 =
+# 12 x 128 = 1536 holds at 4x4 and 8x8, and I used it to derive 192 GB/s for an 8x4
+# panel. The waveguide budget gives that panel 8 optical peers x 256 = 2048 GB/s
+# instead. The two rules agree at 4x4 and 8x8 and disagree at 8x4 -- which is why
+# the mistake was invisible until a third panel size existed, and why 192 (n_wg=1.5,
+# a link that cannot be built) survived until then. The waveguide count is the rule.
 #
 # THE MESH IS GIVEN EVERY ADVANTAGE. Same 1800 GB/s per neighbour link as the FB
 # panel's electrical tier (inside the wafer-scale range: Dojo D1 900 GB/s per die

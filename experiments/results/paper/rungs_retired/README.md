@@ -10,11 +10,19 @@ identity is real but it is not the constraint. The constraint is a per-GPU
 WAVEGUIDE COUNT, `2*deg*n + 4m <= 60` with `4m = 12.5`, so `n <= 47.5/(2*deg)`
 where `n` is waveguides per optical link at 128 GB/s each:
 
-| panel | optical degree | n allowed | n used | GB/s |
+`deg` is the FB degree -- ALL row/column peers, `2(n-1)` for an `n x n` grid, the
+convention the ASP-DAC manuscript states in its Sec. 5.3:
+
+| panel | degree | n allowed | n used | GB/s |
 |---|---|---|---|---|
-| 4x4 | 4 | <= 5.94 | 3 (the paper's choice) | 384 |
-| 8x4 | 8 | <= 2.97 | **2** | **256** |
-| 8x8 | 12 | <= 1.98 | 1 | 128 |
+| 4x4 | 6 | <= 3.96 | 3 | 384 |
+| 8x4 | 10 | <= 2.37 | **2** | **256** |
+| 8x8 | 14 | <= 1.70 | 1 | 128 |
+
+With this convention the budget pins all three, including the paper's own 384. An
+earlier version of this note counted degree as 4/8/12 -- row/column peers minus the
+two grid-adjacent ones, which are electrical RDL -- which permits n <= 5.94 at 4x4
+and fails to pin it.
 
 **192 GB/s is n = 1.5 waveguides, and there is no such link.** The bandwidth
 identity holds at 4x4 and 8x8 only because 3 and 1 happen to be integers; at 8x4

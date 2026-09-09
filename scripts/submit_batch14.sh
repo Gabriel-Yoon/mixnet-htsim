@@ -13,10 +13,13 @@
 # detail: this point varies panel SHAPE as well as size. It is carried in the grid
 # column as 8x4 so no figure can quietly present it as a square.
 #
-# 192 GB/s per optical link is derived, not chosen: an 8x4 corner GPU has
-# (8-1)+(4-1) = 10 row/col peers, 2 of them grid-adjacent and therefore electrical,
-# leaving 8 optical -- and 8 x 192 = 1536 GB/s, the same per-GPU egress budget as
-# 4 x 384 at 4x4 and 12 x 128 at 8x8.
+# 256 GB/s per optical link is the WAVEGUIDE BUDGET's answer, not a bandwidth
+# identity: deg = (8-1)+(4-1) = 10 by the ASP-DAC convention of counting all
+# row/column peers, so 2*10*n_wg + 12.5 <= 60 gives n_wg <= 2.37, hence n_wg = 2 and
+# 2 x 128 = 256 GB/s. This arm first ran at 192, from holding the 1536 GB/s optical
+# egress product fixed; that is n_wg = 1.5 waveguides, a link that cannot be built,
+# and it under-provisioned the panel by 25%. Those rows are in
+# experiments/results/paper/rungs_retired/.
 #
 # THE PORT MAPS WERE GENERATED FROM THE TRAFFIC AND VERIFIED. scripts/mk_p32_maps.sh
 # feeds gen_port_map.py --used-pairs derived from the committed hop logs re-panelled

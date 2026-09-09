@@ -111,6 +111,16 @@ LADDERS = {
     ("glass_pad400", "16"):  [266, 533, 1066, 2133, 4267, 8533],
     ("glass_pad400", "32"):  [533, 1066, 2133, 4267, 8533, 17067],
     ("glass_pad400", "64"):  [1066, 2133, 4267, 8533, 17067, 34133],
+    # submit_batch14.sh: the 32-GPU panel, laid out 8 rows x 4 cols, at 192 GB/s per
+    # optical link (8 optical peers x 192 = the same 1536 GB/s per-GPU egress budget
+    # as 4x384 at 4x4 and 12x128 at 8x8). Third point of the panel-size curve. Same
+    # per-EP ladders as glassfb_800 so a low clean rung can still be found.
+    ("glassfb_8x4", "16"):      [266, 533, 1066, 2133, 4267, 8533],
+    ("glassfb_8x4", "32"):      [533, 1066, 2133, 4267, 8533, 17067],
+    ("glassfb_8x4", "64"):      [1066, 2133, 4267, 8533, 17067, 34133],
+    ("glassfb_mesh8x4", "16"):  [266, 533, 1066, 2133, 4267, 8533],
+    ("glassfb_mesh8x4", "32"):  [533, 1066, 2133, 4267, 8533, 17067],
+    ("glassfb_mesh8x4", "64"):  [1066, 2133, 4267, 8533, 17067, 34133],
 }
 
 
@@ -163,7 +173,7 @@ FAMILY = {"glassfb": "glass", "hgx8_pkt": "pkt", "nvl64_pkt_s1": "pkt",
           # the flattened butterfly with copper long links: same fabric family, the
           # medium is what the arm varies, and the system name is what names it
           "copper_fb": "glass", "copper_fb_50": "glass", "copper_fb_200": "glass",
-          "glass_pad400": "glass"}
+          "glass_pad400": "glass", "glassfb_8x4": "glass", "glassfb_mesh8x4": "glass"}
 # 800.0, not 400.0: q_over_bdp is q x MTU / (port_bw x RTT), so the SAME packet
 # count is half the BDP multiple at twice the port rate. Using 400 here would
 # report every 200G rung at twice its true multiple and put the 800 GB/s q=533
@@ -174,7 +184,7 @@ PORT_GBPS = {"glassfb": 400.0, "hgx8_pkt": 112.5, "nvl64_pkt_s1": 900.0,
              # ports stay at 800 GB/s in the copper arm -- only the distance->=2
              # INTRA-panel links change medium -- so q_over_bdp is the same axis
              "copper_fb": 800.0, "copper_fb_50": 800.0, "copper_fb_200": 800.0,
-             "glass_pad400": 800.0}
+             "glass_pad400": 800.0, "glassfb_8x4": 800.0, "glassfb_mesh8x4": 800.0}
 RTT_S = 4 * 250e-9          # four 250 ns hops, the same for every fabric here
 MTU = 1500
 

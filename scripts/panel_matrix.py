@@ -13,9 +13,9 @@ D = ("/storage/scratch1/8/syoon351/repos/panel_scale_glass_flattened_butterfly"
 # label -> {ep: rung-file prefix}
 ARMS = [
     ("4x4  FB  (16 GPU, 384)", {16: "g16b800", 32: "g32b800", 64: "g64b800"}),
-    ("8x4  FB  (32 GPU, 192)", {16: "p32_16", 32: "p32_32", 64: "p32_64"}),
+    ("8x4  FB  (32 GPU, 256)", {16: "p32_16", 32: "p32_32", 64: "p32_64"}),
     ("8x8  FB  (64 GPU, 128)", {16: "fb64_ep16", 32: "fb64_ep32", 64: "fb64_ep64"}),
-    ("8x4  MESH(32 GPU, 192)", {16: "m32_16", 32: "m32_32", 64: "m32_64"}),
+    ("8x4  MESH(32 GPU, 256)", {16: "m32_16", 32: "m32_32", 64: "m32_64"}),
     ("8x8  MESH(64 GPU, 128)", {16: "mesh64_ep16", 32: "mesh64_ep32", 64: "mesh64_ep64"}),
 ]
 

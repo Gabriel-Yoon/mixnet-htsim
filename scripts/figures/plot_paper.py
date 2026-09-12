@@ -449,7 +449,7 @@ def energy():
                        label=lab if key not in drawn else None); drawn.add(key)
                 bottom += hi
             link_lo = bottom_lo = sum(t[1] for t in tiers)
-            a1.plot([x - 0.33, x + 0.33], [link_lo, link_lo], color="black", lw=0.8)
+            # (favorable-end tick removed at the user's request, 2026-09-12; bars are the conservative end)
             # (per-bar range labels removed at the user's request, 2026-09-12: the brackets are in the text)
             # row 2: link vs static vs total, log scale, grouped
             tot_lo, tot_hi = link_lo + st[0], bottom + st[1]
@@ -474,7 +474,7 @@ def energy():
     if tok: axes[2][0].set_ylabel("energy per token (mJ)", fontsize=6.5)
     h1, l1 = axes[0][0].get_legend_handles_labels(); h2, l2 = axes[1][0].get_legend_handles_labels()
     fig.legend(h1 + h2, l1 + l2, fontsize=7.5, frameon=False, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.005), handlelength=1.6, columnspacing=1.0)
-    fig.tight_layout(pad=0.3, rect=(0, 0.09 if not tok else 0.07, 1, 1)); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
+    fig.tight_layout(pad=0.3, rect=(0, 0.115 if not tok else 0.07, 1, 1)); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
 def calib():
     """R-calib: NVSwitch model as an 8-GPU HGX H100 under a synthetic all-to-all (calib_nvswitch.csv:

@@ -30,7 +30,7 @@ EPS = sorted({ep for _, ep in q})
 COL = {16: "#2b6f7f", 32: "#4b3f8f", 64: "#c46a4a"}
 MK = {16: "o", 32: "s", 64: "^"}
 
-fig, ax = plt.subplots(figsize=(3.45, 2.05), dpi=200)
+fig, ax = plt.subplots(figsize=(3.45, 1.35), dpi=200)
 for ep in EPS:
     g = q[("glass", ep)][0]
     pts = sorted([(rate, ms / g) for (arm, e), (ms, rate) in q.items() if e == ep and arm != "glass_pad400"])
@@ -41,16 +41,16 @@ for ep in EPS:
     cu = q[("copper100", ep)][0] / g
     ax.annotate(f"{cu:.2f}×", (100, cu), textcoords="offset points", xytext=(5, -2 if ep != 64 else 4), fontsize=6.5, color=COL[ep], va="center")
 ax.axvline(100, color="#999", lw=0.6, ls=(0, (3, 2)), zorder=1)
-ax.text(100, ax.get_ylim()[1] * 0.98, " copper-feasible", fontsize=6, color="#666", va="top", ha="left")
+ax.text(100, ax.get_ylim()[1] * 0.98, " copper-feasible", fontsize=5.8, color="#666", va="top", ha="left")
 ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100", "200", "384\n(glass)"]); ax.minorticks_off()
-ax.set_xlabel("distance-≥2 link rate (GB/s per direction)", fontsize=8.5)
-ax.set_ylabel("iteration, normalized to glass", fontsize=8.5)
+ax.set_xlabel("distance-≥2 link rate (GB/s per direction)", fontsize=7.5)
+ax.set_ylabel("iteration / glass", fontsize=7.5)
 ax.tick_params(labelsize=7.5); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
 ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
 h, l = ax.get_legend_handles_labels()
 from matplotlib.lines import Line2D
 h.append(Line2D([], [], marker="o", ls="", markerfacecolor="white", markeredgecolor="#555", label="glass, 400 ns pad")); l.append("glass, 400 ns pad")
-ax.legend(h, l, frameon=False, fontsize=6.8, loc="upper right")
+ax.legend(h, l, frameon=False, fontsize=6.2, loc="upper right", ncol=2, handlelength=1.6, columnspacing=0.8)
 fig.tight_layout(pad=0.3)
 for ext in ("png", "pdf"):
     fig.savefig(os.path.join(OUT, f"fig_medium.{ext}"))

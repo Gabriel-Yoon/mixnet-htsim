@@ -56,7 +56,12 @@ for (i, j), tp in peaks_g.items():
             fontsize=6.5, color="w" if tp < 100 else "k", fontweight="bold")
 ax.set_xlim(0, L); ax.set_ylim(0, L); ax.set_aspect("equal")
 ax.set_xticks([]); ax.set_yticks([])
-ax.set_xlabel(f"coolant flow  →  (inlet {tin:.0f} °C, outlet {tin+20:.0f} °C)", fontsize=7, labelpad=2)
+# coolant direction drawn as an arrow under the panel: inlet edge (left) to outlet edge (right)
+ax.annotate("", xy=(0.97, -0.05), xytext=(0.03, -0.05), xycoords="axes fraction", textcoords="axes fraction",
+            arrowprops=dict(arrowstyle="-|>", color="#1f77b4", lw=1.6, mutation_scale=12), annotation_clip=False)
+ax.text(0.03, -0.075, f"inlet {tin:.0f} °C", transform=ax.transAxes, ha="left", va="top", fontsize=7, color="#1f77b4")
+ax.text(0.50, -0.075, "coolant flow", transform=ax.transAxes, ha="center", va="top", fontsize=7, color="#1f77b4")
+ax.text(0.97, -0.075, f"outlet {tin+20:.0f} °C", transform=ax.transAxes, ha="right", va="top", fontsize=7, color="#1f77b4")
 cb = fig.colorbar(cf, ax=ax, fraction=0.046, pad=0.03, ticks=list(range(int(tin), int(tmax) + 1, 20)))
 cb.ax.tick_params(labelsize=7); cb.set_label("PIC-plane T (°C)", fontsize=7)
 gmax = max(peaks_g.values()); smax = max(peaks_s.values())

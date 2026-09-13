@@ -74,7 +74,7 @@ xs = range(len(EPS)); w = 0.36
 for i, ep in enumerate(EPS):
     (g_lo, g_hi), (k_lo, k_hi) = energy(ep)
     axb.bar(i - w / 2, g_lo, width=w, color="#2b6f7f", zorder=4, label="Glass-FB" if i == 0 else None)
-    axb.bar(i + w / 2, k_lo, width=w, color="#c46a4a", zorder=4, label="copper-FB" if i == 0 else None)
+    axb.bar(i + w / 2, k_lo, width=w, color="#c46a4a", zorder=4, label="wafer-scale FB" if i == 0 else None)
     axb.text(i + 0.06, max(g_hi, k_hi) * 1.25, f"{k_lo/g_lo:.1f}×", ha="center", va="bottom", fontsize=5.6, color="#333")
     print(f"  EP={ep}: glass {g_lo:.1f}-{g_hi:.1f} J, copper-FB {k_lo:.1f}-{k_hi:.1f} J, ratio {k_lo/g_lo:.2f}-{k_hi/g_hi:.2f}")
 axb.set_yscale("log"); axb.set_ylim(5, 30000)

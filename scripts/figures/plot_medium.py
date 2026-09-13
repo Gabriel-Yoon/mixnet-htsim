@@ -57,7 +57,7 @@ for ep in EPS:
     # (pad-only control not drawn at the user's request, 2026-09-12; it is stated in the text as 0.1-2%)
     last = pts[0]   # 50 GB/s point: label the copper-feasible penalty inline
     cu = q[("copper100", ep)][0] / g
-    POS = {64: (112, cu + 0.16, "left"), 32: (118, 1.78, "left"), 16: (66, 1.05, "left")}   # clear of the curves
+    POS = {64: (112, cu + 0.16, "left"), 32: (101, 1.78, "left"), 16: (52, 1.05, "left")}   # clear of the curves
     px, py, ha = POS.get(ep, (112, cu, "left"))
     ax.text(px, py, f"{cu:.2f}×", fontsize=6.5, color=COL[ep], va="center", ha=ha)
 ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100\n(copper)", "200", "384\n(glass)"]); ax.minorticks_off()

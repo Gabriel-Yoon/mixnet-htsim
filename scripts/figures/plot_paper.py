@@ -473,7 +473,18 @@ def energy():
     axes[1][0].set_ylabel("energy per iteration (J), log", fontsize=8.5)
     if tok: axes[2][0].set_ylabel("energy per token (mJ)", fontsize=6.5)
     h1, l1 = axes[0][0].get_legend_handles_labels(); h2, l2 = axes[1][0].get_legend_handles_labels()
-    fig.legend(h1 + h2, l1 + l2, fontsize=7.5, frameon=False, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.005), handlelength=1.6, columnspacing=1.0)
+    # legend columns grouped by fabric: glass tiers | NVL72 pair | HGX-8 pair | link / static / total
+    # (matplotlib fills column-major; blank entries pad the two-entry columns to three rows)
+    import matplotlib.patches as _mp
+    blank = _mp.Patch(alpha=0, label=" ")
+    by = dict(zip(l1, h1))
+    def pick(*names): return [(by[n], n) for n in names if n in by]
+    cols = [pick("electrical RDL (distance-1)", "intra-panel optical (L1/L2)", "inter-panel optical ports"),
+            pick("in-domain NVLink (NVL72)", "scale-out NIC (NVL72)") + [(blank, " ")],
+            pick("in-domain NVLink (HGX-8)", "scale-out NIC (HGX-8)") + [(blank, " ")],
+            list(zip(h2, l2))]
+    ordered = [e for c in cols for e in c]
+    fig.legend([h for h, _ in ordered], [l for _, l in ordered], fontsize=7.5, frameon=False, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.005), handlelength=1.6, columnspacing=1.0)
     fig.tight_layout(pad=0.3, rect=(0, 0.115 if not tok else 0.07, 1, 1)); fig.savefig(f("fig_energy.png")); print("wrote fig_energy.png")
 
 def calib():

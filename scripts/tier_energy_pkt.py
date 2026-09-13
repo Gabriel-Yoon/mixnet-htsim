@@ -37,6 +37,26 @@ NVLINK = (1.55, 5.00)          # pJ/bit, bracket
 # conservative end: this is charged to the INCUMBENT's cross-domain bytes,
 # so a larger number would flatter us.
 NIC_PJ_BIT = 16.0
+# ###################################################################################
+# SUPERSEDED -- AND IT WAS NEVER A BRACKET. 7.5 and 12.5 are TWO DIFFERENT SYSTEMS
+# per-GPU NVSwitch power, not a lo/hi range on one system:
+#
+#     7.5  = 540 W per rack / 72 GPUs     GB200 NVL72, NVLink5  -> the nvl64_pkt rows
+#     12.5 = 4x NVSwitch3 per 8 GPUs      H100 HGX-8            -> the hgx8_pkt rows
+#
+# This file applied BOTH to BOTH systems as a bracket, so every row carried the other
+# system's switch power as one of its two ends. I worked out the two-systems reading
+# when the manuscript session asked where these numbers came from, and left the
+# producer unchanged: a diagnosis is not a fix, and this is what that costs.
+#
+# scripts/figures/energy_consts.py is the authority and gives each system its own
+# value. The link_J and static_J columns this file writes are no longer read by the
+# paper or by any figure. If you regenerate power_tiers_pkt.csv, take the pJ/bit and
+# the static W from there.
+#
+# Kept rather than deleted so sub-class R in docs/methods_provenance.md has something
+# to point at.
+# ###################################################################################
 NVS_STATIC_W_PER_GPU = (7.5, 12.5)
 
 HOPS_IN_DOMAIN = 2             # GPU -> switch -> GPU

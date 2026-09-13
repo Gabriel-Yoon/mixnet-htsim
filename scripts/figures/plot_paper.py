@@ -257,7 +257,7 @@ def decomp():
             if sysname not in grp or ref is None: continue
             v = grp[sysname] / ref; x = i + (j - 1) * w
             ax.bar(x, v, w * 0.9, color=COL[sysname], label=SHORT[sysname] if i == 0 else None, zorder=3)
-            ax.text(x, v + 0.04, "%.2f" % v, ha="center", va="bottom", fontsize=6.2, color="#333", rotation=0)
+            ax.text(x, max(v, 1.0) + 0.04, "%.2f" % v, ha="center", va="bottom", fontsize=6.2, color="#333", rotation=0)   # labels never below the Glass-FB=1 line
     ax.axhline(1.0, color="#999", lw=0.6, ls=(0, (3, 2)), zorder=2)
     ax.set_xticks(range(len(eps))); ax.set_xticklabels(["EP=%d\n%s" % (ep, MODEL.get(ep, "")) for ep in eps], fontsize=7.5)
     ax.set_ylabel("normalized iteration time", fontsize=8.5); ax.set_ylim(0, 4.2)

@@ -57,10 +57,10 @@ for ep in EPS:
     # (pad-only control not drawn at the user's request, 2026-09-12; it is stated in the text as 0.1-2%)
     last = pts[0]   # 50 GB/s point: label the copper-feasible penalty inline
     cu = q[("copper100", ep)][0] / g
-    POS = {64: (112, cu + 0.16, "left"), 32: (101, 1.78, "left"), 16: (52, 1.05, "left")}   # clear of the curves
+    POS = {64: (112, cu + 0.16, "left"), 32: (80, 1.78, "left"), 16: (52, 1.05, "left")}   # clear of the curves
     px, py, ha = POS.get(ep, (112, cu, "left"))
     ax.text(px, py, f"{cu:.2f}×", fontsize=6.5, color=COL[ep], va="center", ha=ha)
-ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100\n(copper)", "200", "384\n(glass)"]); ax.minorticks_off()
+ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100", "200", "384"]); ax.minorticks_off()
 ax.set_xlabel("long-link rate (GB/s per direction)", fontsize=7.5)
 ax.set_ylabel("iteration time,\nnormalized to Glass-FB", fontsize=7)
 ax.tick_params(labelsize=7.5); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
@@ -76,8 +76,8 @@ for i, ep in enumerate(EPS):
     axb.bar(i - w / 2, g_hi, width=w, color="#c9dfe4", edgecolor="#2b6f7f", lw=0.6, zorder=3)
     axb.bar(i - w / 2, g_lo, width=w, color="#2b6f7f", zorder=4, label="Glass-FB" if i == 0 else None)
     axb.bar(i + w / 2, k_hi, width=w, color="#efd3c6", edgecolor="#c46a4a", lw=0.6, zorder=3)
-    axb.bar(i + w / 2, k_lo, width=w, color="#c46a4a", zorder=4, label="copper-FB (100 GB/s)" if i == 0 else None)
-    axb.text(i, max(g_hi, k_hi) * 1.25, f"{k_lo/g_lo:.1f}–{k_hi/g_hi:.1f}×", ha="center", va="bottom", fontsize=5.6, color="#333")
+    axb.bar(i + w / 2, k_lo, width=w, color="#c46a4a", zorder=4, label="copper-FB" if i == 0 else None)
+    axb.text(i + 0.06, max(g_hi, k_hi) * 1.25, f"{k_lo/g_lo:.1f}–{k_hi/g_hi:.1f}×", ha="center", va="bottom", fontsize=5.6, color="#333")
     print(f"  EP={ep}: glass {g_lo:.1f}-{g_hi:.1f} J, copper-FB {k_lo:.1f}-{k_hi:.1f} J, ratio {k_lo/g_lo:.2f}-{k_hi/g_hi:.2f}")
 axb.set_yscale("log"); axb.set_ylim(5, 30000)
 axb.set_xticks(list(xs)); axb.set_xticklabels([f"EP={ep}" for ep in EPS], fontsize=6.5)

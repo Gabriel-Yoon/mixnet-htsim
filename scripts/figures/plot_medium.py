@@ -57,10 +57,12 @@ for ep in EPS:
     # (pad-only control not drawn at the user's request, 2026-09-12; it is stated in the text as 0.1-2%)
     last = pts[0]   # 50 GB/s point: label the copper-feasible penalty inline
     cu = q[("copper100", ep)][0] / g
-    ax.annotate(f"{cu:.2f}×", (100, cu), textcoords="offset points", xytext=(5, -2 if ep != 64 else 4), fontsize=6.5, color=COL[ep], va="center")
-ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100", "200", "384\n(glass)"]); ax.minorticks_off()
+    POS = {64: (112, cu + 0.16, "left"), 32: (118, 1.78, "left"), 16: (66, 1.05, "left")}   # clear of the curves
+    px, py, ha = POS.get(ep, (112, cu, "left"))
+    ax.text(px, py, f"{cu:.2f}×", fontsize=6.5, color=COL[ep], va="center", ha=ha)
+ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100\n(copper)", "200", "384\n(glass)"]); ax.minorticks_off()
 ax.set_xlabel("long-link rate (GB/s per direction)", fontsize=7.5)
-ax.set_ylabel("iteration / glass", fontsize=7.5)
+ax.set_ylabel("iteration time,\nnormalized to Glass-FB", fontsize=7)
 ax.tick_params(labelsize=7.5); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
 ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
 h, l = ax.get_legend_handles_labels()
@@ -79,7 +81,7 @@ for i, ep in enumerate(EPS):
     print(f"  EP={ep}: glass {g_lo:.1f}-{g_hi:.1f} J, copper-FB {k_lo:.1f}-{k_hi:.1f} J, ratio {k_lo/g_lo:.2f}-{k_hi/g_hi:.2f}")
 axb.set_yscale("log"); axb.set_ylim(5, 30000)
 axb.set_xticks(list(xs)); axb.set_xticklabels([f"EP={ep}" for ep in EPS], fontsize=6.5)
-axb.set_ylabel("interconnect J / iteration", fontsize=7.5); axb.tick_params(labelsize=7.5)
+axb.set_ylabel("interconnect energy\nper iteration (J)", fontsize=7); axb.tick_params(labelsize=7.5)
 axb.spines["top"].set_visible(False); axb.spines["right"].set_visible(False); axb.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
 axb.legend(frameon=False, fontsize=5.6, loc="upper left", handlelength=1.2, handletextpad=0.4, labelspacing=0.25)
 axb.set_title("(b)", fontsize=7, loc="left", pad=2)

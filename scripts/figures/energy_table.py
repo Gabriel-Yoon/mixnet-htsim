@@ -7,7 +7,7 @@ optical 1.15-2.62 pJ/b); static J = static W x iteration.
 Env: PAPER_RES, OUT. Writes energy_table.tex."""
 import csv, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from energy_consts import glass_tiers, glass_static, glass_total, ELEC_PJ, OPT_PJ
+from energy_consts import glass_tiers, glass_static, glass_total, ELEC_PJ, OPT_PJ, STATIC_W_PER_PANEL, CARRIERS_PER_PANEL
 RES = os.environ.get("PAPER_RES", os.path.join(os.path.dirname(__file__), "..", "..", "experiments", "results", "paper"))
 OUT = os.environ.get("OUT", ".")
 EPS = [16, 32, 64, 128]
@@ -33,8 +33,8 @@ row(r"hop-bytes, inter-panel ports (TB)", [TB(g[e]["bytes_inter"]) for e in EPS]
 row(r"link J, RDL tier @ %.2f--%.2f pJ/bit" % (elo, ehi), [J(*tierJ(g[e]["bytes_elec"], elo, ehi)) for e in EPS])
 row(r"link J, optical tiers @ %.2f--%.2f pJ/bit" % (glo, ghi), [J(*tierJ(float(g[e]["bytes_opt"]) + float(g[e]["bytes_inter"]), glo, ghi)) for e in EPS])
 row(r"link J, total", [J(sum(t[1] for t in glass_tiers(g[e])), sum(t[2] for t in glass_tiers(g[e]))) for e in EPS])
-row(r"static W: %s~W/panel $\times$ panels" % g[16]["static_laser_tune_W_per_panel"], ["%.0f" % (float(g[e]["static_laser_tune_W_per_panel"]) * (int(e) * 8 / 16)) for e in EPS])
-row(r"static J (5.3~W/panel; 9.12 at 200G/lane)", [J(g[e]["static_J_iter"], g[e]["static_J_iter_200G"]) for e in EPS])
+row(r"static W: %.1f~W/panel (laser $+$ tuning, %d carriers) $\times$ panels" % (STATIC_W_PER_PANEL, CARRIERS_PER_PANEL), ["%.0f" % (STATIC_W_PER_PANEL * int(g[e]["nodes"]) / 16) for e in EPS])
+row(r"static J", [J(*glass_static(g[e])) for e in EPS])
 row(r"total J", [J(*glass_total(g[e])) for e in EPS], bold=True)
 rows.append(r"\midrule")
 # ---- NVSwitch fabrics

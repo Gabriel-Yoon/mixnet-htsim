@@ -54,13 +54,10 @@ for ep in EPS:
     g = q[("glass", ep)][0]
     pts = sorted([(rate, ms / g) for (arm, e), (ms, rate) in q.items() if e == ep and arm != "glass_pad400"])
     ax.plot([p for p, _ in pts], [v for _, v in pts], color=COL[ep], marker=MK[ep], ms=4, lw=1.2, label=f"EP={ep}", zorder=3)
-    if ("glass_pad400", ep) in q:   # pad-only control: hollow marker at the design rate
-        ax.scatter([384], [q[("glass_pad400", ep)][0] / g], s=30, marker=MK[ep], facecolor="white", edgecolor=COL[ep], lw=1.0, zorder=4)
+    # (pad-only control not drawn at the user's request, 2026-09-12; it is stated in the text as 0.1-2%)
     last = pts[0]   # 50 GB/s point: label the copper-feasible penalty inline
     cu = q[("copper100", ep)][0] / g
     ax.annotate(f"{cu:.2f}×", (100, cu), textcoords="offset points", xytext=(5, -2 if ep != 64 else 4), fontsize=6.5, color=COL[ep], va="center")
-ax.axvline(100, color="#999", lw=0.6, ls=(0, (3, 2)), zorder=1)
-ax.text(100, 0.62, " copper-feasible", fontsize=5.6, color="#666", va="bottom", ha="left")
 ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100", "200", "384\n(glass)"]); ax.minorticks_off()
 ax.set_xlabel("long-link rate (GB/s per direction)", fontsize=7.5)
 ax.set_ylabel("iteration / glass", fontsize=7.5)
@@ -68,7 +65,6 @@ ax.tick_params(labelsize=7.5); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
 ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
 h, l = ax.get_legend_handles_labels()
 from matplotlib.lines import Line2D
-h.append(Line2D([], [], marker="o", ls="", markerfacecolor="white", markeredgecolor="#555", label="glass, 400 ns pad")); l.append("glass, 400 ns pad")
 ax.legend(h, l, frameon=False, fontsize=5.6, loc="upper right", ncol=1, handlelength=1.4, handletextpad=0.4, labelspacing=0.25)
 ax.set_title("(a)", fontsize=7, loc="left", pad=2)
 # (b)

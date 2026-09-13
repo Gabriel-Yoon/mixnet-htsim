@@ -16,7 +16,7 @@ OPT_PJ = (1.15, 2.62)
 
 # Static term: external laser + ring tuning for the carriers the 4x4 panel actually modulates
 # (corrected 2026-09-13; the earlier 5.3 / 9.12 W per panel applied ONE GPU's 960-wavelength
-# budget to a whole 16-GPU panel, a 16x undercount -- the thermal deck already charged the
+# budget to a whole 16-GPU panel, an 8.1x undercount (7808 / 960 carriers) -- the thermal deck already charged the
 # 1.44 W of tuning per tile). Lit transmit carriers at the 200G/lane design point:
 #   intra-panel: 24 distance>=2 links x 3 waveguides x 2 directions = 144 one-way waveguides
 #   ports:       16 GPUs x 6.25 waveguides of egress (800 GB/s at 128 GB/s per waveguide) = 100

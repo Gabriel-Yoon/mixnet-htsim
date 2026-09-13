@@ -248,7 +248,7 @@ def decomp():
     eps = sorted({ep for ep, _, _ in parsed})
     # user 2026-09-08: no A2A/compute split; normalized iteration time (MixNet style), Glass-FB = 1 per EP
     order = [s_ for s_ in HEAD if s_ != "glassfb"]
-    fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
     w = 0.26
     for i, ep in enumerate(eps):
         grp = {sysname: float(r["makespan_ms"]) for _, sysname, r in parsed if _ == ep}
@@ -450,13 +450,15 @@ def energy():
                 bottom += hi
             link_lo = bottom_lo = sum(t[1] for t in tiers)
             # (favorable-end tick removed at the user's request, 2026-09-12; bars are the conservative end)
-            # (per-bar range labels removed at the user's request, 2026-09-12: the brackets are in the text)
+            a1.text(x, bottom * 1.02, f"{bottom:.0f}", ha="center", va="bottom", fontsize=6.5)   # conservative-end link J
             # row 2: link vs static vs total, log scale, grouped
             tot_lo, tot_hi = link_lo + st[0], bottom + st[1]
             a2.bar(x - 0.22, bottom, width=0.2, color=HUE[sysname], label="link (bytes moved)" if "l2" not in drawn else None); drawn.add("l2")
             a2.bar(x, max(st[1], 1e-3), width=0.2, facecolor="white", edgecolor=HUE[sysname], hatch="////", lw=0.6,
                    label="static (idle power x iteration)" if "s2" not in drawn else None); drawn.add("s2")
             a2.bar(x + 0.22, tot_hi, width=0.2, color="#c9ced2", label="total" if "t2" not in drawn else None); drawn.add("t2")
+            for xx, val in ((x - 0.22, bottom), (x, st[1]), (x + 0.22, tot_hi)):   # vertical value labels, conservative end
+                a2.text(xx, val * 1.12, f"{val:.0f}", ha="center", va="bottom", fontsize=5.2, rotation=90)
             if tok.get(ep):
                 a3 = axes[2][j]
                 mj_lo, mj_hi = tot_lo / tok[ep] * 1e3, tot_hi / tok[ep] * 1e3
@@ -467,7 +469,7 @@ def energy():
         for ax in axes[:, j]:
             ax.set_xticks(range(len(systems))); ax.set_xticklabels([NAMES[s_] for s_ in systems], fontsize=8, rotation=30, ha="right")
             ax.tick_params(labelsize=7.5); ax.grid(alpha=0.25, axis="y")
-        a1.set_ylim(0, a1.get_ylim()[1] * 1.18); a2.set_ylim(a2.get_ylim()[0], a2.get_ylim()[1] * 4)
+        a1.set_ylim(0, a1.get_ylim()[1] * 1.18); a2.set_ylim(a2.get_ylim()[0], a2.get_ylim()[1] * 8)
         for ax in axes[:-1, j]: ax.set_xticklabels([])
     axes[0][0].set_ylabel("link energy per iteration (J)", fontsize=8.5)
     axes[1][0].set_ylabel("energy per iteration (J), log", fontsize=8.5)
@@ -682,7 +684,7 @@ def loadfig():
     STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
            "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
            "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
-    fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
     mbs = [4, 8, 16, 32]
     ref = {int(r["mb"]): float(r["makespan_ms"]) for r in rows if r["system"] == "glass_200G"}
     for sysname, st in STY.items():
@@ -723,7 +725,7 @@ def calibfig():
     sim.sort(key=lambda r: float(r["msg_bytes"]))
     import numpy as np
     M = np.array([2**21, 2**26], dtype=float)
-    fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
     # (DeepEP efficiency band removed at the user's request, 2026-09-08; the number stays in the text)
     ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
     if sim:

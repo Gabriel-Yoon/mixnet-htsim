@@ -49,7 +49,7 @@ def energy(ep):
     k_hi = J(be, rdl + ghi) + J(bo, chi) + J(bi, ghi)
     return (g_lo, g_hi), (k_lo, k_hi)
 
-fig, (ax, axb) = plt.subplots(1, 2, figsize=(3.45, 1.55), dpi=200, gridspec_kw=dict(width_ratios=[1.25, 1], wspace=0.45))
+fig, (ax, axb) = plt.subplots(1, 2, figsize=(3.45, 1.45), dpi=200, gridspec_kw=dict(width_ratios=[1.25, 1], wspace=0.45))
 for ep in EPS:
     g = q[("glass", ep)][0]
     pts = sorted([(rate, ms / g) for (arm, e), (ms, rate) in q.items() if e == ep and arm != "glass_pad400"])

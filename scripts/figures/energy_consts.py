@@ -11,8 +11,22 @@ electrical tier the optical bracket plus an unsourced 1.0 pJ/b RDL adder (2.15-3
 Hop-bytes and the NVSwitch fabrics are unchanged; the static term is recomputed below; power_tiers.csv's
 link_J_iter columns for glassfb_* therefore no longer match the paper and are NOT read.
 """
-ELEC_PJ = (0.60, 1.15)
-OPT_PJ = (1.15, 2.62)
+# Single values (2026-09-13, user decision: no favorable/conservative brackets in the paper).
+# The (lo, hi) tuple shape is kept so callers are unchanged; lo == hi everywhere.
+#   electrical RDL tier: 1.15 pJ/b, Hsueh Table 1 XSR SerDes PHY (a ~30 mm tile-to-tile link is
+#                        an XSR-class link; the 0.60 UCIe PHY is for millimetre die-to-die reach)
+#   optical tiers:       1.15 pJ/b, Hsueh Table 1 32-wavelength WDM photonic link (2.62 margin dropped)
+#   NVLink:              5.0 pJ/b, HotI'25 (Lightmatter) 224G-LR SerDes figure, scale-up class <5
+#                        (1.55 was a 112G XSR SerDes, not an NVLink SerDes)
+#   800G NIC:            16 pJ/b, HotI'25 Table I scale-out class
+#   copper long links:   16 pJ/b, same scale-out class (copper_energy.csv carried 16-20)
+#   NVSwitch static:     7.5 W/GPU for NVL72, 12.5 W/GPU for HGX-8 (was a 7.5-12.5 bracket for both)
+ELEC_PJ = (1.15, 1.15)
+OPT_PJ = (1.15, 1.15)
+NVLINK_PJ = 5.0
+NIC_PJ = 16.0
+COPPER_PJ = 16.0
+NVS_STATIC_W_PER_GPU = {"nvl64_pkt_s1": 7.5, "hgx8_pkt": 12.5}
 
 # Static term: external laser + ring tuning for the carriers the 4x4 panel actually modulates
 # (corrected 2026-09-13; the earlier 5.3 / 9.12 W per panel applied ONE GPU's 960-wavelength
@@ -47,6 +61,15 @@ def glass_total(r):
     t = glass_tiers(r); s = glass_static(r)
     return sum(x[1] for x in t) + s[0], sum(x[2] for x in t) + s[1]
 
+def pkt_tiers(r):
+    """[(tier, J, J)] for an NVSwitch row: in-domain NVLink hop-bytes and NIC hop-bytes."""
+    a = J(r["bytes_in_domain"], NVLINK_PJ); b = J(r["bytes_nic"], NIC_PJ)
+    return [("nvlink", a, a), ("nic", b, b)]
+
+def pkt_static(r):
+    j = NVS_STATIC_W_PER_GPU[r["system"]] * float(r["nodes"]) * float(r["makespan_ms"]) / 1e3
+    return j, j
+
 def pkt_total(r):
-    return (float(r["link_J_iter_lo"]) + float(r["static_J_iter_lo"]),
-            float(r["link_J_iter_hi"]) + float(r["static_J_iter_hi"]))
+    t = pkt_tiers(r); s = pkt_static(r)
+    return sum(x[1] for x in t) + s[0], sum(x[2] for x in t) + s[1]

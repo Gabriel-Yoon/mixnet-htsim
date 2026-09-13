@@ -248,7 +248,7 @@ def decomp():
     eps = sorted({ep for ep, _, _ in parsed})
     # user 2026-09-08: no A2A/compute split; normalized iteration time (MixNet style), Glass-FB = 1 per EP
     order = [s_ for s_ in HEAD if s_ != "glassfb"]
-    fig, ax = plt.subplots(figsize=(3.45, 1.72), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.775), dpi=200)
     w = 0.26
     for i, ep in enumerate(eps):
         grp = {sysname: float(r["makespan_ms"]) for _, sysname, r in parsed if _ == ep}
@@ -404,14 +404,8 @@ def energy():
             return glass_tiers(r), glass_static(r)
         r = next((r for r in n if r["system"] == sysname and int(r["ep"]) == ep), None)
         if not r: return None, None
-        nlo, nhi = float(r["nvlink_pj_bit_lo"]), float(r["nvlink_pj_bit_hi"]); nic = float(r["nic_pj_bit"])
-        bd, bn = float(r["bytes_in_domain"]), float(r["bytes_nic"])
-        # bytes_in_domain / bytes_nic are already hop-bytes (tier_energy_pkt.py multiplies by hops); no second factor
-        tiers = [("nvlink", bd * 8 * nlo * 1e-12, bd * 8 * nhi * 1e-12), ("nic", bn * 8 * nic * 1e-12, bn * 8 * nic * 1e-12)]
-        lo_sum = sum(t[1] for t in tiers); hi_sum = sum(t[2] for t in tiers)
-        L_lo, L_hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
-        tiers = [(k, a * L_lo / lo_sum, b * L_hi / hi_sum) for k, a, b in tiers]
-        return tiers, (float(r["static_J_iter_lo"]), float(r["static_J_iter_hi"]))
+        from energy_consts import pkt_tiers, pkt_static   # single-value charges (energy_consts.py)
+        return pkt_tiers(r), pkt_static(r)
     # optional per-token row
     tok = {}
     tp = os.path.join(RES, "tokens_per_iter.csv")
@@ -675,7 +669,7 @@ def loadfig():
     STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
            "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
            "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
-    fig, ax = plt.subplots(figsize=(3.45, 1.72), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.775), dpi=200)
     mbs = [4, 8, 16, 32]
     ref = {int(r["mb"]): float(r["makespan_ms"]) for r in rows if r["system"] == "glass_200G"}
     for sysname, st in STY.items():
@@ -716,7 +710,7 @@ def calibfig():
     sim.sort(key=lambda r: float(r["msg_bytes"]))
     import numpy as np
     M = np.array([2**21, 2**26], dtype=float)
-    fig, ax = plt.subplots(figsize=(3.45, 1.72), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.775), dpi=200)
     # (DeepEP efficiency band removed at the user's request, 2026-09-08; the number stays in the text)
     ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
     if sim:

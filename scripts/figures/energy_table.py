@@ -7,7 +7,7 @@ optical 1.15-2.62 pJ/b); static J = static W x iteration.
 Env: PAPER_RES, OUT. Writes energy_table.tex."""
 import csv, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from energy_consts import glass_tiers, glass_static, glass_total, ELEC_PJ, OPT_PJ, STATIC_W_PER_PANEL, CARRIERS_PER_PANEL
+from energy_consts import glass_tiers, glass_static, glass_total, ELEC_PJ, OPT_PJ, STATIC_W_PER_PANEL, CARRIERS_PER_PANEL, pkt_tiers, pkt_static, pkt_total, NVLINK_PJ, NIC_PJ, NVS_STATIC_W_PER_GPU
 RES = os.environ.get("PAPER_RES", os.path.join(os.path.dirname(__file__), "..", "..", "experiments", "results", "paper"))
 OUT = os.environ.get("OUT", ".")
 EPS = [16, 32, 64, 128]
@@ -30,8 +30,8 @@ rows.append(r"\multicolumn{5}{@{}l}{\textbf{\glassfb{}} (200G/lane ports; iterat
 row(r"hop-bytes, electrical RDL (TB)", [TB(g[e]["bytes_elec"]) for e in EPS])
 row(r"hop-bytes, intra-panel optical (TB)", [TB(g[e]["bytes_opt"]) for e in EPS])
 row(r"hop-bytes, inter-panel ports (TB)", [TB(g[e]["bytes_inter"]) for e in EPS])
-row(r"link J, RDL tier @ %.2f--%.2f pJ/bit" % (elo, ehi), [J(*tierJ(g[e]["bytes_elec"], elo, ehi)) for e in EPS])
-row(r"link J, optical tiers @ %.2f--%.2f pJ/bit" % (glo, ghi), [J(*tierJ(float(g[e]["bytes_opt"]) + float(g[e]["bytes_inter"]), glo, ghi)) for e in EPS])
+row(r"link J, RDL tier @ %.2f pJ/bit" % elo, [J(*tierJ(g[e]["bytes_elec"], elo, ehi)) for e in EPS])
+row(r"link J, optical tiers @ %.2f pJ/bit" % glo, [J(*tierJ(float(g[e]["bytes_opt"]) + float(g[e]["bytes_inter"]), glo, ghi)) for e in EPS])
 row(r"link J, total", [J(sum(t[1] for t in glass_tiers(g[e])), sum(t[2] for t in glass_tiers(g[e]))) for e in EPS])
 row(r"static W: %.1f~W/panel (laser $+$ tuning, %d carriers) $\times$ panels" % (STATIC_W_PER_PANEL, CARRIERS_PER_PANEL), ["%.0f" % (STATIC_W_PER_PANEL * int(g[e]["nodes"]) / 16) for e in EPS])
 row(r"static J", [J(*glass_static(g[e])) for e in EPS])
@@ -40,21 +40,21 @@ rows.append(r"\midrule")
 # ---- NVSwitch fabrics
 for sysname, name in (("nvl64_pkt_s1", "NVL72"), ("hgx8_pkt", "HGX-8")):
     rr = {e: n[(sysname, e)] for e in EPS}
-    r0 = rr[16]; nlo, nhi, nic = float(r0["nvlink_pj_bit_lo"]), float(r0["nvlink_pj_bit_hi"]), float(r0["nic_pj_bit"])
+    r0 = rr[16]
     hd, hc = int(r0["hops_in_domain"]), int(r0["hops_cross"])
     rows.append(r"\multicolumn{5}{@{}l}{\textbf{%s} (iteration %s~ms)} \\" % (name, " / ".join("%.1f" % float(rr[e]["makespan_ms"]) for e in EPS)))
     row(r"hop-bytes in domain (TB; %d NVLink hops per flow)" % hd, [TB(rr[e]["bytes_in_domain"]) for e in EPS])
     row(r"hop-bytes on NICs (TB; %d hop per flow)" % hc, [TB(rr[e]["bytes_nic"]) for e in EPS])
-    row(r"link J, NVLink @ %.2f--%.1f pJ/bit" % (nlo, nhi), [J(*tierJ(rr[e]["bytes_in_domain"], nlo, nhi)) for e in EPS])
-    row(r"link J, NIC @ %.0f pJ/bit" % nic, [J(*tierJ(rr[e]["bytes_nic"], nic, nic)) for e in EPS])
-    row(r"link J, total", [J(rr[e]["link_J_iter_lo"], rr[e]["link_J_iter_hi"]) for e in EPS])
-    row(r"static W: %s--%s~W/GPU $\times$ GPUs" % (r0["nvs_static_W_per_gpu_lo"], r0["nvs_static_W_per_gpu_hi"]), ["%.0f--%.0f" % (float(r0["nvs_static_W_per_gpu_lo"]) * int(rr[e]["nodes"]), float(r0["nvs_static_W_per_gpu_hi"]) * int(rr[e]["nodes"])) for e in EPS])
-    row(r"static J", [J(rr[e]["static_J_iter_lo"], rr[e]["static_J_iter_hi"], 0) for e in EPS])
-    row(r"total J", [J(float(rr[e]["link_J_iter_lo"]) + float(rr[e]["static_J_iter_lo"]), float(rr[e]["link_J_iter_hi"]) + float(rr[e]["static_J_iter_hi"]), 0) for e in EPS], bold=True)
+    row(r"link J, NVLink @ %.1f pJ/bit" % NVLINK_PJ, [J(pkt_tiers(rr[e])[0][1]) for e in EPS])
+    row(r"link J, NIC @ %.0f pJ/bit" % NIC_PJ, [J(pkt_tiers(rr[e])[1][1]) for e in EPS])
+    row(r"link J, total", [J(sum(t[1] for t in pkt_tiers(rr[e]))) for e in EPS])
+    row(r"static W: %.1f~W/GPU $\times$ GPUs" % NVS_STATIC_W_PER_GPU[sysname], ["%.0f" % (NVS_STATIC_W_PER_GPU[sysname] * int(rr[e]["nodes"])) for e in EPS])
+    row(r"static J", [J(pkt_static(rr[e])[0], d=0) for e in EPS])
+    row(r"total J", [J(pkt_total(rr[e])[0], d=0) for e in EPS], bold=True)
     if sysname == "nvl64_pkt_s1": rows.append(r"\midrule")
 tex = "\n".join([
  r"\begin{table*}[tb]", r"\centering", r"\footnotesize", r"\setlength{\tabcolsep}{5pt}",
- r"\caption{Interconnect energy per training iteration, every term. Bytes are hop-bytes from each topology's own path classification of the quoted run (a flow crossing two hops of a tier is charged twice); link J $=$ bytes $\times$ 8 $\times$ pJ/bit at the favorable--conservative ends; static J $=$ static power $\times$ the quoted iteration. GPUs $=$ 8$\times$EP; panels $=$ GPUs/16.}",
+ r"\caption{Interconnect energy per training iteration, every term. Bytes are hop-bytes from each topology's own path classification of the quoted run (a flow crossing two hops of a tier is charged twice); link J $=$ bytes $\times$ 8 $\times$ pJ/bit; static J $=$ static power $\times$ the quoted iteration. GPUs $=$ 8$\times$EP; panels $=$ GPUs/16.}",
  r"\label{tab:energy}",
  r"\begin{tabular}{@{}lrrrr@{}}", r"\toprule",
  r"Term & EP$=$16 & EP$=$32 & EP$=$64 & EP$=$128 \\", r"\midrule",

@@ -37,10 +37,10 @@ MK = {16: "o", 32: "s", 64: "^"}
 pt = {int(float(r["ep"])): r for r in csv.DictReader(open(os.path.join(RES, "power_tiers.csv"))) if r["system"] == os.environ.get("PRIMARY_GLASS", "glassfb_800")}
 cue = {int(float(r["ep"])): r for r in csv.DictReader(open(os.path.join(RES, "copper_energy.csv")))}
 def energy(ep):
-    from energy_consts import glass_tiers, glass_static, J as JJ, ELEC_PJ, OPT_PJ
+    from energy_consts import glass_tiers, glass_static, J as JJ, ELEC_PJ, OPT_PJ, COPPER_PJ
     r = pt[ep]; c = cue[ep]
     be, bo, bi = float(r["bytes_elec"]), float(r["bytes_opt"]), float(r["bytes_inter"])
-    clo, chi = float(c["copper_pj_bit_lo"]), float(c["copper_pj_bit_hi"])
+    clo = chi = COPPER_PJ
     assert abs(float(c["bytes_x_hops"]) - bo) / bo < 1e-6, "long-link bytes differ between the two tables"
     t = glass_tiers(r); st = glass_static(r)
     g_lo = sum(x[1] for x in t) + st[0]; g_hi = sum(x[2] for x in t) + st[1]
@@ -73,11 +73,9 @@ ax.set_title("(a)", fontsize=7, loc="left", pad=2)
 xs = range(len(EPS)); w = 0.36
 for i, ep in enumerate(EPS):
     (g_lo, g_hi), (k_lo, k_hi) = energy(ep)
-    axb.bar(i - w / 2, g_hi, width=w, color="#c9dfe4", edgecolor="#2b6f7f", lw=0.6, zorder=3)
     axb.bar(i - w / 2, g_lo, width=w, color="#2b6f7f", zorder=4, label="Glass-FB" if i == 0 else None)
-    axb.bar(i + w / 2, k_hi, width=w, color="#efd3c6", edgecolor="#c46a4a", lw=0.6, zorder=3)
     axb.bar(i + w / 2, k_lo, width=w, color="#c46a4a", zorder=4, label="copper-FB" if i == 0 else None)
-    axb.text(i + 0.06, max(g_hi, k_hi) * 1.25, f"{k_lo/g_lo:.1f}–{k_hi/g_hi:.1f}×", ha="center", va="bottom", fontsize=5.6, color="#333")
+    axb.text(i + 0.06, max(g_hi, k_hi) * 1.25, f"{k_lo/g_lo:.1f}×", ha="center", va="bottom", fontsize=5.6, color="#333")
     print(f"  EP={ep}: glass {g_lo:.1f}-{g_hi:.1f} J, copper-FB {k_lo:.1f}-{k_hi:.1f} J, ratio {k_lo/g_lo:.2f}-{k_hi/g_hi:.2f}")
 axb.set_yscale("log"); axb.set_ylim(5, 30000)
 axb.set_xticks(list(xs)); axb.set_xticklabels([f"EP={ep}" for ep in EPS], fontsize=6.5)

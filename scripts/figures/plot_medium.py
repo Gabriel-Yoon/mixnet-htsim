@@ -62,7 +62,7 @@ for ep in EPS:
 ax.axvline(100, color="#999", lw=0.6, ls=(0, (3, 2)), zorder=1)
 ax.text(100, 0.62, " copper-feasible", fontsize=5.6, color="#666", va="bottom", ha="left")
 ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100", "200", "384\n(glass)"]); ax.minorticks_off()
-ax.set_xlabel("distance-≥2 link rate (GB/s per direction)", fontsize=7.5)
+ax.set_xlabel("long-link rate (GB/s per direction)", fontsize=7.5)
 ax.set_ylabel("iteration / glass", fontsize=7.5)
 ax.tick_params(labelsize=7.5); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
 ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)

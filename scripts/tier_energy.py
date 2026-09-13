@@ -30,6 +30,20 @@ GLASS_WG = (1.15, 2.62)
 RDL_PJ = 1.0            # electrical RDL adder, per bit, on the electrical tier
 NVLINK = (1.55, 5.00)
 
+# ###################################################################################
+# SUPERSEDED -- DO NOT QUOTE. 5.3 W is ONE GPU's carrier budget (960 = 30 transmit
+# waveguides x 32 wavelengths) assigned to a variable whose name says PER PANEL. A
+# 4x4 panel holds sixteen GPUs and lights 7,808 carriers, giving 42.9 W with all
+# ports lit -- an understatement of 8.13x, not 16x (the correction both widens the
+# scope to the panel and narrows the charge to the LIT waveguides, 15.25 of 30).
+# Recorded as sub-class R in docs/methods_provenance.md.
+#
+# scripts/figures/energy_consts.py is the authority. The paper and every figure read
+# it; the static_J_iter* columns this file writes are no longer read by anything. If
+# you regenerate power_tiers.csv, take the static W and the pJ/bit from there.
+#
+# Kept rather than deleted so the provenance entry has something to point at.
+# ###################################################################################
 LASER_TUNE_W_PER_PANEL = 5.3
 # The same term if the laser scales with the doubled baud and the thermal tuning
 # does not: 2 x 3.84 + 1.44. The 3.84/1.44 split is asserted by the manuscript and

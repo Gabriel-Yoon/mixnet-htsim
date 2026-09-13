@@ -805,6 +805,53 @@ attempted, it was invalidated, and it is reported as attempted-and-invalidated. 
 EP 16/32/64 arms are unaffected — they reported `relayed_pairs=0`, which is precisely
 why they were quotable and these were not.
 
+**Sub-class R is the one dimensional analysis cannot see: a per-DEVICE constant
+applied at per-PANEL scope.** Every earlier sub-class here is a number that is wrong,
+missing, or stale. This one is a number that is *correct* — for a scope thirteen
+times smaller than the one it was used at.
+
+`tier_energy.py` carried `LASER_TUNE_W_PER_PANEL = 5.3` (and 9.12 at 200G/lane),
+built from `N_LAM = 30 * 32 = 960` carriers: 3.84 W of laser at 1 mW per carrier and
+25% wall-plug efficiency, plus 1.44 W of ring tuning at 2 x 0.75 mW. **960 carriers is
+one GPU's transmit budget** — 30 transmit waveguides x 32 wavelengths — and the
+variable it was assigned to says *per panel*. A 4x4 panel holds sixteen GPUs.
+
+The corrected charge counts the carriers a panel actually lights at the 200G/lane
+design point:
+
+    24 optical links x 3 WG x 2 directions  = 144 transmit waveguides
+    16 GPUs x 6.25 egress WG                = 100
+    (144 + 100) x 32 wavelengths            = 7,808 carriers
+    -> 31.2 W laser + 11.7 W tuning         = 42.9 W per panel, all ports lit
+
+Verified independently by enumeration rather than by re-reading the arithmetic: a 4x4
+flattened butterfly has 48 links, 24 of them grid-adjacent and therefore electrical
+RDL, leaving exactly 24 optical. And the 6.25 falls out of the port rate by a second
+route — at 1.024 Tb/s per waveguide, an 800 GB/s egress port is 6400/1024 = 6.25
+waveguides exactly, and the same identity makes a 384 GB/s optical link exactly 3 WG.
+
+> **The understatement is 8.13x, not 16x.** 7,808 carriers against 960. It is
+> tempting to call it sixteen because a panel has sixteen GPUs, but the correction
+> does two things at once: it widens the scope from one GPU to the panel (x16) and it
+> narrows the charge from every transmit waveguide a GPU owns to only the lit ones
+> (15.25 of 30 on average). Quoting the GPU count as the error factor would be wrong
+> in our own favour.
+
+**Why nothing caught it.** Both quantities are watts. Dimensional analysis, unit
+tests, and every gate in this repo pass a number that is correct at the wrong scope,
+because scope is not a dimension. The variable name was the only thing asserting
+per-panel, and a name is not a check.
+
+**What did catch it is worth generalising.** The same 1.44 W appears twice in this
+repo at two different scopes — as per-panel tuning in `tier_energy.py` and as
+per-tile tuning in the thermal deck — and the thermal deck is right. *A constant that
+appears at two scopes in one repository is a defect until one of the two is shown to
+be a coincidence.* That is a cheap grep and it is now the rule.
+
+The effect is large and runs against us: the paper's interconnect-energy headline
+falls from 3.7-11.5x to 1.9-4.3x versus NVL72. Reported here in the direction it
+actually moved.
+
 ### Scope limit
 
 This rule establishes that a parameter was *read*. It says nothing about whether

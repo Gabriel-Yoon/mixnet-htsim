@@ -248,7 +248,7 @@ def decomp():
     eps = sorted({ep for ep, _, _ in parsed})
     # user 2026-09-08: no A2A/compute split; normalized iteration time (MixNet style), Glass-FB = 1 per EP
     order = [s_ for s_ in HEAD if s_ != "glassfb"]
-    fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
     w = 0.26
     for i, ep in enumerate(eps):
         grp = {sysname: float(r["makespan_ms"]) for _, sysname, r in parsed if _ == ep}
@@ -399,18 +399,9 @@ def energy():
         if sysname == "glass":
             r = glass_row(ep)
             if not r: return None, None
-            rdl = float(r["rdl_pj_bit"]); glo, ghi = float(r["glass_pj_bit_lo"]), float(r["glass_pj_bit_hi"])
-            be, bo, bi = float(r["bytes_elec"]), float(r["bytes_opt"]), float(r["bytes_inter"])
-            tiers = [("elec", be * 8 * (rdl + glo) * 1e-12, be * 8 * (rdl + ghi) * 1e-12),   # RDL tier carries +1 pJ/bit RDL on top of the glass bracket? see energy_model.md
-                     ("opt", bo * 8 * glo * 1e-12, bo * 8 * ghi * 1e-12),
-                     ("inter", bi * 8 * glo * 1e-12, bi * 8 * ghi * 1e-12)]
-            # scale the per-tier split so the tiers sum to the table's own link_J_iter (the table is authoritative)
-            lo_sum = sum(t[1] for t in tiers); hi_sum = sum(t[2] for t in tiers)
-            L_lo, L_hi = float(r["link_J_iter_lo"]), float(r["link_J_iter_hi"])
-            tiers = [(k, a * L_lo / lo_sum, b * L_hi / hi_sum) for k, a, b in tiers]
-            st = float(r.get("static_J_iter") or 0)
-            st_hi = float(r.get("static_J_iter_200G") or st)   # 5.3 W/panel (100G lanes) .. 9.12 W (200G lanes), as in the energy table
-            return tiers, (st, st_hi)
+            # Hsueh et al. Table 1 charges (energy_consts.py); the table's link_J_iter is the old convention and is not used
+            from energy_consts import glass_tiers, glass_static
+            return glass_tiers(r), glass_static(r)
         r = next((r for r in n if r["system"] == sysname and int(r["ep"]) == ep), None)
         if not r: return None, None
         nlo, nhi = float(r["nvlink_pj_bit_lo"]), float(r["nvlink_pj_bit_hi"]); nic = float(r["nic_pj_bit"])
@@ -684,7 +675,7 @@ def loadfig():
     STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
            "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
            "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
-    fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
     mbs = [4, 8, 16, 32]
     ref = {int(r["mb"]): float(r["makespan_ms"]) for r in rows if r["system"] == "glass_200G"}
     for sysname, st in STY.items():
@@ -725,7 +716,7 @@ def calibfig():
     sim.sort(key=lambda r: float(r["msg_bytes"]))
     import numpy as np
     M = np.array([2**21, 2**26], dtype=float)
-    fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
     # (DeepEP efficiency band removed at the user's request, 2026-09-08; the number stays in the text)
     ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
     if sim:

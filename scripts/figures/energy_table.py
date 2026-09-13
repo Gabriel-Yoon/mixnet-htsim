@@ -2,10 +2,12 @@
 """Paper table: interconnect energy per iteration, every term shown (power_tiers.csv for Glass-FB
 at the 200G/lane design point, power_tiers_pkt.csv for NVL72 = nvl64_pkt_s1 and HGX-8).
 Bytes are hop-bytes (bytes x hops of that tier on the flow's route); link J = bytes x 8 x pJ/bit,
-with the electrical tier charged the optical system figure plus the 1 pJ/bit RDL adder (the
-producer's convention, scripts/tier_energy.py); static J = static W x iteration.
+with Glass-FB's tiers charged per Hsueh et al. Table 1 (energy_consts.py: electrical 0.6-1.15,
+optical 1.15-2.62 pJ/b); static J = static W x iteration.
 Env: PAPER_RES, OUT. Writes energy_table.tex."""
-import csv, os
+import csv, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from energy_consts import glass_tiers, glass_static, glass_total, ELEC_PJ, OPT_PJ
 RES = os.environ.get("PAPER_RES", os.path.join(os.path.dirname(__file__), "..", "..", "experiments", "results", "paper"))
 OUT = os.environ.get("OUT", ".")
 EPS = [16, 32, 64, 128]
@@ -23,17 +25,17 @@ def row(label, cells, bold=False):
     lab = r"\textbf{%s}" % label if bold else label
     rows.append(lab + " & " + " & ".join(cells) + r" \\")
 # ---- Glass-FB
-r0 = g[16]; glo, ghi, rdl = float(r0["glass_pj_bit_lo"]), float(r0["glass_pj_bit_hi"]), float(r0["rdl_pj_bit"])
+glo, ghi = OPT_PJ; elo, ehi = ELEC_PJ
 rows.append(r"\multicolumn{5}{@{}l}{\textbf{\glassfb{}} (200G/lane ports; iteration %s~ms)} \\" % " / ".join("%.1f" % float(g[e]["makespan_ms"]) for e in EPS))
 row(r"hop-bytes, electrical RDL (TB)", [TB(g[e]["bytes_elec"]) for e in EPS])
 row(r"hop-bytes, intra-panel optical (TB)", [TB(g[e]["bytes_opt"]) for e in EPS])
 row(r"hop-bytes, inter-panel ports (TB)", [TB(g[e]["bytes_inter"]) for e in EPS])
-row(r"link J, RDL tier @ %.2f--%.2f pJ/bit" % (rdl + glo, rdl + ghi), [J(*tierJ(g[e]["bytes_elec"], rdl + glo, rdl + ghi)) for e in EPS])
+row(r"link J, RDL tier @ %.2f--%.2f pJ/bit" % (elo, ehi), [J(*tierJ(g[e]["bytes_elec"], elo, ehi)) for e in EPS])
 row(r"link J, optical tiers @ %.2f--%.2f pJ/bit" % (glo, ghi), [J(*tierJ(float(g[e]["bytes_opt"]) + float(g[e]["bytes_inter"]), glo, ghi)) for e in EPS])
-row(r"link J, total", [J(g[e]["link_J_iter_lo"], g[e]["link_J_iter_hi"]) for e in EPS])
+row(r"link J, total", [J(sum(t[1] for t in glass_tiers(g[e])), sum(t[2] for t in glass_tiers(g[e]))) for e in EPS])
 row(r"static W: %s~W/panel $\times$ panels" % g[16]["static_laser_tune_W_per_panel"], ["%.0f" % (float(g[e]["static_laser_tune_W_per_panel"]) * (int(e) * 8 / 16)) for e in EPS])
 row(r"static J (5.3~W/panel; 9.12 at 200G/lane)", [J(g[e]["static_J_iter"], g[e]["static_J_iter_200G"]) for e in EPS])
-row(r"total J", [J(float(g[e]["link_J_iter_lo"]) + float(g[e]["static_J_iter"]), float(g[e]["link_J_iter_hi"]) + float(g[e]["static_J_iter_200G"])) for e in EPS], bold=True)
+row(r"total J", [J(*glass_total(g[e])) for e in EPS], bold=True)
 rows.append(r"\midrule")
 # ---- NVSwitch fabrics
 for sysname, name in (("nvl64_pkt_s1", "NVL72"), ("hgx8_pkt", "HGX-8")):

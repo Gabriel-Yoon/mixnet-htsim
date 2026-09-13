@@ -31,22 +31,22 @@ COL = {16: "#2b6f7f", 32: "#4b3f8f", 64: "#c46a4a"}
 MK = {16: "o", 32: "s", 64: "^"}
 
 # --- (b) energy per iteration, glass vs copper-FB, from the paper's own hop-bytes (power_tiers.csv):
-#     RDL tier at rdl + glass bracket (unchanged by the medium), long-link tier at the copper bracket
+#     RDL tier at the Hsueh Table 1 electrical charge (energy_consts.py; unchanged by the medium), long-link tier at the copper bracket
 #     (copper_energy.csv), inter-panel ports at the glass bracket (unchanged), static: glass laser+tuning
 #     (5.3-9.12 W/panel), copper 0 (no laser or rings; retimer idle power is not charged, in copper's favour)
 pt = {int(float(r["ep"])): r for r in csv.DictReader(open(os.path.join(RES, "power_tiers.csv"))) if r["system"] == os.environ.get("PRIMARY_GLASS", "glassfb_800")}
 cue = {int(float(r["ep"])): r for r in csv.DictReader(open(os.path.join(RES, "copper_energy.csv")))}
 def energy(ep):
+    from energy_consts import glass_tiers, glass_static, J as JJ, ELEC_PJ, OPT_PJ
     r = pt[ep]; c = cue[ep]
     be, bo, bi = float(r["bytes_elec"]), float(r["bytes_opt"]), float(r["bytes_inter"])
-    glo, ghi, rdl = float(r["glass_pj_bit_lo"]), float(r["glass_pj_bit_hi"]), float(r["rdl_pj_bit"])
     clo, chi = float(c["copper_pj_bit_lo"]), float(c["copper_pj_bit_hi"])
     assert abs(float(c["bytes_x_hops"]) - bo) / bo < 1e-6, "long-link bytes differ between the two tables"
-    J = lambda b, pj: b * 8 * pj * 1e-12
-    g_lo = J(be, rdl + glo) + J(bo, glo) + J(bi, glo) + float(r["static_J_iter"])
-    g_hi = J(be, rdl + ghi) + J(bo, ghi) + J(bi, ghi) + float(r.get("static_J_iter_200G") or r["static_J_iter"])
-    k_lo = J(be, rdl + glo) + J(bo, clo) + J(bi, glo)
-    k_hi = J(be, rdl + ghi) + J(bo, chi) + J(bi, ghi)
+    t = glass_tiers(r); st = glass_static(r)
+    g_lo = sum(x[1] for x in t) + st[0]; g_hi = sum(x[2] for x in t) + st[1]
+    # copper butterfly: same RDL and port tiers, long links at the copper bracket, no static term
+    k_lo = JJ(be, ELEC_PJ[0]) + JJ(bo, clo) + JJ(bi, OPT_PJ[0])
+    k_hi = JJ(be, ELEC_PJ[1]) + JJ(bo, chi) + JJ(bi, OPT_PJ[1])
     return (g_lo, g_hi), (k_lo, k_hi)
 
 fig, (ax, axb) = plt.subplots(1, 2, figsize=(3.45, 1.4), dpi=200, gridspec_kw=dict(width_ratios=[1.25, 1], wspace=0.45))

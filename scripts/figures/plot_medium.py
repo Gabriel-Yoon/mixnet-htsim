@@ -49,7 +49,7 @@ def energy(ep):
     k_hi = J(be, rdl + ghi) + J(bo, chi) + J(bi, ghi)
     return (g_lo, g_hi), (k_lo, k_hi)
 
-fig, (ax, axb) = plt.subplots(1, 2, figsize=(3.45, 1.7), dpi=200, gridspec_kw=dict(width_ratios=[1.25, 1], wspace=0.45))
+fig, (ax, axb) = plt.subplots(1, 2, figsize=(3.45, 1.55), dpi=200, gridspec_kw=dict(width_ratios=[1.25, 1], wspace=0.45))
 for ep in EPS:
     g = q[("glass", ep)][0]
     pts = sorted([(rate, ms / g) for (arm, e), (ms, rate) in q.items() if e == ep and arm != "glass_pad400"])
@@ -70,7 +70,7 @@ h, l = ax.get_legend_handles_labels()
 from matplotlib.lines import Line2D
 h.append(Line2D([], [], marker="o", ls="", markerfacecolor="white", markeredgecolor="#555", label="glass, 400 ns pad")); l.append("glass, 400 ns pad")
 ax.legend(h, l, frameon=False, fontsize=5.6, loc="upper right", ncol=1, handlelength=1.4, handletextpad=0.4, labelspacing=0.25)
-ax.set_title("(a) time", fontsize=7, loc="left", pad=2)
+ax.set_title("(a)", fontsize=7, loc="left", pad=2)
 # (b)
 xs = range(len(EPS)); w = 0.36
 for i, ep in enumerate(EPS):
@@ -86,7 +86,7 @@ axb.set_xticks(list(xs)); axb.set_xticklabels([f"EP={ep}" for ep in EPS], fontsi
 axb.set_ylabel("interconnect J / iteration", fontsize=7.5); axb.tick_params(labelsize=7.5)
 axb.spines["top"].set_visible(False); axb.spines["right"].set_visible(False); axb.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
 axb.legend(frameon=False, fontsize=5.6, loc="upper left", handlelength=1.2, handletextpad=0.4, labelspacing=0.25)
-axb.set_title("(b) energy", fontsize=7, loc="left", pad=2)
+axb.set_title("(b)", fontsize=7, loc="left", pad=2)
 fig.tight_layout(pad=0.3)
 for ext in ("png", "pdf"):
     fig.savefig(os.path.join(OUT, f"fig_medium.{ext}"), bbox_inches="tight", pad_inches=0.02)

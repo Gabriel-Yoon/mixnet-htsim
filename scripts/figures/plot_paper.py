@@ -248,7 +248,7 @@ def decomp():
     eps = sorted({ep for ep, _, _ in parsed})
     # user 2026-09-08: no A2A/compute split; normalized iteration time (MixNet style), Glass-FB = 1 per EP
     order = [s_ for s_ in HEAD if s_ != "glassfb"]
-    fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.32), dpi=200)
     w = 0.26
     for i, ep in enumerate(eps):
         grp = {sysname: float(r["makespan_ms"]) for _, sysname, r in parsed if _ == ep}
@@ -669,7 +669,7 @@ def loadfig():
     STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
            "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
            "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
-    fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.32), dpi=200)
     mbs = [4, 8, 16, 32]
     ref = {int(r["mb"]): float(r["makespan_ms"]) for r in rows if r["system"] == "glass_200G"}
     for sysname, st in STY.items():
@@ -710,7 +710,7 @@ def calibfig():
     sim.sort(key=lambda r: float(r["msg_bytes"]))
     import numpy as np
     M = np.array([2**21, 2**26], dtype=float)
-    fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.32), dpi=200)
     # (DeepEP efficiency band removed at the user's request, 2026-09-08; the number stays in the text)
     ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
     if sim:

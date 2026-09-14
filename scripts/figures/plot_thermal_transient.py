@@ -34,7 +34,7 @@ for r in sched:
     if plo not in (0, 210): continue          # 350 W rows exist (tile_schedule.csv) but are not drawn
     series.setdefault(plo, []).append((float(r["period_s"]), float(r["delta_pp_K"])))
 STYLE = {210: dict(color="#2b6f7f", marker="o", lw=1.2, label="GPU 700 / 210 W (30% floor)", zorder=4),
-         0: dict(color="#8a97a3", marker="s", lw=0.9, ls=(0, (3, 2)), label="GPU 700 / 0 W (bound)", zorder=3),
+         0: dict(color="#3f4b56", marker="s", lw=1.1, ls=(0, (3, 2)), label="GPU 700 / 0 W (bound)", zorder=3),
          350: dict(color="#b7c5cc", marker="^", lw=0.9, ls=(0, (1, 1.5)), label="GPU 700 / 350 W", zorder=2)}
 
 # First-order low-pass model of the tile stack, with its time constant taken from the measured
@@ -61,9 +61,7 @@ for plo, pts in sorted(series.items(), key=lambda kv: -kv[0]):
 # (microbatch / iteration guide lines removed at the user's request, 2026-09-08)
 # (no in-figure title: the caption carries it)
 # (the idle-to-TDP step solve, 28.8 K at 0.3 s, is the 0 W series' own plateau; not drawn separately)
-chan_K = CHANNEL_PM / PM_PER_K
-ax.axhline(chan_K, color="#999", lw=0.7, zorder=1)
-ax.text(0.02, chan_K + 0.5, "one 100 GHz channel (0.8 nm)", transform=ax.get_yaxis_transform(), ha="left", va="bottom", fontsize=6, color="#666")
+# (100 GHz channel line and label removed at the user's request, 2026-09-13)
 ax.set_xscale("log"); ax.set_xlabel("GPU power fluctuation period", fontsize=8.5)
 ax.set_xlim(0.001, 6.0); ax.set_xticks([0.001, 0.01, 0.1, 1.0]); ax.set_xticklabels(["1 ms", "10 ms", "100 ms", "1 s"]); ax.minorticks_off()
 ax.set_ylabel("PIC swing, peak-to-peak (K)", fontsize=8.5)

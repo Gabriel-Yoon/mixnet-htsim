@@ -248,7 +248,7 @@ def decomp():
     eps = sorted({ep for ep, _, _ in parsed})
     # user 2026-09-08: no A2A/compute split; normalized iteration time (MixNet style), Glass-FB = 1 per EP
     order = [s_ for s_ in HEAD if s_ != "glassfb"]
-    fig, ax = plt.subplots(figsize=(3.45, 1.18), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.45), dpi=200)
     w = 0.26
     for i, ep in enumerate(eps):
         grp = {sysname: float(r["makespan_ms"]) for _, sysname, r in parsed if _ == ep}
@@ -260,7 +260,7 @@ def decomp():
             ax.text(x, max(v, 1.0) + 0.04, "%.2f" % v, ha="center", va="bottom", fontsize=6.2, color="#333", rotation=0)   # labels never below the Glass-FB=1 line
     ax.axhline(1.0, color="#999", lw=0.6, ls=(0, (3, 2)), zorder=2)
     ax.set_xticks(range(len(eps))); ax.set_xticklabels(["EP=%d\n%s" % (ep, MODEL.get(ep, "")) for ep in eps], fontsize=7.5)
-    ax.set_ylabel("normalized iteration time", fontsize=8.5); ax.set_ylim(0, 4.2)
+    ax.set_ylabel("normalized\niteration time", fontsize=8); ax.set_ylim(0, 4.2)
     ax.tick_params(axis="y", labelsize=7.5); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
     ax.legend(frameon=False, fontsize=7, loc="upper left", ncol=3, handlelength=1.2, columnspacing=1.0)
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
@@ -669,20 +669,22 @@ def loadfig():
     STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
            "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
            "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
-    fig, ax = plt.subplots(figsize=(3.45, 1.18), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.45), dpi=200)
     mbs = [4, 8, 16, 32]
     ref = {int(r["mb"]): float(r["makespan_ms"]) for r in rows if r["system"] == "glass_200G"}
     for sysname, st in STY.items():
         pts = sorted([(int(r["mb"]), float(r["makespan_ms"]) / ref[int(r["mb"])], int(float(r["drops"] or 0))) for r in rows if r["system"] == sysname and int(r["mb"]) in ref])
         if not pts: continue
         ax.plot([p[0] for p in pts], [p[1] for p in pts], **st)
-        dy = {"glass_200G": None, "nvl64_striped": 7, "hgx8": 7}[sysname]   # Glass-FB is the unit line; no labels
+        # Glass-FB is the unit line (no labels); NVL72 labels under the unit line, HGX-8 labels above its points
+        dy = {"glass_200G": None, "nvl64_striped": -5, "hgx8": 6}[sysname]
         for mb, v, d in pts:
-            if dy is not None: ax.annotate("%.2f" % v, (mb, v), textcoords="offset points", xytext=(0, dy), ha="center", fontsize=6.5, color=st["color"])
+            if dy is not None: ax.annotate("%.2f" % v, (mb, v), textcoords="offset points", xytext=(0, dy), ha="center",
+                                           va=("top" if dy < 0 else "bottom"), fontsize=6.5, color=st["color"])
         print("  %-13s" % sysname, " ".join("mb%d=%.2f(%dd)" % p for p in pts))
     ax.set_xscale("log", base=2); ax.set_xticks(mbs); ax.set_xticklabels([str(m) for m in mbs]); ax.minorticks_off()
-    ax.set_ylim(0.8, 4.6); ax.axhline(1.0, color="#999", lw=0.5, ls=(0, (3, 2)), zorder=1)
-    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("normalized iteration time", fontsize=8.5)
+    ax.set_ylim(0.35, 4.8); ax.set_yticks([1, 2, 3, 4]); ax.axhline(1.0, color="#999", lw=0.5, ls=(0, (3, 2)), zorder=1)
+    ax.set_xlabel("microbatch (LLaMA-MoE, EP=16)", fontsize=8.5); ax.set_ylabel("normalized\niteration time", fontsize=8)
     ax.tick_params(labelsize=7.5)
     ax.legend(frameon=False, fontsize=7, loc="upper left"); ax.grid(lw=0.4, alpha=0.4, which="major")
     ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)

@@ -49,7 +49,7 @@ def energy(ep):
     k_hi = JJ(be, ELEC_PJ[1]) + JJ(bo, chi) + JJ(bi, OPT_PJ[1])
     return (g_lo, g_hi), (k_lo, k_hi)
 
-fig, (ax, axb) = plt.subplots(1, 2, figsize=(3.45, 1.4), dpi=200, gridspec_kw=dict(width_ratios=[1.25, 1], wspace=0.45))
+fig, ax = plt.subplots(figsize=(3.45, 1.35), dpi=200)   # time only; the energy panel was dropped 2026-09-13 (user)
 for ep in EPS:
     g = q[("glass", ep)][0]
     pts = sorted([(rate, ms / g) for (arm, e), (ms, rate) in q.items() if e == ep and arm != "glass_pad400"])
@@ -62,27 +62,12 @@ for ep in EPS:
     ax.text(px, py, f"{cu:.2f}×", fontsize=6.5, color=COL[ep], va="center", ha=ha)
 ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100", "200", "384"]); ax.minorticks_off()
 ax.set_xlabel("long-link rate (GB/s per direction)", fontsize=7.5)
-ax.set_ylabel("iteration time,\nnormalized to Glass-FB", fontsize=7)
+ax.set_ylabel("iteration time,\nnormalized to glass", fontsize=7)
 ax.tick_params(labelsize=7.5); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
 ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
 h, l = ax.get_legend_handles_labels()
 from matplotlib.lines import Line2D
 ax.legend(h, l, frameon=False, fontsize=5.6, loc="upper right", ncol=1, handlelength=1.4, handletextpad=0.4, labelspacing=0.25)
-ax.set_title("(a)", fontsize=7, loc="left", pad=2)
-# (b)
-xs = range(len(EPS)); w = 0.36
-for i, ep in enumerate(EPS):
-    (g_lo, g_hi), (k_lo, k_hi) = energy(ep)
-    axb.bar(i - w / 2, g_lo, width=w, color="#2b6f7f", zorder=4, label="Glass-FB" if i == 0 else None)
-    axb.bar(i + w / 2, k_lo, width=w, color="#c46a4a", zorder=4, label="wafer-scale FB" if i == 0 else None)
-    axb.text(i + 0.06, max(g_hi, k_hi) * 1.25, f"{k_lo/g_lo:.1f}×", ha="center", va="bottom", fontsize=5.6, color="#333")
-    print(f"  EP={ep}: glass {g_lo:.1f}-{g_hi:.1f} J, copper-FB {k_lo:.1f}-{k_hi:.1f} J, ratio {k_lo/g_lo:.2f}-{k_hi/g_hi:.2f}")
-axb.set_yscale("log"); axb.set_ylim(5, 30000)
-axb.set_xticks(list(xs)); axb.set_xticklabels([f"EP={ep}" for ep in EPS], fontsize=6.5)
-axb.set_ylabel("interconnect energy\nper iteration (J)", fontsize=7); axb.tick_params(labelsize=7.5)
-axb.spines["top"].set_visible(False); axb.spines["right"].set_visible(False); axb.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)
-axb.legend(frameon=False, fontsize=5.6, loc="upper left", handlelength=1.2, handletextpad=0.4, labelspacing=0.25)
-axb.set_title("(b)", fontsize=7, loc="left", pad=2)
 fig.tight_layout(pad=0.3)
 for ext in ("png", "pdf"):
     fig.savefig(os.path.join(OUT, f"fig_medium.{ext}"), bbox_inches="tight", pad_inches=0.02)

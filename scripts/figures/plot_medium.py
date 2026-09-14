@@ -49,7 +49,7 @@ def energy(ep):
     k_hi = JJ(be, ELEC_PJ[1]) + JJ(bo, chi) + JJ(bi, OPT_PJ[1])
     return (g_lo, g_hi), (k_lo, k_hi)
 
-fig, ax = plt.subplots(figsize=(3.45, 1.35), dpi=200)   # time only; the energy panel was dropped 2026-09-13 (user)
+fig, ax = plt.subplots(figsize=(3.45, 1.2), dpi=200)   # time only; the energy panel was dropped 2026-09-13 (user)
 for ep in EPS:
     g = q[("glass", ep)][0]
     pts = sorted([(rate, ms / g) for (arm, e), (ms, rate) in q.items() if e == ep and arm != "glass_pad400"])

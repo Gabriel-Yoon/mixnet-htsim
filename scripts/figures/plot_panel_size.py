@@ -22,7 +22,7 @@ EPS = [16, 32, 64]
 ARMS = [(("4x4", "flattened_butterfly"), "4×4 FB (glass)", "#2b6f7f"),
         (("8x8", "flattened_butterfly"), "8×8 FB (glass)", "#8fbcc6"),
         (("8x8", "mesh"), "8×8 mesh (electrical)", "#c46a4a")]
-fig, ax = plt.subplots(figsize=(3.45, 1.35), dpi=200)
+fig, ax = plt.subplots(figsize=(3.45, 1.2), dpi=200)
 w = 0.26
 for k, (key, lab, col) in enumerate(ARMS):
     xs, ys = [], []

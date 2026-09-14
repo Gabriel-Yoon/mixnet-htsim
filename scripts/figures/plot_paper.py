@@ -248,7 +248,7 @@ def decomp():
     eps = sorted({ep for ep, _, _ in parsed})
     # user 2026-09-08: no A2A/compute split; normalized iteration time (MixNet style), Glass-FB = 1 per EP
     order = [s_ for s_ in HEAD if s_ != "glassfb"]
-    fig, ax = plt.subplots(figsize=(3.45, 1.45), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
     w = 0.26
     for i, ep in enumerate(eps):
         grp = {sysname: float(r["makespan_ms"]) for _, sysname, r in parsed if _ == ep}
@@ -669,7 +669,7 @@ def loadfig():
     STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
            "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
            "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
-    fig, ax = plt.subplots(figsize=(3.45, 1.45), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
     mbs = [4, 8, 16, 32]
     ref = {int(r["mb"]): float(r["makespan_ms"]) for r in rows if r["system"] == "glass_200G"}
     for sysname, st in STY.items():
@@ -712,13 +712,13 @@ def calibfig():
     sim.sort(key=lambda r: float(r["msg_bytes"]))
     import numpy as np
     M = np.array([2**21, 2**26], dtype=float)
-    fig, ax = plt.subplots(figsize=(3.45, 1.18), dpi=200)
+    fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
     # (DeepEP efficiency band removed at the user's request, 2026-09-08; the number stays in the text)
     ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
     if sim:
         ax.plot([float(r["msg_bytes"]) for r in sim], [float(r["T_us"]) for r in sim], "--^", color="#4b3f8f", lw=1.1, ms=4.5, label="SimAI (stock DGX-H100)")
-    for r in s1:
-        ax.annotate("%.0f" % r["T_us"], (r["msg_bytes"], r["T_us"]), textcoords="offset points", xytext=(0, -11), ha="center", fontsize=6.2, color="#2b6f7f")
+    for i, r in enumerate(s1):   # first point above (below it sits on the SimAI marker), the rest below
+        ax.annotate("%.0f" % r["T_us"], (r["msg_bytes"], r["T_us"]), textcoords="offset points", xytext=((0, 5) if i == 0 else (0, -11)), ha="center", fontsize=6.2, color="#2b6f7f")
     ax.set_xscale("log", base=2); ax.set_yscale("log")
     ax.set_xticks([2**21, 2**23, 2**25, 2**26]); ax.set_xticklabels(["2 MB", "8 MB", "32 MB", "64 MB"]); ax.minorticks_off()
     ax.set_xlabel("bytes per (src, dst) pair", fontsize=8.5); ax.set_ylabel("all-to-all time (us)", fontsize=8.5)

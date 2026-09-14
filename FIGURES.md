@@ -116,3 +116,5 @@ Drawn 2026-09-07 from cliff_all d317e0e / buffer_sweeps ea0c6f2: R1 (EP=64 pair 
 **Fig. 7 redraw 2026-09-13.** `fig_panel_size` canvas 3.45x1.5 in with bar width 0.2; `fig_medium` canvas 3.45x1.65 in, y 0.72-4.15, ratio labels (normalized to the glass design point) at both 50 and 100 GB/s for every EP (copper50 1.48 / 2.10 / 3.86, copper100 1.13 / 1.47 / 2.15 at EP 16 / 32 / 64).
 
 **Fig. 5(b)(c) redraw 2026-09-13.** `decomp` (copied to the paper as `fig_crossover.png`) and `load` canvases 3.45x1.45 in; y label "normalized / iteration time" on two lines at 8 pt; in `fig_load` NVL72 ratio labels sit under the unit line and HGX-8 labels above its points, ylim 0.35-4.8.
+
+**Fig. 5 restored 2026-09-13.** `calibfig`, `decomp` and `load` back on the 3.45x1.6 in canvas of 30e4e04 (the later 1.18-1.775 in changes were page-fit tuning against a local tectonic render; the user compiles on Overleaf, which has room). First calib label drawn above its point.

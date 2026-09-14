@@ -49,18 +49,24 @@ def energy(ep):
     k_hi = JJ(be, ELEC_PJ[1]) + JJ(bo, chi) + JJ(bi, OPT_PJ[1])
     return (g_lo, g_hi), (k_lo, k_hi)
 
-fig, ax = plt.subplots(figsize=(3.45, 1.2), dpi=200)   # time only; the energy panel was dropped 2026-09-13 (user)
+fig, ax = plt.subplots(figsize=(3.45, 1.65), dpi=200)   # time only; the energy panel was dropped 2026-09-13 (user)
 for ep in EPS:
     g = q[("glass", ep)][0]
     pts = sorted([(rate, ms / g) for (arm, e), (ms, rate) in q.items() if e == ep and arm != "glass_pad400"])
     ax.plot([p for p, _ in pts], [v for _, v in pts], color=COL[ep], marker=MK[ep], ms=4, lw=1.2, label=f"EP={ep}", zorder=3)
     # (pad-only control not drawn at the user's request, 2026-09-12; it is stated in the text as 0.1-2%)
-    last = pts[0]   # 50 GB/s point: label the copper-feasible penalty inline
-    cu = q[("copper100", ep)][0] / g
-    POS = {64: (112, cu + 0.16, "left"), 32: (80, 1.78, "left"), 16: (52, 1.05, "left")}   # clear of the curves
-    px, py, ha = POS.get(ep, (112, cu, "left"))
-    ax.text(px, py, f"{cu:.2f}×", fontsize=6.5, color=COL[ep], va="center", ha=ha)
+    # ratio labels at the copper-feasible 100 GB/s point and at 50 GB/s (user, 2026-09-13)
+    # offsets in points: EP64 above-right of its points, EP32 above, EP16 below, clear of the curves
+    OFF = {64: {50: (7, 2, "left", "center"), 100: (4, 5, "left", "bottom")},
+           32: {50: (0, 5, "center", "bottom"), 100: (0, 5, "center", "bottom")},
+           16: {50: (0, -5, "center", "top"), 100: (0, -5, "center", "top")}}
+    for arm, rate in (("copper50", 50), ("copper100", 100)):
+        v = q[(arm, ep)][0] / g
+        dx, dy, ha, va = OFF[ep][rate]
+        ax.annotate(f"{v:.2f}×", (rate, v), xytext=(dx, dy), textcoords="offset points",
+                    fontsize=6.3, color=COL[ep], ha=ha, va=va, zorder=4)
 ax.set_xscale("log"); ax.set_xticks([50, 100, 200, 384]); ax.set_xticklabels(["50", "100", "200", "384"]); ax.minorticks_off()
+ax.set_ylim(0.72, 4.15); ax.set_yticks([1, 2, 3, 4])
 ax.set_xlabel("long-link rate (GB/s per direction)", fontsize=7.5)
 ax.set_ylabel("iteration time,\nnormalized to glass", fontsize=7)
 ax.tick_params(labelsize=7.5); ax.grid(axis="y", lw=0.4, alpha=0.4, zorder=0)

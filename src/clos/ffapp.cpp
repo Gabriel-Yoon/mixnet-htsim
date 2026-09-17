@@ -1129,6 +1129,12 @@ void FFTask::execute_compute() {
             finish_time = start_time + run_time;
             eventlist().sourceIsPending(*this, finish_time);
             device->busy_up_to = finish_time;
+            // One line per compute task (grep COMPUTE_TASK): per-device busy timeline used to
+            // build the thermal power schedule from the simulated iteration itself.
+            std::cerr << "COMPUTE_TASK dev=" << device->gpu_id << " id=" << taskid
+                      << " name=\"" << name << "\" type=" << get_string_type()
+                      << " layer=" << layer_id << " mb=" << micro_batch_id
+                      << " start_ps=" << start_time << " finish_ps=" << finish_time << std::endl;
             /*
                 1. check if this topology is mixnet && check the topology manager is not nullptr
                 2. if this task is backward aggregation task, we can trigger regional reconfiguration

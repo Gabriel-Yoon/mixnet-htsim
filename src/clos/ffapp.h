@@ -571,6 +571,10 @@ public:
     // Independent of the shortcut flag above.
     bool a2a_hier = false;
     simtime_picosec thermal_tuning_delay_ps = 0;  // one-time stall added before each all-to-all
+    // The FlexFlow export gives every GROUP_BY (dispatch) all-to-all task xfersize 0. When set,
+    // a zero-size GROUP_BY task is sized like the AGGREGATE (combine) task of the same layer,
+    // micro-batch and direction (dispatch and combine move the same token payload).
+    bool a2a_symmetric_dispatch = false;
                                                    // round starts (ring-modulator wavelength re-lock
                                                    // time), NOT a per-packet link propagation delay --
                                                    // see FFTask::cleanup() TASK_ALLTOALL branch.

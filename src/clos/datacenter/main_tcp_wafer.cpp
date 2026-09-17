@@ -138,6 +138,7 @@ int main(int argc, char **argv)
     double alloc_cap = 2.0;
     bool alloc_inter = false;
     int alloc_tp = 1;
+    bool a2a_symmetric = false;
 
     int i = 1;
     while (i < argc)
@@ -225,6 +226,12 @@ int main(int argc, char **argv)
         {
             alloc_cap = atof(argv[i + 1]);
             i++;
+        }
+        else if (!strcmp(argv[i], "-a2a-symmetric"))
+        {
+            // size the exporter's zero-byte GROUP_BY (dispatch) rounds like the matching
+            // AGGREGATE (combine) rounds; see FFApplication::a2a_symmetric_dispatch
+            a2a_symmetric = true;
         }
         else if (!strcmp(argv[i], "-alloc-tp"))
         {
@@ -397,6 +404,8 @@ int main(int argc, char **argv)
     FFApplication app = FFApplication(top, ssthresh, logdir, &fct_util_out, tcpRtxScanner, eventlist);
     app.disable_intra_node_shortcut = disable_intra_shortcut;
     app.thermal_tuning_delay_ps = thermal_delay_ps;
+    app.a2a_symmetric_dispatch = a2a_symmetric;
+    std::cout << "All-to-all dispatch sizing: " << (a2a_symmetric ? "symmetric to combine (-a2a-symmetric)" : "as exported (GROUP_BY xfersize from fbuf)") << std::endl;
     app.load_taskgraph_flatbuf(flowfile, weight_matrix_file);
     app.start_init_tasks();
 

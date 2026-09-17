@@ -10,6 +10,7 @@
 #include <utility>
 
 #include <map>
+#include <tuple>
 #include "ffapp.h"
 // for the hierarchical all-to-all: panel(), gw(), _gw_parallel. The include
 // path already carries datacenter/ (src/clos/Makefile INC).
@@ -257,7 +258,25 @@ void FFApplication::load_taskgraph_flatbuf(std::string & taskgraph, std::string 
         assert("tasks() is null!" && false);
     }
     std::cerr << "Total tasks to load: " << fbuf_tg->tasks()->size() << endl;
-    
+
+    // AGGREGATE (combine) all-to-all sizes per (layer, micro-batch, direction), used to size
+    // the exporter's zero-byte GROUP_BY (dispatch) tasks when a2a_symmetric_dispatch is set.
+    std::map<std::tuple<int, int, int>, uint64_t> aggregate_xfersize;
+    int symmetric_resized = 0;
+    if (a2a_symmetric_dispatch) {
+        for (int i = 0; i < fbuf_tg->tasks()->size(); i++) {
+            auto tp = fbuf_tg->tasks()->Get(i);
+            if (tp->type() != FlatBufTaskGraph::SimTaskType_TASK_ALLTOALL) continue;
+            std::string inf = tp->info()->str();
+            if (inf.find("AGGREGATE") == std::string::npos) continue;
+            int dir = (inf.find("backward") != std::string::npos) ? 1 : 0;
+            auto key = std::make_tuple(tp->layer_id(), tp->micro_batch_id(), dir);
+            aggregate_xfersize[key] = std::max(aggregate_xfersize[key], (uint64_t)tp->xfersize());
+        }
+        std::cerr << "a2a_symmetric_dispatch: " << aggregate_xfersize.size()
+                  << " AGGREGATE sizes indexed by (layer, mb, dir)" << std::endl;
+    }
+
     for (int i = 0; i < fbuf_tg->tasks()->size(); i++) {
         auto task_ptr = fbuf_tg->tasks()->Get(i);
         if (!task_ptr) {
@@ -403,7 +422,19 @@ void FFApplication::load_taskgraph_flatbuf(std::string & taskgraph, std::string 
                 to_node.push_back(tn);
             }
 
-            uint64_t total_xfer_size=this_task.xfersize()*ep_degree;//no need to x tp_degree
+            uint64_t task_xfersize = this_task.xfersize();
+            if (a2a_symmetric_dispatch && task_xfersize == 0 &&
+                this_task.info()->str().find("GROUP_BY") != std::string::npos) {
+                int dir = (this_task.info()->str().find("backward") != std::string::npos) ? 1 : 0;
+                auto it = aggregate_xfersize.find(std::make_tuple(this_task.layer_id(), this_task.micro_batch_id(), dir));
+                if (it != aggregate_xfersize.end()) {
+                    task_xfersize = it->second; symmetric_resized++;
+                    std::cerr << "a2a_symmetric_dispatch: task " << this_task.taskid() << " layer=" << this_task.layer_id()
+                              << " mb=" << this_task.micro_batch_id() << " dir=" << dir << " sized " << task_xfersize
+                              << " bytes (resized so far " << symmetric_resized << ")" << std::endl;
+                }
+            }
+            uint64_t total_xfer_size=task_xfersize*ep_degree;//no need to x tp_degree
             int is_first=0;
             if(global_operator_sizes.empty()) {
                 is_first=1;

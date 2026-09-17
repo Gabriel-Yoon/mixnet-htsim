@@ -575,6 +575,13 @@ public:
     // a zero-size GROUP_BY task is sized like the AGGREGATE (combine) task of the same layer,
     // micro-batch and direction (dispatch and combine move the same token payload).
     bool a2a_symmetric_dispatch = false;
+    // Measured traffic: bytes sent per (src, dst) over the simulated iteration, all flow types.
+    // dump_traffic_file != "" writes it as an N x N CSV when the iteration finishes; the wafer
+    // main can read such a file back as the demand for wavelength allocation (-alloc-traffic).
+    std::unordered_map<std::pair<int, int>, uint64_t, pair_hash> traffic_bytes;
+    std::string dump_traffic_file;
+    void record_flow(int src, int dst, uint64_t bytes);
+    void dump_traffic();
                                                    // round starts (ring-modulator wavelength re-lock
                                                    // time), NOT a per-packet link propagation delay --
                                                    // see FFTask::cleanup() TASK_ALLTOALL branch.

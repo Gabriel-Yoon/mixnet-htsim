@@ -205,6 +205,28 @@ void load_weight_matrix(std::string & weight_matrix_file, std::vector<std::vecto
     }
 }
 
+void FFApplication::record_flow(int src, int dst, uint64_t bytes) {
+    if (src < 0 || dst < 0 || src == dst || bytes == 0) return;
+    traffic_bytes[std::make_pair(src, dst)] += bytes;
+}
+
+void FFApplication::dump_traffic() {
+    if (dump_traffic_file.empty()) return;
+    int n = 0;
+    for (auto & kv : traffic_bytes) n = std::max(n, std::max(kv.first.first, kv.first.second) + 1);
+    n = std::max(n, (int)nnodes);
+    std::ofstream out(dump_traffic_file);
+    for (int s = 0; s < n; ++s) {
+        for (int d = 0; d < n; ++d) {
+            auto it = traffic_bytes.find(std::make_pair(s, d));
+            out << (it == traffic_bytes.end() ? 0ULL : it->second) << (d + 1 < n ? "," : "\n");
+        }
+    }
+    std::cerr << "dumped per-(src,dst) traffic matrix (" << n << "x" << n << ", " << traffic_bytes.size()
+              << " nonzero pairs) to " << dump_traffic_file << std::endl;
+    dump_traffic_file.clear();   // once per run
+}
+
 void FFApplication::load_taskgraph_flatbuf(std::string & taskgraph, std::string & weight_matrix_file) {
     string buffer;
     bool success = FFApplication::LoadFileRaw(taskgraph.c_str(), &buffer);
@@ -1286,6 +1308,7 @@ void FFTask::cleanup() {
         }
     }
     if (ffapp->n_finished_tasks == ffapp->tasks.size()) {
+        ffapp->dump_traffic();
         std::cerr << ffapp << " 0: finished one iter, nfin " << FFApplication::finished_apps << " ntot " << FFApplication::total_apps << std::endl;
         if (!ffapp->finished_once) {
             ffapp->finished_once = true;
@@ -1578,6 +1601,7 @@ void FFRingAllreduce::start_flow(int src_idx, int id) {
         flowSrc = new DCTCPSrc(NULL, NULL, ffapp->fstream_out, eventlist(), src_gpu, dst_gpu, ar_finish_ring, f);
     }
     TcpSink* flowSnk = new TcpSink();
+    ffapp->record_flow(src_gpu, dst_gpu, operator_size/node_group.size());
     flowSrc->set_flowsize(operator_size/node_group.size()); // bytes
     flowSrc->set_ssthresh(ffapp->ssthresh*Packet::data_packet_size());
     flowSrc->_rto = timeFromMs(1);
@@ -1734,6 +1758,7 @@ void FFNewRingAllreduce::start_flow(int src_idx, const std::vector<int>& jump, i
     DCTCPSrc* flowSrc = new DCTCPSrc(NULL, NULL, ffapp->fstream_out, 
         eventlist(), src_node, dst_node, ar_finish_newring, f);
     TcpSink* flowSnk = new TcpSink();
+    ffapp->record_flow(src_node, dst_node, operator_size/node_group.size()/jumps.size());
     flowSrc->set_flowsize(operator_size/node_group.size()/jumps.size()); // bytes
     flowSrc->set_ssthresh(ffapp->ssthresh*Packet::data_packet_size());
     flowSrc->_rto = timeFromMs(10);
@@ -1873,6 +1898,7 @@ void FFPSAllreduce::start_flow(int node_idx, int direction) {
     DCTCPSrc* flowSrc = new DCTCPSrc(NULL, NULL, ffapp->fstream_out, 
         eventlist(), src_node, dst_node, ar_finish_ps, f);
     TcpSink* flowSnk = new TcpSink();
+    ffapp->record_flow(src_node, dst_node, operator_size);
     flowSrc->set_flowsize(operator_size); // bytes
     flowSrc->set_ssthresh(ffapp->ssthresh*Packet::data_packet_size());
     flowSrc->_rto = timeFromMs(1);
@@ -1984,6 +2010,7 @@ void FFDPSAllreduce::start_flow(int src_node, int dst_node) {
     DCTCPSrc* flowSrc = new DCTCPSrc(NULL, NULL, ffapp->fstream_out, 
         eventlist(), src_node, dst_node, ar_finish_dps, this);
     TcpSink* flowSnk = new TcpSink();
+    ffapp->record_flow(src_node, dst_node, operator_size/node_group.size());
     flowSrc->set_flowsize(operator_size/node_group.size()); // bytes
     flowSrc->set_ssthresh(ffapp->ssthresh*Packet::data_packet_size());
     flowSrc->_rto = timeFromMs(1);
@@ -2117,6 +2144,7 @@ void FFReduceScatter::start_flow(int src_idx, int id) {
     DCTCPSrc* flowSrc = new DCTCPSrc(NULL, NULL, ffapp->fstream_out, 
         eventlist(), src_node, dst_node, ar_finish_reducescatter, this);
     TcpSink* flowSnk = new TcpSink();
+    ffapp->record_flow(src_node, dst_node, operator_size/node_group.size());
     flowSrc->set_flowsize(operator_size/node_group.size()); // bytes
     flowSrc->set_ssthresh(ffapp->ssthresh*Packet::data_packet_size());
     flowSrc->_rto = timeFromMs(1);
@@ -2255,6 +2283,7 @@ void FFAllGather::start_flow(int src_idx, int id) {
     DCTCPSrc* flowSrc = new DCTCPSrc(NULL, NULL, ffapp->fstream_out, 
         eventlist(), src_node, dst_node, ar_finish_allgather, this);
     TcpSink* flowSnk = new TcpSink();
+    ffapp->record_flow(src_node, dst_node, operator_size/node_group.size());
     flowSrc->set_flowsize(operator_size/node_group.size()); // bytes
     flowSrc->set_ssthresh(ffapp->ssthresh*Packet::data_packet_size());
     flowSrc->_rto = timeFromMs(1);
@@ -2546,6 +2575,7 @@ void FFAlltoAll::start_flow(int src_gpu, int dst_gpu, uint64_t size, int stage, 
     }
 
     TcpSink* flowSnk = new TcpSink();
+    ffapp->record_flow(src_gpu, dst_gpu, flow_size);
     flowSrc->set_flowsize(flow_size); // bytes
     flowSrc->set_ssthresh(ffapp->ssthresh*Packet::data_packet_size());
     flowSrc->_rto = timeFromMs(1);
@@ -2715,6 +2745,7 @@ void FFP2P::start_flow(uint64_t src_gpu, uint64_t dst_gpu) {
     }
 
     TcpSink* flowSnk = new TcpSink();
+    ffapp->record_flow(src_gpu, dst_gpu, operator_size);
     flowSrc->set_flowsize(operator_size); // bytes
     flowSrc->set_ssthresh(ffapp->ssthresh*Packet::data_packet_size());
     flowSrc->_rto = timeFromMs(1);

@@ -139,6 +139,8 @@ int main(int argc, char **argv)
     bool alloc_inter = false;
     int alloc_tp = 1;
     bool a2a_symmetric = false;
+    std::string dump_traffic_file = "";
+    std::string alloc_traffic_file = "";
 
     int i = 1;
     while (i < argc)
@@ -225,6 +227,16 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "-alloc-cap"))
         {
             alloc_cap = atof(argv[i + 1]);
+            i++;
+        }
+        else if (!strcmp(argv[i], "-dump-traffic"))
+        {
+            dump_traffic_file = argv[i + 1];   // N x N bytes CSV written when the iteration finishes
+            i++;
+        }
+        else if (!strcmp(argv[i], "-alloc-traffic"))
+        {
+            alloc_traffic_file = argv[i + 1];  // use a dumped traffic matrix as the allocation demand
             i++;
         }
         else if (!strcmp(argv[i], "-a2a-symmetric"))
@@ -371,7 +383,25 @@ int main(int argc, char **argv)
     cfg.intra_link_delay = intra_delay_ps;
     cfg.inter_link_speed = inter_speed_mbps;
     cfg.inter_link_delay = inter_delay_ps;
-    if (lambda_alloc == "demand") {
+    if (lambda_alloc == "demand" && !alloc_traffic_file.empty()) {
+        // measured demand: N x N bytes CSV from a previous run's -dump-traffic (all flow types)
+        std::ifstream tf(alloc_traffic_file);
+        if (!tf) { std::cerr << "FATAL: cannot open -alloc-traffic file " << alloc_traffic_file << std::endl; return 1; }
+        cfg.link_demand.assign(no_of_nodes, std::vector<double>(no_of_nodes, 0.0));
+        std::string line; int r = 0; double total = 0.0;
+        while (std::getline(tf, line) && r < no_of_nodes) {
+            std::stringstream ss(line); std::string cell; int c = 0;
+            while (std::getline(ss, cell, ',') && c < no_of_nodes) {
+                cfg.link_demand[r][c] = atof(cell.c_str()); total += cfg.link_demand[r][c]; c++;
+            }
+            r++;
+        }
+        cfg.alloc_floor = alloc_floor;
+        cfg.alloc_cap = alloc_cap;
+        cfg.alloc_inter = alloc_inter;
+        std::cout << "Wavelength allocation: demand-aware from measured traffic " << alloc_traffic_file
+                  << " (" << r << " rows, " << total / 1e9 << " GB total)" << std::endl;
+    } else if (lambda_alloc == "demand") {
         std::string mfile = alloc_matrix_file.empty() ? weight_matrix_file : alloc_matrix_file;
         std::vector<std::vector<int>> wm;
         load_weight_matrix(mfile, wm);
@@ -405,6 +435,7 @@ int main(int argc, char **argv)
     app.disable_intra_node_shortcut = disable_intra_shortcut;
     app.thermal_tuning_delay_ps = thermal_delay_ps;
     app.a2a_symmetric_dispatch = a2a_symmetric;
+    app.dump_traffic_file = dump_traffic_file;
     std::cout << "All-to-all dispatch sizing: " << (a2a_symmetric ? "symmetric to combine (-a2a-symmetric)" : "as exported (GROUP_BY xfersize from fbuf)") << std::endl;
     app.load_taskgraph_flatbuf(flowfile, weight_matrix_file);
     app.start_init_tasks();

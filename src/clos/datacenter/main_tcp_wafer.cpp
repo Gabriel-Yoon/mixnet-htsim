@@ -135,6 +135,7 @@ int main(int argc, char **argv)
     std::string lambda_alloc = "uniform";
     std::string alloc_matrix_file = "";
     double alloc_floor = 0.1;
+    double alloc_cap = 2.0;
     bool alloc_inter = false;
     int alloc_tp = 1;
 
@@ -219,6 +220,11 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "-alloc-inter"))
         {
             alloc_inter = true;
+        }
+        else if (!strcmp(argv[i], "-alloc-cap"))
+        {
+            alloc_cap = atof(argv[i + 1]);
+            i++;
         }
         else if (!strcmp(argv[i], "-alloc-tp"))
         {
@@ -374,6 +380,7 @@ int main(int argc, char **argv)
             }
         }
         cfg.alloc_floor = alloc_floor;
+        cfg.alloc_cap = alloc_cap;
         cfg.alloc_inter = alloc_inter;
         std::cout << "Wavelength allocation: demand-aware from " << mfile << " (ep=" << ep
                   << ", tp=" << alloc_tp << ", EP block=" << block << " GPUs)" << std::endl;

@@ -139,16 +139,28 @@ void WaferRowColTopology::compute_allocation()
       double wsum = 0.0;
       std::vector<double> w(outs.size());
       for (size_t i = 0; i < outs.size(); ++i) { w[i] = std::max(load[u][outs[i]], floor_w); wsum += w[i]; }
+      std::vector<double> sp(outs.size());
+      for (size_t i = 0; i < outs.size(); ++i) sp[i] = total * w[i] / wsum;
+      // cap: a receiver only has alloc_cap x the uniform ring count per source; redistribute
+      // the excess of capped links to the uncapped ones (keeps the source budget constant)
+      double cap = cfg_.alloc_cap * (double)uniform;
+      for (int iter = 0; iter < 4; ++iter) {
+        double excess = 0.0, uncapped = 0.0;
+        for (size_t i = 0; i < outs.size(); ++i) {
+          if (sp[i] > cap) { excess += sp[i] - cap; sp[i] = cap; } else uncapped += sp[i];
+        }
+        if (excess <= 0.0 || uncapped <= 0.0) break;
+        for (size_t i = 0; i < outs.size(); ++i) if (sp[i] < cap) sp[i] += excess * sp[i] / uncapped;
+      }
       for (size_t i = 0; i < outs.size(); ++i) {
-        double sp = total * w[i] / wsum;
-        alloc_speed_[u][outs[i]] = (uint64_t)sp;
-        double r = sp / (double)uniform;
+        alloc_speed_[u][outs[i]] = (uint64_t)sp[i];
+        double r = sp[i] / (double)uniform;
         ratio_min = std::min(ratio_min, r); ratio_max = std::max(ratio_max, r);
       }
     }
   }
   std::cout << "Wavelength allocation: demand-aware, per-link rate ratio to uniform in ["
-            << ratio_min << ", " << ratio_max << "], floor " << cfg_.alloc_floor
+            << ratio_min << ", " << ratio_max << "], floor " << cfg_.alloc_floor << ", cap " << cfg_.alloc_cap
             << (cfg_.alloc_inter ? ", inter-wafer links included" : ", intra-wafer links only") << std::endl;
 }
 

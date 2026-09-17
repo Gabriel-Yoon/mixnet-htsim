@@ -29,6 +29,7 @@ struct WaferConfig {
   // a floor of alloc_floor x the uniform share per link. Empty = uniform (unchanged behaviour).
   std::vector<std::vector<double>> link_demand;
   double alloc_floor = 0.1;
+  double alloc_cap = 2.0;     // max share per link, x uniform (= receiver ring over-provisioning factor)
   bool alloc_inter = false;   // also reallocate the inter-wafer gateway links
 
   int gpus_per_wafer() const { return wafer_rows * wafer_cols; }

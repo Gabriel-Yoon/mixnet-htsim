@@ -30,6 +30,8 @@
 #include "flat_topology.h"
 #include "ffapp.h"
 
+static bool a2a_symmetric = false;   // -a2a-symmetric: see FFApplication::a2a_symmetric_dispatch
+
 #include <list>
 
 // Simulation params
@@ -223,6 +225,10 @@ int main(int argc, char **argv)
             weight_matrix_file = argv[i + 1];
             i++;
         }
+        else if (!strcmp(argv[i], "-a2a-symmetric"))
+        {
+            a2a_symmetric = true;
+        }
         else if (!strcmp(argv[i], "-q"))
         {
             queuesize = memFromPkt(atoi(argv[i + 1]));
@@ -372,6 +378,8 @@ int main(int argc, char **argv)
     FlatTopology *top = new FlatTopology(no_of_nodes, queuesize, nullptr /* &logfile */, &eventlist, ff, ECN);
     // FFApplication app = FFApplication(top, ssthresh, sinkLogger, traffic_logger, tcpRtxScanner, eventlist);
     FFApplication app = FFApplication(top, ssthresh, logdir, &fct_util_out, tcpRtxScanner, eventlist, ar_strategy);
+    app.a2a_symmetric_dispatch = a2a_symmetric;
+    std::cout << "All-to-all dispatch sizing: " << (a2a_symmetric ? "symmetric to combine (-a2a-symmetric)" : "as exported") << std::endl;
     if (flowfile.size() >= 3 && flowfile.compare(flowfile.size() - 3, 3, ".pb") == 0) {
         app.load_taskgraph_protobuf(flowfile, weight_matrix_file);
     } else {

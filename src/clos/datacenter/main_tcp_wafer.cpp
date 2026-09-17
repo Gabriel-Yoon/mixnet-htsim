@@ -141,6 +141,7 @@ int main(int argc, char **argv)
     bool a2a_symmetric = false;
     std::string dump_traffic_file = "";
     std::string alloc_traffic_file = "";
+    std::map<std::string, simtime_picosec> thermal_delay_map;
 
     int i = 1;
     while (i < argc)
@@ -227,6 +228,14 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "-alloc-cap"))
         {
             alloc_cap = atof(argv[i + 1]);
+            i++;
+        }
+        else if (!strcmp(argv[i], "-thermal-delay-map"))
+        {
+            // ns, comma-separated: GROUP_BY-forward,AGGREGATE-forward,GROUP_BY-backward,AGGREGATE-backward
+            std::stringstream ss(argv[i + 1]); std::string v; int k = 0;
+            const char* keys[4] = {"GROUP_BY forward", "AGGREGATE forward", "GROUP_BY backward", "AGGREGATE backward"};
+            while (std::getline(ss, v, ',') && k < 4) { thermal_delay_map[keys[k]] = (simtime_picosec)(atof(v.c_str()) * 1000.0); k++; }
             i++;
         }
         else if (!strcmp(argv[i], "-dump-traffic"))
@@ -434,6 +443,12 @@ int main(int argc, char **argv)
     FFApplication app = FFApplication(top, ssthresh, logdir, &fct_util_out, tcpRtxScanner, eventlist);
     app.disable_intra_node_shortcut = disable_intra_shortcut;
     app.thermal_tuning_delay_ps = thermal_delay_ps;
+    app.thermal_delay_by_type = thermal_delay_map;
+    if (!thermal_delay_map.empty()) {
+        std::cout << "Thermal stall per round type (ns):";
+        for (auto & kv : thermal_delay_map) std::cout << " [" << kv.first << "]=" << kv.second / 1000;
+        std::cout << std::endl;
+    }
     app.a2a_symmetric_dispatch = a2a_symmetric;
     app.dump_traffic_file = dump_traffic_file;
     std::cout << "All-to-all dispatch sizing: " << (a2a_symmetric ? "symmetric to combine (-a2a-symmetric)" : "as exported (GROUP_BY xfersize from fbuf)") << std::endl;

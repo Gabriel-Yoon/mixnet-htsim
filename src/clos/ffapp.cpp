@@ -205,6 +205,14 @@ void load_weight_matrix(std::string & weight_matrix_file, std::vector<std::vecto
     }
 }
 
+simtime_picosec FFApplication::thermal_delay_for(const std::string & info) const {
+    if (thermal_delay_by_type.empty()) return thermal_tuning_delay_ps;
+    std::string op = (info.find("GROUP_BY") != std::string::npos) ? "GROUP_BY" : "AGGREGATE";
+    std::string dir = (info.find("backward") != std::string::npos) ? "backward" : "forward";
+    auto it = thermal_delay_by_type.find(op + " " + dir);
+    return it == thermal_delay_by_type.end() ? thermal_tuning_delay_ps : it->second;
+}
+
 void FFApplication::record_flow(int src, int dst, uint64_t bytes) {
     if (src < 0 || dst < 0 || src == dst || bytes == 0) return;
     traffic_bytes[std::make_pair(src, dst)] += bytes;
@@ -1291,7 +1299,8 @@ void FFTask::cleanup() {
                 }
                 eventlist().sourceIsPending(*task, task->ready_time + ffapp->topomanager->reconf_delay + 10);// add some delay for reconfig
             }
-            else if (task->type == FFTask::TASK_ALLTOALL && ffapp->thermal_tuning_delay_ps > 0) {
+            else if (task->type == FFTask::TASK_ALLTOALL &&
+                     (ffapp->thermal_tuning_delay_ps > 0 || !ffapp->thermal_delay_by_type.empty())) {
                 // Thermal-tuning stall: ring/disk modulators must re-lock wavelength before this
                 // all-to-all round can start transmitting optically. Applied ONCE per round here
                 // (not as a per-packet link propagation delay, which would compound every RTT).
@@ -1299,7 +1308,7 @@ void FFTask::cleanup() {
                 // code (e.g. FFTask::start_flow's `start_time = ready_time`) reads ready_time
                 // directly once doNextEvent() runs, so a stale value would schedule things in the
                 // past relative to eventlist().now() once we jump forward by the delay.
-                task->ready_time += ffapp->thermal_tuning_delay_ps;
+                task->ready_time += ffapp->thermal_delay_for(task->info);
                 eventlist().sourceIsPending(*task, task->ready_time);
             }
             else{

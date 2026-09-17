@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
+#include <map>
 #include <utility>
 #include "topology.h"
 #include "flat_topology.h"
@@ -571,6 +572,10 @@ public:
     // Independent of the shortcut flag above.
     bool a2a_hier = false;
     simtime_picosec thermal_tuning_delay_ps = 0;  // one-time stall added before each all-to-all
+    // Optional per-round-type stalls (override the scalar when non-empty): keys
+    // "GROUP_BY forward", "GROUP_BY backward", "AGGREGATE forward", "AGGREGATE backward".
+    std::map<std::string, simtime_picosec> thermal_delay_by_type;
+    simtime_picosec thermal_delay_for(const std::string & info) const;
     // The FlexFlow export gives every GROUP_BY (dispatch) all-to-all task xfersize 0. When set,
     // a zero-size GROUP_BY task is sized like the AGGREGATE (combine) task of the same layer,
     // micro-batch and direction (dispatch and combine move the same token payload).

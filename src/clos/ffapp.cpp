@@ -1194,6 +1194,14 @@ void FFTask::cleanup() {
     if (ffapp->final_finish_time < finish_time) {
         ffapp->final_finish_time = finish_time;
     }
+    if (this->type == FFTask::TASK_ALLTOALL) {
+        // One line per all-to-all round (grep A2A_ROUND): ready = all predecessors done
+        // (includes any thermal-tuning stall), finish = last flow of the round delivered.
+        std::cerr << "A2A_ROUND id=" << this->taskid << " layer=" << this->layer_id
+                  << " mb=" << this->micro_batch_id << " info=\"" << this->info << "\""
+                  << " ready_ps=" << this->ready_time << " start_ps=" << this->start_time
+                  << " finish_ps=" << this->finish_time << std::endl;
+    }
 
     for (uint64_t next_id: next_tasks) {
         FFTask * task = ffapp->tasks[next_id];

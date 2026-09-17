@@ -1,5 +1,7 @@
 #include "wafer_rowcol_topology.h"
 #include <cassert>
+#include <algorithm>
+#include <iostream>
 
 WaferRowColTopology::WaferRowColTopology(
     const WaferConfig& cfg,
@@ -15,6 +17,12 @@ WaferRowColTopology::WaferRowColTopology(
   q_.assign(N, std::vector<RandomQueue*>(N, nullptr));
   p_.assign(N, std::vector<Pipe*>(N, nullptr));
 
+  if (!cfg_.link_demand.empty()) compute_allocation();
+  auto speed_of = [&](int u, int v, uint64_t uniform) -> uint64_t {
+    if (alloc_speed_.empty() || alloc_speed_[u][v] == 0) return uniform;
+    return alloc_speed_[u][v];
+  };
+
   // Build intra-wafer row/col links (directed).
   for (int g = 0; g < N; ++g) {
     for (int h = 0; h < N; ++h) {
@@ -22,7 +30,7 @@ WaferRowColTopology::WaferRowColTopology(
       if (!same_wafer(g, h)) continue;
 
       if (row(g) == row(h) || col(g) == col(h)) {
-        add_link(g, h, cfg_.intra_link_speed, cfg_.intra_link_delay);
+        add_link(g, h, speed_of(g, h, cfg_.intra_link_speed), cfg_.intra_link_delay);
       }
     }
   }
@@ -37,7 +45,8 @@ WaferRowColTopology::WaferRowColTopology(
       int g1 = gateway_gpu(w1, w2);
       int g2 = gateway_gpu(w2, w1);
       if (g1 < N && g2 < N) {
-        add_link(g1, g2, cfg_.inter_link_speed, cfg_.inter_link_delay);
+        add_link(g1, g2, cfg_.alloc_inter ? speed_of(g1, g2, cfg_.inter_link_speed) : cfg_.inter_link_speed,
+                 cfg_.inter_link_delay);
       }
     }
   }
@@ -62,6 +71,85 @@ void WaferRowColTopology::add_link(int u, int v, uint64_t speed_mbps, simtime_pi
   );
 
   p_[u][v] = new Pipe(delay, *eventlist_);
+}
+
+std::vector<std::pair<int,int>> WaferRowColTopology::hops(int src, int dst) const
+{
+  std::vector<std::pair<int,int>> h;
+  if (src == dst) return h;
+  auto intra = [&](int a, int b) {
+    if (a == b) return;
+    if (row(a) == row(b) || col(a) == col(b)) {
+      h.emplace_back(a, b);
+    } else {
+      int mid = intersection_gpu(a, b);
+      h.emplace_back(a, mid);
+      h.emplace_back(mid, b);
+    }
+  };
+  if (same_wafer(src, dst)) {
+    intra(src, dst);
+    return h;
+  }
+  int gwS = gateway_gpu(wafer_id(src), wafer_id(dst));
+  int gwD = gateway_gpu(wafer_id(dst), wafer_id(src));
+  intra(src, gwS);
+  h.emplace_back(gwS, gwD);
+  intra(gwD, dst);
+  return h;
+}
+
+void WaferRowColTopology::compute_allocation()
+{
+  int N = cfg_.total_gpus;
+  assert((int)cfg_.link_demand.size() == N);
+  std::vector<std::vector<double>> load(N, std::vector<double>(N, 0.0));
+  for (int s = 0; s < N; ++s)
+    for (int d = 0; d < N; ++d) {
+      double dem = cfg_.link_demand[s][d];
+      if (dem <= 0.0) continue;
+      for (auto& e : hops(s, d)) load[e.first][e.second] += dem;
+    }
+
+  alloc_speed_.assign(N, std::vector<uint64_t>(N, 0));
+  double ratio_min = 1e9, ratio_max = 0.0;
+  int nw = cfg_.num_wafers();
+  for (int u = 0; u < N; ++u) {
+    // two link classes per source: intra-wafer (row/col) and, if it is a gateway, inter-wafer
+    for (int cls = 0; cls < 2; ++cls) {
+      if (cls == 1 && !cfg_.alloc_inter) break;
+      std::vector<int> outs;
+      for (int v = 0; v < N; ++v) {
+        if (v == u) continue;
+        bool intra_link = same_wafer(u, v) && (row(u) == row(v) || col(u) == col(v));
+        bool inter_link = false;
+        if (!same_wafer(u, v)) {
+          int w = wafer_id(v);
+          inter_link = (gateway_gpu(wafer_id(u), w) == u) && (gateway_gpu(w, wafer_id(u)) == v) && w < nw;
+        }
+        if ((cls == 0 && intra_link) || (cls == 1 && inter_link)) outs.push_back(v);
+      }
+      if (outs.empty()) continue;
+      uint64_t uniform = (cls == 0) ? cfg_.intra_link_speed : cfg_.inter_link_speed;
+      double total = (double)uniform * outs.size();   // fixed wavelength budget per source
+      double sum = 0.0;
+      for (int v : outs) sum += load[u][v];
+      if (sum <= 0.0) continue;                          // no demand information: stay uniform
+      double floor_w = cfg_.alloc_floor * (sum / outs.size());
+      double wsum = 0.0;
+      std::vector<double> w(outs.size());
+      for (size_t i = 0; i < outs.size(); ++i) { w[i] = std::max(load[u][outs[i]], floor_w); wsum += w[i]; }
+      for (size_t i = 0; i < outs.size(); ++i) {
+        double sp = total * w[i] / wsum;
+        alloc_speed_[u][outs[i]] = (uint64_t)sp;
+        double r = sp / (double)uniform;
+        ratio_min = std::min(ratio_min, r); ratio_max = std::max(ratio_max, r);
+      }
+    }
+  }
+  std::cout << "Wavelength allocation: demand-aware, per-link rate ratio to uniform in ["
+            << ratio_min << ", " << ratio_max << "], floor " << cfg_.alloc_floor
+            << (cfg_.alloc_inter ? ", inter-wafer links included" : ", intra-wafer links only") << std::endl;
 }
 
 int WaferRowColTopology::intersection_gpu(int src, int dst) const

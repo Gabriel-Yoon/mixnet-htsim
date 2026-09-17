@@ -29,6 +29,8 @@
 #include "wafer_rowcol_topology.h"
 #include "ffapp.h"
 
+void load_weight_matrix(std::string & weight_matrix_file, std::vector<std::vector<int>> &weight_matrix);
+
 #include <list>
 
 #define PRINT_PATHS 0
@@ -126,6 +128,15 @@ int main(int argc, char **argv)
     bool disable_intra_shortcut = true; // wafer topology should route through get_paths, not NVLink shortcut
     simtime_picosec thermal_delay_ps = 0;     // one-time per-all-to-all-round stall (ring-modulator
                                                // wavelength re-lock time); see -thermal-delay (ns)
+    // Demand-aware wavelength allocation (see WaferConfig::link_demand). The allocation is
+    // computed from an expert-to-expert token matrix (default: the -weightmatrix file, i.e. the
+    // allocation matches the traffic; pass -alloc-matrix to allocate from a stale/other matrix).
+    // GPU->expert mapping mirrors ffapp: expert(g) = (g / tp) % ep, EP group = block of tp*ep GPUs.
+    std::string lambda_alloc = "uniform";
+    std::string alloc_matrix_file = "";
+    double alloc_floor = 0.1;
+    bool alloc_inter = false;
+    int alloc_tp = 1;
 
     int i = 1;
     while (i < argc)
@@ -189,6 +200,30 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "-enable-intra-shortcut"))
         {
             disable_intra_shortcut = false;
+        }
+        else if (!strcmp(argv[i], "-lambda-alloc"))
+        {
+            lambda_alloc = argv[i + 1];   // uniform | demand
+            i++;
+        }
+        else if (!strcmp(argv[i], "-alloc-matrix"))
+        {
+            alloc_matrix_file = argv[i + 1];
+            i++;
+        }
+        else if (!strcmp(argv[i], "-alloc-floor"))
+        {
+            alloc_floor = atof(argv[i + 1]);
+            i++;
+        }
+        else if (!strcmp(argv[i], "-alloc-inter"))
+        {
+            alloc_inter = true;
+        }
+        else if (!strcmp(argv[i], "-alloc-tp"))
+        {
+            alloc_tp = atoi(argv[i + 1]);
+            i++;
         }
         else if (!strcmp(argv[i], "-rttrack"))
         {
@@ -323,6 +358,28 @@ int main(int argc, char **argv)
     cfg.intra_link_delay = intra_delay_ps;
     cfg.inter_link_speed = inter_speed_mbps;
     cfg.inter_link_delay = inter_delay_ps;
+    if (lambda_alloc == "demand") {
+        std::string mfile = alloc_matrix_file.empty() ? weight_matrix_file : alloc_matrix_file;
+        std::vector<std::vector<int>> wm;
+        load_weight_matrix(mfile, wm);
+        int ep = (int)wm.size();
+        int block = alloc_tp * ep;
+        cfg.link_demand.assign(no_of_nodes, std::vector<double>(no_of_nodes, 0.0));
+        for (int g = 0; g < no_of_nodes; ++g) {
+            for (int h = 0; h < no_of_nodes; ++h) {
+                if (g == h || g / block != h / block) continue;
+                int eg = (g / alloc_tp) % ep, eh = (h / alloc_tp) % ep;
+                // dispatch g->h ~ W[eg][eh]; combine g->h ~ W[eh][eg] (mirrors ffapp sizing)
+                cfg.link_demand[g][h] = (double)wm[eg][eh] + (double)wm[eh][eg];
+            }
+        }
+        cfg.alloc_floor = alloc_floor;
+        cfg.alloc_inter = alloc_inter;
+        std::cout << "Wavelength allocation: demand-aware from " << mfile << " (ep=" << ep
+                  << ", tp=" << alloc_tp << ", EP block=" << block << " GPUs)" << std::endl;
+    } else {
+        std::cout << "Wavelength allocation: uniform" << std::endl;
+    }
     std::cout << "Wafer topology: " << wafer_rows << "x" << wafer_cols << " ("
               << cfg.gpus_per_wafer() << " GPUs/wafer, " << cfg.num_wafers() << " wafers), "
               << "intra=" << intra_speed_mbps << " Mbps/" << (intra_delay_ps / 1000) << " ns, "

@@ -22,6 +22,15 @@ struct WaferConfig {
   uint64_t inter_link_speed = 0;
   simtime_picosec inter_link_delay = 0;
 
+  // Demand-aware wavelength allocation (non-volatile programmable ring array):
+  // link_demand[s][d] = expected traffic from GPU s to GPU d (any unit). When non-empty, every
+  // source keeps its total wavelength budget (num_out_links x intra_link_speed) but splits it
+  // across its outgoing intra-wafer links in proportion to the traffic those links carry, with
+  // a floor of alloc_floor x the uniform share per link. Empty = uniform (unchanged behaviour).
+  std::vector<std::vector<double>> link_demand;
+  double alloc_floor = 0.1;
+  bool alloc_inter = false;   // also reallocate the inter-wafer gateway links
+
   int gpus_per_wafer() const { return wafer_rows * wafer_cols; }
   int num_wafers() const { return (total_gpus + gpus_per_wafer() - 1) / gpus_per_wafer(); }
 };
@@ -83,6 +92,12 @@ private:
   inline bool same_wafer(int a, int b) const { return wafer_id(a) == wafer_id(b); }
 
   int intersection_gpu(int src, int dst) const;
+
+  // directed (u,v) link sequence of the route get_paths() would build for src->dst
+  std::vector<std::pair<int,int>> hops(int src, int dst) const;
+  // per-link speeds after demand-aware allocation (Mbps); empty when uniform
+  std::vector<std::vector<uint64_t>> alloc_speed_;
+  void compute_allocation();
 
   void add_link(int u, int v, uint64_t speed, simtime_picosec delay);
 };

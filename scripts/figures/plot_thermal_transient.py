@@ -33,7 +33,7 @@ for r in sched:
     plo = int(float(r["p_lo_W"]))
     if plo not in (0, 210): continue          # 350 W rows exist (tile_schedule.csv) but are not drawn
     series.setdefault(plo, []).append((float(r["period_s"]), float(r["delta_pp_K"])))
-STYLE = {210: dict(color="#2b6f7f", marker="o", lw=1.2, label="GPU 700 / 210 W (30% floor)", zorder=4),
+STYLE = {210: dict(color="#15535c", marker="o", lw=1.2, label="GPU 700 / 210 W (30% floor)", zorder=4),
          0: dict(color="#3f4b56", marker="s", lw=1.1, ls=(0, (3, 2)), label="GPU 700 / 0 W (bound)", zorder=3),
          350: dict(color="#b7c5cc", marker="^", lw=0.9, ls=(0, (1, 1.5)), label="GPU 700 / 350 W", zorder=2)}
 

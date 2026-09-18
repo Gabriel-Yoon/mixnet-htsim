@@ -243,7 +243,7 @@ def decomp():
     parsed = [t for t in parsed if not (t[1] in ("glassfb", "glassfb_800") and t[1] != PRIMARY_GLASS and t[0] in eps_with_primary)]
     parsed.sort(key=lambda t: (t[0], HEAD.index(t[1]) if t[1] in HEAD else 9))
     SHORT = {"glassfb": "Glass-FB (100G/lane)", "glassfb_800": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
-    COL = {"glassfb_800": "#2b6f7f", "glassfb": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
+    COL = {"glassfb_800": "#15535c", "glassfb": "#15535c", "nvl64_pkt_s1": "#5a6a9c", "hgx8_pkt": "#b5715a"}
     MODEL = {16: "LLaMA-MoE", 32: "LLaMA-MoE", 64: "Qwen-MoE", 128: "Arctic"}
     eps = sorted({ep for ep, _, _ in parsed})
     # user 2026-09-08: no A2A/compute split; normalized iteration time (MixNet style), Glass-FB = 1 per EP
@@ -387,8 +387,8 @@ def energy():
     eps = sorted({int(r["ep"]) for r in g} | {int(r["ep"]) for r in n})
     systems = ["glass", "nvl64_pkt_s1", "hgx8_pkt"]   # NVL72 = the striped model
     NAMES = {"glass": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
-    TIER_COL = {"elec": "#2b6f7f", "opt": "#6aa9b5", "inter": "#b7d8de", "nvlink": "#4b3f8f", "nic": "#b7aee0", "static": "none"}
-    TIER_COL_HGX = {"nvlink": "#c46a4a", "nic": "#efd3c6"}
+    TIER_COL = {"elec": "#15535c", "opt": "#5e9099", "inter": "#aecdd1", "nvlink": "#5a6a9c", "nic": "#b3bcd6", "static": "none"}
+    TIER_COL_HGX = {"nvlink": "#b5715a", "nic": "#e3c7ba"}
     TIER_LAB = {"elec": "electrical RDL (distance-1)", "opt": "intra-panel optical (L1/L2)", "inter": "inter-panel optical ports",
                 "nvlink": "in-domain NVLink", "nic": "scale-out NIC", "static": "static (laser+tune / NVSwitch idle)"}
     def glass_row(ep):
@@ -417,7 +417,7 @@ def energy():
     ncol = len(eps); nrow = 3 if tok else 2
     fig, axes = plt.subplots(nrow, ncol, figsize=(7.0, 2.3 * nrow), dpi=200, sharey=False, squeeze=False)
     drawn = set()
-    HUE = {"glass": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
+    HUE = {"glass": "#15535c", "nvl64_pkt_s1": "#5a6a9c", "hgx8_pkt": "#b5715a"}
     for j, ep in enumerate(eps):
         a1 = axes[0][j]; a2 = axes[1][j]
         for x, sysname in enumerate(systems):
@@ -441,7 +441,7 @@ def energy():
             a2.bar(x - 0.22, bottom, width=0.2, color=HUE[sysname], label="link (bytes moved)" if "l2" not in drawn else None); drawn.add("l2")
             a2.bar(x, max(st[1], 1e-3), width=0.2, facecolor="white", edgecolor=HUE[sysname], hatch="////", lw=0.6,
                    label="static (idle power x iteration)" if "s2" not in drawn else None); drawn.add("s2")
-            a2.bar(x + 0.22, tot_hi, width=0.2, color="#c9ced2", label="total" if "t2" not in drawn else None); drawn.add("t2")
+            a2.bar(x + 0.22, tot_hi, width=0.2, color="#c7ccd1", label="total" if "t2" not in drawn else None); drawn.add("t2")
             for xx, val in ((x - 0.22, bottom), (x, st[1]), (x + 0.22, tot_hi)):   # vertical value labels, conservative end
                 a2.text(xx, val * 1.12, f"{val:.0f}", ha="center", va="bottom", fontsize=5.2, rotation=90)
             if tok.get(ep):
@@ -598,7 +598,7 @@ def boundary():
     PRIMARY_GLASS = os.environ.get("PRIMARY_GLASS", "glassfb_800")
     XBW = {"glass": 800.0, "nvl64_pkt_s1": 100.0, "hgx8_pkt": 50.0}   # GB/s per GPU on the cross-domain tier (Table III)
     NAMES = {"glass": "Glass-FB", "nvl64_pkt_s1": "NVL72", "hgx8_pkt": "HGX-8"}
-    HUE = {"glass": "#2b6f7f", "nvl64_pkt_s1": "#4b3f8f", "hgx8_pkt": "#c46a4a"}
+    HUE = {"glass": "#15535c", "nvl64_pkt_s1": "#5a6a9c", "hgx8_pkt": "#b5715a"}
     MK = {16: "o", 32: "s", 64: "D", 128: "^"}
     eps = [16, 32, 64, 128]
     def row(sysname, ep):
@@ -666,9 +666,9 @@ def loadfig():
     cliff_postfix.csv: the quoted rung per (system, mb) with its drop count), normalized to Glass-FB at
     the same microbatch (Glass-FB = 1, the convention of the EP figure; user 2026-09-08)."""
     rows = list(csv.DictReader(open(os.path.join(RES, "load_panel.csv"))))
-    STY = {"glass_200G": dict(color="#2b6f7f", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
-           "nvl64_striped": dict(color="#4b3f8f", marker="s", lw=1.4, ms=4.5, label="NVL72"),
-           "hgx8": dict(color="#c46a4a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
+    STY = {"glass_200G": dict(color="#15535c", marker="o", lw=1.4, ms=4.5, label="Glass-FB"),
+           "nvl64_striped": dict(color="#5a6a9c", marker="s", lw=1.4, ms=4.5, label="NVL72"),
+           "hgx8": dict(color="#b5715a", marker="^", lw=1.4, ms=4.5, label="HGX-8")}
     fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
     mbs = [4, 8, 16, 32]
     ref = {int(r["mb"]): float(r["makespan_ms"]) for r in rows if r["system"] == "glass_200G"}
@@ -714,11 +714,11 @@ def calibfig():
     M = np.array([2**21, 2**26], dtype=float)
     fig, ax = plt.subplots(figsize=(3.45, 1.6), dpi=200)
     # (DeepEP efficiency band removed at the user's request, 2026-09-08; the number stays in the text)
-    ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#2b6f7f", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
+    ax.plot([r["msg_bytes"] for r in s1], [r["T_us"] for r in s1], "-o", color="#15535c", lw=1.5, ms=4.5, label="this work (NVSwitch model)")
     if sim:
-        ax.plot([float(r["msg_bytes"]) for r in sim], [float(r["T_us"]) for r in sim], "--^", color="#4b3f8f", lw=1.1, ms=4.5, label="SimAI (stock DGX-H100)")
+        ax.plot([float(r["msg_bytes"]) for r in sim], [float(r["T_us"]) for r in sim], "--^", color="#5a6a9c", lw=1.1, ms=4.5, label="SimAI (stock DGX-H100)")
     for i, r in enumerate(s1):   # first point above (below it sits on the SimAI marker), the rest below
-        ax.annotate("%.0f" % r["T_us"], (r["msg_bytes"], r["T_us"]), textcoords="offset points", xytext=((0, 5) if i == 0 else (0, -11)), ha="center", fontsize=6.2, color="#2b6f7f")
+        ax.annotate("%.0f" % r["T_us"], (r["msg_bytes"], r["T_us"]), textcoords="offset points", xytext=((0, 5) if i == 0 else (0, -11)), ha="center", fontsize=6.2, color="#15535c")
     ax.set_xscale("log", base=2); ax.set_yscale("log")
     ax.set_xticks([2**21, 2**23, 2**25, 2**26]); ax.set_xticklabels(["2 MB", "8 MB", "32 MB", "64 MB"]); ax.minorticks_off()
     ax.set_xlabel("bytes per (src, dst) pair", fontsize=8.5); ax.set_ylabel("all-to-all time (us)", fontsize=8.5)
@@ -736,9 +736,9 @@ def dsefig():
     One panel per EP, x = q / port BDP, y = iteration (linear; points above a panel's range are clipped and
     labelled). Filled markers = the quoted rung (quotable == yes); hollow = the others."""
     rows = [r for r in csv.DictReader(open(os.path.join(RES, "panel_dse.csv"))) if r.get("makespan_ms")]
-    ARMS = [("4x4", "4x4 Glass-FB (this work)", "#2b6f7f", "o"),
-            ("fb", "8x8 flattened butterfly (128 GB/s optical)", "#c46a4a", "s"),
-            ("mesh", "8x8 electrical mesh (1800 GB/s, wafer proxy)", "#4b3f8f", "^")]
+    ARMS = [("4x4", "4x4 Glass-FB (this work)", "#15535c", "o"),
+            ("fb", "8x8 flattened butterfly (128 GB/s optical)", "#b5715a", "s"),
+            ("mesh", "8x8 electrical mesh (1800 GB/s, wafer proxy)", "#5a6a9c", "^")]
     MODEL = {16: "LLaMA-MoE", 32: "LLaMA-MoE", 64: "Qwen-MoE", 128: "Arctic"}
     eps = sorted({int(r["ep"]) for r in rows if r["arm"] in ("fb", "mesh")})
     eps = [e for e in eps if e <= int(os.environ.get("DSE_EP_MAX", "64"))]   # EP=128 held back until its rows land (user 2026-09-08)

@@ -118,3 +118,5 @@ Drawn 2026-09-07 from cliff_all d317e0e / buffer_sweeps ea0c6f2: R1 (EP=64 pair 
 **Fig. 5(b)(c) redraw 2026-09-13.** `decomp` (copied to the paper as `fig_crossover.png`) and `load` canvases 3.45x1.45 in; y label "normalized / iteration time" on two lines at 8 pt; in `fig_load` NVL72 ratio labels sit under the unit line and HGX-8 labels above its points, ylim 0.35-4.8.
 
 **Fig. 5 restored 2026-09-13.** `calibfig`, `decomp` and `load` back on the 3.45x1.6 in canvas of 30e4e04 (the later 1.18-1.775 in changes were page-fit tuning against a local tectonic render; the user compiles on Overleaf, which has room). First calib label drawn above its point.
+
+**Palette 2026-09-18.** The three-fabric hues are now deep petrol #15535c (Glass-FB), slate blue #5a6a9c (NVL72) and clay #b5715a (HGX-8), with tints #5e9099 / #aecdd1 (glass optical tiers), #b3bcd6 (NVL72 NIC), #e3c7ba (HGX-8 NIC), #7fb0b7 (8x8 FB) and #c7ccd1 (total). Applied in plot_paper.py, plot_medium.py, plot_panel_size.py, plot_thermal_transient.py and plot_a2a_share.py; every paper figure was regenerated together.

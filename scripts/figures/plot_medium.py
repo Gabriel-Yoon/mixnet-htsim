@@ -27,7 +27,7 @@ q = {}
 for r in rows:
     q[(r["arm"], int(float(r["ep"])))] = (float(r["makespan_ms"]), float(r["long_link_GBps"]))
 EPS = sorted({ep for _, ep in q})
-COL = {16: "#2b6f7f", 32: "#4b3f8f", 64: "#c46a4a"}
+COL = {16: "#15535c", 32: "#5a6a9c", 64: "#b5715a"}
 MK = {16: "o", 32: "s", 64: "^"}
 
 # --- (b) energy per iteration, glass vs copper-FB, from the paper's own hop-bytes (power_tiers.csv):

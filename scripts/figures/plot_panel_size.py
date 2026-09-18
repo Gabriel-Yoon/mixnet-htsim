@@ -19,9 +19,9 @@ for r in csv.DictReader(open(os.path.join(RES, "panel_dse.csv"))):
     if (r.get("quotable") or "").lower() == "yes":
         q[(r["grid"], r["topo"], int(float(r["ep"])))] = float(r["makespan_ms"])
 EPS = [16, 32, 64]
-ARMS = [(("4x4", "flattened_butterfly"), "4×4 FB (glass)", "#2b6f7f"),
-        (("8x8", "flattened_butterfly"), "8×8 FB (glass)", "#8fbcc6"),
-        (("8x8", "mesh"), "8×8 mesh (electrical)", "#c46a4a")]
+ARMS = [(("4x4", "flattened_butterfly"), "4×4 FB (glass)", "#15535c"),
+        (("8x8", "flattened_butterfly"), "8×8 FB (glass)", "#7fb0b7"),
+        (("8x8", "mesh"), "8×8 mesh (electrical)", "#b5715a")]
 fig, ax = plt.subplots(figsize=(3.45, 1.5), dpi=200)
 w = 0.2
 for k, (key, lab, col) in enumerate(ARMS):

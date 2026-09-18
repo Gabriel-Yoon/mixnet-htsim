@@ -40,7 +40,7 @@ PHASE_OF = {"MultiHeadAttention": "Attention", "Softmax": "Gate", "Group_by": "G
             "Dense": "Experts", "Aggregate": "Experts", "LayerNorm": "Add&Norm", "Add": "Add&Norm",
             "Input": "Add&Norm", "Repartition": "Add&Norm"}
 PHASES = ["Attention", "Gate", "All-to-All", "Experts", "Add&Norm"]
-COL = {"Attention": "#8a97a3", "Gate": "#c9d1d8", "All-to-All": "#2b6f7f", "Experts": "#d99a4e", "Add&Norm": "#efd3b0"}
+COL = {"Attention": "#8a97a3", "Gate": "#c9d1d8", "All-to-All": "#15535c", "Experts": "#d99a4e", "Add&Norm": "#efd3b0"}
 
 def cp_phases(path):
     sys.setrecursionlimit(200000)

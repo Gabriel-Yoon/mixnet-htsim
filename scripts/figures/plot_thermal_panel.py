@@ -43,7 +43,7 @@ L = x.max()
 n = 4
 pitch = L / n
 
-fig, ax = plt.subplots(figsize=(3.4, 3.1), dpi=200)
+fig, ax = plt.subplots(figsize=(1.68, 1.62), dpi=200)
 tri = mtri.Triangulation(y, x)  # tile_i (coolant axis) runs along y in the cut; draw it left->right
 tin = float(bc.get("tcp_in") or 55); tmax = float(np.ceil((max(peaks_g.values()) + 5) / 10) * 10)
 levels = np.linspace(tin, tmax, int((tmax - tin) / 2.5) + 1)
@@ -53,22 +53,20 @@ for k in range(1, n):
     ax.axvline(k * pitch, color="w", lw=0.4, alpha=0.6)
 for (i, j), tp in peaks_g.items():
     ax.text((i + 0.5) * pitch, (j + 0.5) * pitch, f"{tp:.0f}", ha="center", va="center",
-            fontsize=6.5, color="w" if tp < 100 else "k", fontweight="bold")
+            fontsize=5.6, color="w" if tp < 100 else "k", fontweight="bold")
 ax.set_xlim(0, L); ax.set_ylim(0, L); ax.set_aspect("equal")
 ax.set_xticks([]); ax.set_yticks([])
 # coolant direction drawn as an arrow under the panel: inlet edge (left) to outlet edge (right)
 ax.annotate("", xy=(0.97, -0.05), xytext=(0.03, -0.05), xycoords="axes fraction", textcoords="axes fraction",
             arrowprops=dict(arrowstyle="-|>", color="#1f77b4", lw=1.6, mutation_scale=12), annotation_clip=False)
-ax.text(0.03, -0.075, f"inlet {tin:.0f} °C", transform=ax.transAxes, ha="left", va="top", fontsize=7, color="#1f77b4")
-ax.text(0.50, -0.075, "coolant flow", transform=ax.transAxes, ha="center", va="top", fontsize=7, color="#1f77b4")
-ax.text(0.97, -0.075, f"outlet {tin+20:.0f} °C", transform=ax.transAxes, ha="right", va="top", fontsize=7, color="#1f77b4")
+ax.text(0.50, -0.075, f"coolant flow, {tin:.0f} to {tin+20:.0f} °C", transform=ax.transAxes,
+        ha="center", va="top", fontsize=5.4, color="#1f77b4")
 cb = fig.colorbar(cf, ax=ax, fraction=0.046, pad=0.03, ticks=list(range(int(tin), int(tmax) + 1, 20)))
-cb.ax.tick_params(labelsize=7); cb.set_label("PIC-plane T (°C)", fontsize=7)
+cb.ax.tick_params(labelsize=5.4); cb.set_label("PIC-plane T (°C)", fontsize=5.8)
 gmax = max(peaks_g.values()); smax = max(peaks_s.values())
 pic_w = sorted({float(r) for r in [bc["pic_w"]]})
-ax.set_title(f"glass: PIC peak {gmax:.1f} °C  (Si control {smax:.1f})\n"
-             f"700 W/die · PIC 14–58 W/tile · h={int(float(bc['hcp']))//1000}k W/m²K",
-             fontsize=7.5)
+ax.set_title(f"PIC peak {gmax:.1f} °C (Si {smax:.1f})\n700 W/die, h={int(float(bc['hcp']))//1000}k W/m²K",
+             fontsize=5.8)
 fig.tight_layout(pad=0.3)
 os.makedirs(a.out, exist_ok=True)
 outp = os.path.join(a.out, "thermal_panel_steady.png")

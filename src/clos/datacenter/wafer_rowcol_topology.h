@@ -22,6 +22,15 @@ struct WaferConfig {
   uint64_t inter_link_speed = 0;
   simtime_picosec inter_link_delay = 0;
 
+  // Inter-wafer model:
+  //   0 = per-wafer-pair gateway (legacy): one directed link of inter_link_speed between one
+  //       gateway GPU of wafer A and one of wafer B; every A->B flow detours to the gateway.
+  //   1 = per-reticle CPO port: every GPU has its own off-wafer egress and ingress port of
+  //       inter_link_speed (Section 3.2's co-packaged-optics connectors), and an off-wafer flow
+  //       goes src port -> fibre -> dst port with no intra-wafer detour. Port contention is
+  //       modelled by the shared per-GPU egress/ingress queues.
+  int inter_mode = 0;
+
   // Demand-aware wavelength allocation (non-volatile programmable ring array):
   // link_demand[s][d] = expected traffic from GPU s to GPU d (any unit). When non-empty, every
   // source keeps its total wavelength budget (num_out_links x intra_link_speed) but splits it
@@ -80,6 +89,10 @@ private:
   // Store queues/pipes for any directed pair we might use.
   std::vector<std::vector<RandomQueue*>> q_;
   std::vector<std::vector<Pipe*>> p_;
+  // per-reticle CPO ports (inter_mode 1)
+  std::vector<RandomQueue*> port_out_;
+  std::vector<RandomQueue*> port_in_;
+  std::vector<Pipe*> port_pipe_;
 
   inline int W() const { return cfg_.gpus_per_wafer(); }
   inline int wafer_id(int g) const { return g / W(); }

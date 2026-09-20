@@ -142,6 +142,7 @@ int main(int argc, char **argv)
     std::string dump_traffic_file = "";
     std::string alloc_traffic_file = "";
     std::map<std::string, simtime_picosec> thermal_delay_map;
+    int inter_mode = 0;
 
     int i = 1;
     while (i < argc)
@@ -228,6 +229,12 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "-alloc-cap"))
         {
             alloc_cap = atof(argv[i + 1]);
+            i++;
+        }
+        else if (!strcmp(argv[i], "-inter-mode"))
+        {
+            // gateway (legacy: one link per wafer pair) | port (per-reticle CPO port at -inter-speed)
+            inter_mode = !strcmp(argv[i + 1], "port") ? 1 : 0;
             i++;
         }
         else if (!strcmp(argv[i], "-thermal-delay-map"))
@@ -392,6 +399,7 @@ int main(int argc, char **argv)
     cfg.intra_link_delay = intra_delay_ps;
     cfg.inter_link_speed = inter_speed_mbps;
     cfg.inter_link_delay = inter_delay_ps;
+    cfg.inter_mode = inter_mode;
     if (lambda_alloc == "demand" && !alloc_traffic_file.empty()) {
         // measured demand: N x N bytes CSV from a previous run's -dump-traffic (all flow types)
         std::ifstream tf(alloc_traffic_file);

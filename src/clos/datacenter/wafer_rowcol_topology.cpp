@@ -35,6 +35,22 @@ WaferRowColTopology::WaferRowColTopology(
     }
   }
 
+  if (cfg_.inter_mode == 1) {
+    // per-reticle CPO ports: one egress and one ingress queue per GPU at the port rate
+    port_out_.assign(N, nullptr); port_in_.assign(N, nullptr); port_pipe_.assign(N, nullptr);
+    for (int g = 0; g < N; ++g) {
+      port_out_[g] = new RandomQueue(speedFromMbps(cfg_.inter_link_speed), memFromPkt(SWITCH_BUFFER + RANDOM_BUFFER),
+                                     *eventlist_, nullptr, memFromPkt(RANDOM_BUFFER));
+      port_in_[g] = new RandomQueue(speedFromMbps(cfg_.inter_link_speed), memFromPkt(SWITCH_BUFFER + RANDOM_BUFFER),
+                                    *eventlist_, nullptr, memFromPkt(RANDOM_BUFFER));
+      port_pipe_[g] = new Pipe(cfg_.inter_link_delay, *eventlist_);
+    }
+    std::cout << "Inter-wafer model: per-reticle CPO port, " << cfg_.inter_link_speed / 8000
+              << " GB/s egress + ingress per GPU, " << cfg_.inter_link_delay / 1000 << " ns" << std::endl;
+    return;
+  }
+  std::cout << "Inter-wafer model: per-wafer-pair gateway, " << cfg_.inter_link_speed / 8000 << " GB/s per link" << std::endl;
+
   // Build inter-wafer links between gateways (directed, fully connected among wafers).
   // Per-destination-wafer gateway assignment spreads each wafer's (nw-1) inter-wafer links
   // across up to W() distinct local GPUs instead of funneling all of them through local GPU 0.
@@ -91,6 +107,7 @@ std::vector<std::pair<int,int>> WaferRowColTopology::hops(int src, int dst) cons
     intra(src, dst);
     return h;
   }
+  if (cfg_.inter_mode == 1) return h;   // CPO port path uses no intra-wafer links
   int gwS = gateway_gpu(wafer_id(src), wafer_id(dst));
   int gwD = gateway_gpu(wafer_id(dst), wafer_id(src));
   intra(src, gwS);
@@ -190,6 +207,10 @@ std::vector<int>* WaferRowColTopology::get_neighbours(int src)
     }
   }
 
+  if (cfg_.inter_mode == 1) {
+    for (int dst = 0; dst < N; ++dst) if (!same_wafer(src, dst)) nbrs->push_back(dst);
+    return nbrs;
+  }
   // inter-wafer: src may be the per-destination gateway for one or more other wafers now
   // (gateway assignment is spread across local GPUs, not a single fixed GPU per wafer).
   int wsrc = wafer_id(src);
@@ -246,6 +267,15 @@ std::vector<const Route*>* WaferRowColTopology::get_paths(int src, int dst)
   }
 
   // Case 2: different wafers
+  if (cfg_.inter_mode == 1) {
+    // src CPO egress port -> fibre -> dst CPO ingress port (no intra-wafer detour)
+    route->push_back(port_out_[src]);
+    route->push_back(port_pipe_[src]);
+    route->push_back(port_in_[dst]);
+    route->push_back(port_pipe_[dst]);
+    paths->push_back(route);
+    return paths;
+  }
   // Route via gateways: src -> gwS (intra), gwS -> gwD (inter), gwD -> dst (intra)
   int gwS = gateway_gpu(wafer_id(src), wafer_id(dst));
   int gwD = gateway_gpu(wafer_id(dst), wafer_id(src));
